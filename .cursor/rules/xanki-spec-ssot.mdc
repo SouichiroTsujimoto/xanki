@@ -1,0 +1,15 @@
+---
+description: xanki の仕様 SSoT (docs/spec/) を参照・更新する
+alwaysApply: true
+---
+
+# xanki 仕様 SSoT
+
+正本: `docs/spec/`（索引: `docs/spec/README.md`）
+
+- 機能・UI・データ形式を変更する前に、関連 spec を読む
+- 実装と spec が矛盾する場合は、**spec を更新するか spec に合わせて実装する**
+- 座標系・masks JSON・保存パイプラインは `docs/spec/image-masks.md` / `text-masks.md` / `data-model.md` を最優先で整合させる
+- Tauri では `window.confirm` / `window.alert` を使わない（`docs/spec/ui.md`）
+
+Agent 向け索引: リポジトリルート `AGENTS.md`
