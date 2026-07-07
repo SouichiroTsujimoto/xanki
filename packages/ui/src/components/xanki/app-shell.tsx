@@ -8,6 +8,7 @@ import {
 } from "../../lib/motion-presets";
 import { useReducedMotion } from "../../lib/use-reduced-motion";
 import type { Deck } from "../../types";
+import xankiLogo from "../../assets/xanki-logo.png";
 
 const NARROW_BREAKPOINT = "(max-width: 900px)";
 
@@ -122,7 +123,7 @@ export function AppShell({
     <>
       <div className="brand-block">
         <div className="brand-mark" aria-hidden>
-          x
+          <img src={xankiLogo} alt="" />
         </div>
         <div className="brand-copy">
           <strong>xanki</strong>

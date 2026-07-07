@@ -170,12 +170,21 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
       notify();
       return card;
     },
-    saveImageCards:
-      platform.saveImageCards ??
-      unsupported("画像カード保存"),
-    updateImageCard:
-      platform.updateImageCard ??
-      unsupported("画像カード更新"),
+    saveImageCards: platform.saveImageCards
+      ? async (request) => {
+          platform.setLastUsedDeckId?.(request.deckId);
+          const cards = await platform.saveImageCards!(request);
+          notify();
+          return cards;
+        }
+      : unsupported("画像カード保存"),
+    updateImageCard: platform.updateImageCard
+      ? async (request) => {
+          const card = await platform.updateImageCard!(request);
+          notify();
+          return card;
+        }
+      : unsupported("画像カード更新"),
     runOcr: platform.runOcr ?? unsupported("OCR"),
     getEditorInit: platform.getEditorInit ?? (async () => null),
     openAccessibilitySettings:
