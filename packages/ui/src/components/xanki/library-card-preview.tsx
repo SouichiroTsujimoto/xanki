@@ -63,7 +63,7 @@ export function LibraryCardPreview({ card }: { card: Card }) {
         <ImageWithMaskOverlays
           src={imageSrc}
           rects={overlayRects}
-          rootClassName="image-overlay-root image-card library-image-frame"
+          rootClassName="image-overlay-root image-card library-image-preview"
         />
       </div>
     );

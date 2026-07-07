@@ -146,12 +146,15 @@ function measureReviewCard(card: HTMLElement): number {
   card.style.overflow = "visible";
 
   const measured = card.offsetHeight;
+  const width = card.clientWidth || card.offsetWidth;
+  const minAspectHeight =
+    width > 0 ? Math.round((width * 3) / 4) : FLIP_MIN_HEIGHT_PX;
 
   card.style.height = previous.height;
   card.style.maxHeight = previous.maxHeight;
   card.style.overflow = previous.overflow;
 
-  return clampFlipHeight(measured);
+  return clampFlipHeight(Math.max(measured, minAspectHeight));
 }
 
 function hasActiveTextSelection(): boolean {
@@ -432,11 +435,12 @@ export function StudyCardDisplay({
 
   useEffect(() => {
     async function loadImage() {
-      if (card.card.imagePath) {
-        setImageSrc(await api.resolveImageUrl(card.card.imagePath));
-      } else {
+      const imageKey = card.card.imagePath ?? card.card.imageHash;
+      if (card.card.kind !== "image" || !imageKey) {
         setImageSrc(null);
+        return;
       }
+      setImageSrc(await api.resolveImageUrl(imageKey));
     }
     void loadImage();
   }, [card, api]);

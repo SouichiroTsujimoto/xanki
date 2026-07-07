@@ -917,9 +917,9 @@ html.tauri-macos .app-topbar label {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  text-align: center;
+  text-align: left;
 }
 
 .card-collection .flashcard-preview.flashcard-preview-text,
@@ -928,13 +928,14 @@ html.tauri-macos .app-topbar label {
   box-sizing: border-box;
   padding: 4px 0.2em;
   word-break: break-word;
+  align-items: flex-start;
 }
 
 .card-collection .flashcard-preview pre,
 .study-coverflow-slide-body .flashcard-preview pre {
   width: 100%;
   margin: 0;
-  text-align: center;
+  text-align: left;
   white-space: pre-wrap;
   overflow: visible;
   display: block;
@@ -957,31 +958,27 @@ html.tauri-macos .app-topbar label {
   justify-content: center;
 }
 
-.card-collection .flashcard-preview-image .library-image-frame {
+.card-collection .flashcard-preview-image .library-image-preview {
   position: relative;
-  display: block;
-  width: min(100%, 88%);
-  aspect-ratio: 16 / 9;
-  max-height: 68%;
-  overflow: hidden;
+  display: inline-block;
+  max-width: min(100%, 88%);
+  max-height: 100%;
   border-radius: var(--radius-sm);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--color-border) 80%, transparent),
     inset 0 -10px 14px -8px color-mix(in srgb, var(--color-foreground) 10%, transparent);
 }
 
-.card-collection .flashcard-preview-image .library-image-frame .image-overlay-layer {
+.card-collection .flashcard-preview-image .library-image-preview .image-overlay-layer {
   z-index: 1;
 }
 
-.card-collection .flashcard-preview-image .library-image-frame img {
-  position: relative;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  max-height: none;
-  object-fit: cover;
-  object-position: center;
+.card-collection .flashcard-preview-image .library-image-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 168px;
+  width: auto;
+  height: auto;
   border-radius: inherit;
 }
 
@@ -1090,12 +1087,13 @@ html.tauri-macos .app-topbar label {
   min-height: 120px;
 }
 
-.library-image-frame {
+.library-image-preview {
   max-width: 100%;
-  max-height: 180px;
 }
 
-.library-image-frame img {
+.library-image-preview img {
+  display: block;
+  max-width: 100%;
   max-height: 180px;
   width: auto;
   height: auto;
@@ -1363,8 +1361,8 @@ html.tauri-macos .app-topbar label {
 }
 
 .study-session .study-flip-face .review-card {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
+  width: min(calc(100% - 4px), calc(min(58vh, 520px) * 4 / 3));
+  max-width: min(880px, calc(min(58vh, 520px) * 4 / 3));
   margin-inline: auto;
   height: 100%;
   min-height: 0;
@@ -1401,21 +1399,27 @@ html.tauri-macos .app-topbar label {
   text-align: center;
 }
 
+.study-session .review-card:has(.study-text-body) {
+  justify-content: center;
+  align-items: stretch;
+  text-align: left;
+}
+
 .study-session .study-text-body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .study-session .study-text-body pre {
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
-.study-session .qa-answer-block {
+.study-session .study-text-body.qa-card .qa-answer-block {
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 .study-session .image-card,
@@ -2678,31 +2682,27 @@ html.tauri-macos .image-editor-header button {
   display: none;
 }
 
-.study-coverflow-slide-body .flashcard-preview-image .library-image-frame {
+.study-coverflow-slide-body .flashcard-preview-image .library-image-preview {
   position: relative;
-  display: block;
-  width: min(100%, 88%);
-  aspect-ratio: 16 / 9;
-  max-height: 68%;
-  overflow: hidden;
+  display: inline-block;
+  max-width: min(100%, 88%);
+  max-height: 100%;
   border-radius: var(--radius-sm);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--color-border) 80%, transparent),
     inset 0 -10px 14px -8px color-mix(in srgb, var(--color-foreground) 10%, transparent);
 }
 
-.study-coverflow-slide-body .flashcard-preview-image .library-image-frame .image-overlay-layer {
+.study-coverflow-slide-body .flashcard-preview-image .library-image-preview .image-overlay-layer {
   z-index: 1;
 }
 
-.study-coverflow-slide-body .flashcard-preview-image .library-image-frame img {
-  position: relative;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  max-height: none;
-  object-fit: cover;
-  object-position: center;
+.study-coverflow-slide-body .flashcard-preview-image .library-image-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 120px;
+  width: auto;
+  height: auto;
   border-radius: inherit;
 }
 
