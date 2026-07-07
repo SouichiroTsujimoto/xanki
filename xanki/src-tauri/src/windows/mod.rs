@@ -60,6 +60,7 @@ pub fn open_mask_editor_text(app: &AppHandle, text: &str) -> AppResult<()> {
         EditorInitPayload {
             mode: "text".into(),
             content: Some(text.to_string()),
+            answer: None,
             image_path: None,
             card_id: None,
             deck_id: None,
@@ -81,6 +82,7 @@ pub fn open_mask_editor_image(app: &AppHandle, image_path: &str) -> AppResult<()
         EditorInitPayload {
             mode: "image".into(),
             content: None,
+            answer: None,
             image_path: Some(image_path.to_string()),
             card_id: None,
             deck_id: None,
@@ -171,6 +173,19 @@ pub fn open_card_editor(app: &AppHandle, state: &AppState, card_id: &str) -> App
         "text" => EditorInitPayload {
             mode: "text".into(),
             content: card.content.clone(),
+            answer: None,
+            image_path: None,
+            card_id: Some(card.id.clone()),
+            deck_id: Some(card.deck_id.clone()),
+            masks: Some(card.masks.clone()),
+            note: card.note.clone(),
+            ocr_text: None,
+            ocr_data: None,
+        },
+        "qa" => EditorInitPayload {
+            mode: "qa".into(),
+            content: card.content.clone(),
+            answer: card.answer.clone(),
             image_path: None,
             card_id: Some(card.id.clone()),
             deck_id: Some(card.deck_id.clone()),
@@ -182,6 +197,7 @@ pub fn open_card_editor(app: &AppHandle, state: &AppState, card_id: &str) -> App
         "image" => EditorInitPayload {
             mode: "image".into(),
             content: None,
+            answer: None,
             image_path: card.image_path.clone(),
             card_id: Some(card.id.clone()),
             deck_id: Some(card.deck_id.clone()),

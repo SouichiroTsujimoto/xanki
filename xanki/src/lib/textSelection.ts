@@ -30,7 +30,7 @@ export function getTextareaPopupPosition(
       paddingLeft + column * charWidth + 8,
       textarea.clientWidth - paddingLeft - 48,
     ),
-    y: paddingTop + lineIndex * lineHeight + lineHeight + 6,
+    y: paddingTop + lineIndex * lineHeight + lineHeight + 6 - textarea.scrollTop,
   };
 }
 

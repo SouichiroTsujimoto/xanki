@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { api, parseImageMasks, parseTextMasks } from "../../lib/tauri/api";
 import { ImageWithMaskOverlays } from "../ImageWithMaskOverlays";
 import type { ImageMask, OcrResult, ReviewCard } from "../../types";
+import type { ColoredImageRect } from "../ImageWithMaskOverlays";
 
 export type TextMaskRenderOptions = {
   hide?: boolean;
@@ -92,8 +93,8 @@ export function renderTextWithMasks(
 export function resolveImageOverlayRects(
   masks: ImageMask[],
   ocrData: OcrResult | null,
-): Array<{ x: number; y: number; w: number; h: number }> {
-  const rects: Array<{ x: number; y: number; w: number; h: number }> = [];
+): ColoredImageRect[] {
+  const rects: ColoredImageRect[] = [];
   for (const mask of masks) {
     if (mask.type === "rect") {
       rects.push(mask);
@@ -102,11 +103,97 @@ export function resolveImageOverlayRects(
     if (mask.type === "ocr" && ocrData) {
       for (const id of mask.wordIds) {
         const word = ocrData.words.find((w) => w.id === id);
-        if (word) rects.push(word);
+        if (word) {
+          rects.push({
+            x: word.x,
+            y: word.y,
+            w: word.w,
+            h: word.h,
+            color: mask.color,
+          });
+        }
       }
     }
   }
   return rects;
+}
+
+export function isMaskFlipTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest(".masked, .mask-block, .mask-interactive, .mask-mark, .ocr-word"),
+  );
+}
+
+interface FlipSceneProps {
+  revealed: boolean;
+  onToggle: () => void;
+  clickable?: boolean;
+  compact?: boolean;
+  front: ReactNode;
+  back: ReactNode;
+}
+
+export function FlipScene({
+  revealed,
+  onToggle,
+  clickable = false,
+  compact = false,
+  front,
+  back,
+}: FlipSceneProps) {
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!clickable || isMaskFlipTarget(event.target)) return;
+      onToggle();
+    },
+    [clickable, onToggle],
+  );
+
+  const sceneClassName = [
+    "study-flip-scene",
+    clickable ? "study-flip-scene-interactive" : "",
+    compact ? "study-flip-scene-compact" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div className={sceneClassName} onClick={clickable ? handleClick : undefined}>
+      <div className={`study-flip-inner ${revealed ? "is-flipped" : ""}`}>
+        <div className="study-flip-face study-flip-front">{front}</div>
+        <div className="study-flip-face study-flip-back">{back}</div>
+      </div>
+    </div>
+  );
+}
+
+interface StudyFlipCardProps {
+  card: ReviewCard;
+  revealed: boolean;
+  onRevealedChange: (revealed: boolean) => void;
+  interactive?: boolean;
+}
+
+export function StudyFlipCard({
+  card,
+  revealed,
+  onRevealedChange,
+  interactive = false,
+}: StudyFlipCardProps) {
+  const toggle = useCallback(() => {
+    onRevealedChange(!revealed);
+  }, [onRevealedChange, revealed]);
+
+  return (
+    <FlipScene
+      revealed={revealed}
+      onToggle={toggle}
+      clickable
+      front={<StudyCardDisplay card={card} revealed={false} interactive={interactive} />}
+      back={<StudyCardDisplay card={card} revealed interactive={false} />}
+    />
+  );
 }
 
 interface CardDisplayProps {
@@ -153,6 +240,8 @@ export function StudyCardDisplay({
 
   const textMasks =
     card.card.kind === "text" ? parseTextMasks(card.card.masks) : [];
+  const qaMasks =
+    card.card.kind === "qa" ? parseTextMasks(card.card.masks) : [];
   const imageMasks =
     card.card.kind === "image" ? parseImageMasks(card.card.masks) : [];
   const ocrData: OcrResult | null = card.card.ocrData
@@ -171,6 +260,21 @@ export function StudyCardDisplay({
             interactive,
             onTogglePeek: togglePeek,
           })}
+        </div>
+      )}
+
+      {card.card.kind === "qa" && card.card.content && (
+        <div className="text-card qa-card">
+          {renderTextWithMasks(card.card.content, qaMasks, {
+            hide: !revealed,
+            revealed,
+          })}
+          {revealed && card.card.answer && (
+            <div className="qa-answer-block">
+              <p className="eyebrow">解答</p>
+              <pre>{card.card.answer}</pre>
+            </div>
+          )}
         </div>
       )}
 

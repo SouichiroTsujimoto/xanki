@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
-  StudyCardDisplay,
   StudyEmpty,
+  StudyFlipCard,
   StudyProgress,
   useStudyQueue,
 } from "./shared";
@@ -30,14 +30,14 @@ export function FlashcardsMode({ deckId, shuffle }: Props) {
         e.preventDefault();
         setRevealed((v) => !v);
       }
-      if (e.key === "ArrowRight" && revealed) {
+      if (e.key === "ArrowRight") {
         next();
         setRevealed(false);
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [current, revealed, next]);
+  }, [current, next]);
 
   if (!current) {
     return (
@@ -52,8 +52,13 @@ export function FlashcardsMode({ deckId, shuffle }: Props) {
   return (
     <div className="review-stage" tabIndex={0}>
       <StudyProgress index={index} total={queue.length} progress={progress} />
-      <p className="review-hint study-hint">Space 答え · → 次へ</p>
-      <StudyCardDisplay card={current} revealed={revealed} interactive />
+      <p className="review-hint study-hint">Space / クリック 答え · → 次へ</p>
+      <StudyFlipCard
+        card={current}
+        revealed={revealed}
+        onRevealedChange={setRevealed}
+        interactive
+      />
       <div className="review-actions">
         <button
           type="button"
@@ -65,7 +70,6 @@ export function FlashcardsMode({ deckId, shuffle }: Props) {
         <button
           type="button"
           className="accent-button"
-          disabled={!revealed}
           onClick={() => {
             next();
             setRevealed(false);

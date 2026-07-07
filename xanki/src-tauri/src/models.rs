@@ -17,6 +17,7 @@ pub struct Card {
     pub deck_id: String,
     pub kind: String,
     pub content: Option<String>,
+    pub answer: Option<String>,
     pub image_path: Option<String>,
     pub ocr_text: Option<String>,
     pub ocr_data: Option<String>,
@@ -41,9 +42,20 @@ pub enum TextMask {
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum ImageMask {
     #[serde(rename = "rect")]
-    Rect { x: f64, y: f64, w: f64, h: f64 },
+    Rect {
+        x: f64,
+        y: f64,
+        w: f64,
+        h: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        color: Option<String>,
+    },
     #[serde(rename = "ocr")]
-    Ocr { word_ids: Vec<usize> },
+    Ocr {
+        word_ids: Vec<usize>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        color: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,6 +81,17 @@ pub struct OcrResult {
 pub struct SaveTextCardRequest {
     pub deck_id: String,
     pub content: String,
+    pub masks: Vec<TextMask>,
+    pub note: Option<String>,
+    pub source_hint: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SaveQaCardRequest {
+    pub deck_id: String,
+    pub content: String,
+    pub answer: String,
     pub masks: Vec<TextMask>,
     pub note: Option<String>,
     pub source_hint: Option<String>,
@@ -123,6 +146,7 @@ pub struct ImportTextResult {
 pub struct EditorInitPayload {
     pub mode: String,
     pub content: Option<String>,
+    pub answer: Option<String>,
     pub image_path: Option<String>,
     pub card_id: Option<String>,
     pub deck_id: Option<String>,
@@ -138,6 +162,17 @@ pub struct UpdateTextCardRequest {
     pub card_id: String,
     pub deck_id: String,
     pub content: String,
+    pub masks: Vec<TextMask>,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateQaCardRequest {
+    pub card_id: String,
+    pub deck_id: String,
+    pub content: String,
+    pub answer: String,
     pub masks: Vec<TextMask>,
     pub note: Option<String>,
 }

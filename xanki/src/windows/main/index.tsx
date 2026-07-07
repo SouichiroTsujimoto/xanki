@@ -60,6 +60,27 @@ export function MainApp() {
   }, [refreshDecks, refreshDueCount, refreshPermissions]);
 
   useEffect(() => {
+    if (decks.length === 0) {
+      if (selectedDeckId !== null) setSelectedDeckId(null);
+      return;
+    }
+
+    const selectedExists = selectedDeckId
+      ? decks.some((deck) => deck.id === selectedDeckId)
+      : false;
+    if (selectedExists) return;
+
+    void (async () => {
+      const lastUsed = await api.getLastUsedDeckId();
+      const pick =
+        lastUsed && decks.some((deck) => deck.id === lastUsed)
+          ? lastUsed
+          : decks[0]?.id ?? null;
+      setSelectedDeckId(pick);
+    })();
+  }, [decks, selectedDeckId, setSelectedDeckId]);
+
+  useEffect(() => {
     const unlistenNavigate = listen<string>("navigate", (event) => {
       if (
         event.payload === "library" ||

@@ -32,10 +32,16 @@ export function LibraryView({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadCards = useCallback(async () => {
+    if (!selectedDeckId) {
+      setCards([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       setCards(
-        await api.listCards(selectedDeckId ?? undefined, searchQuery || undefined),
+        await api.listCards(selectedDeckId, searchQuery || undefined),
       );
     } finally {
       setLoading(false);
@@ -112,7 +118,10 @@ export function LibraryView({
         await loadCards();
       } else {
         await api.deleteDeck(pendingDelete.id);
-        if (selectedDeckId === pendingDelete.id) onSelectDeck(null);
+        if (selectedDeckId === pendingDelete.id) {
+          const remaining = decks.filter((item) => item.id !== pendingDelete.id);
+          onSelectDeck(remaining[0]?.id ?? null);
+        }
         await loadCards();
       }
       onRefreshDecks();
@@ -180,9 +189,6 @@ export function LibraryView({
       <aside className="deck-panel">
         <div className="panel-head">
           <h2>デッキ</h2>
-          <button type="button" className="text-button" onClick={() => onSelectDeck(null)}>
-            すべて
-          </button>
         </div>
 
         <ul className="deck-list">
@@ -306,7 +312,11 @@ export function LibraryView({
                     ★
                   </button>
                   <span className={`type-pill ${card.kind}`}>
-                    {card.kind === "text" ? "Text" : "Image"}
+                    {card.kind === "text"
+                      ? "Text"
+                      : card.kind === "qa"
+                        ? "Q&A"
+                        : "Image"}
                   </span>
                   {card.boxNum != null && (
                     <span className="box-pill">Box {card.boxNum}</span>
@@ -330,9 +340,13 @@ export function LibraryView({
 
         {!loading && cards.length === 0 && (
           <div className="empty-panel">
-            <p className="empty-title">カードがまだありません</p>
+            <p className="empty-title">
+              {selectedDeckId ? "カードがまだありません" : "デッキがありません"}
+            </p>
             <p className="empty-copy">
-              教材上で ⌥⌘M（テキスト）または ⌥⌘S（スクショ）を押して、最初のカードを作りましょう。
+              {selectedDeckId
+                ? "教材上で ⌥⌘M（テキスト）または ⌥⌘S（スクショ）を押して、最初のカードを作りましょう。"
+                : "左のサイドバーからデッキを作成してください。"}
             </p>
           </div>
         )}

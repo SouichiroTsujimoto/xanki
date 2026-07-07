@@ -1,5 +1,18 @@
 use crate::models::{ImageMask, ImageRegion, OcrResult, OcrWord};
 
+pub fn is_full_image_region(region: &ImageRegion, image_w: u32, image_h: u32) -> bool {
+    if region.crop_x.abs() > 0.5 || region.crop_y.abs() > 0.5 {
+        return false;
+    }
+
+    let crop_w = region.crop_w.round() as u32;
+    let crop_h = region.crop_h.round() as u32;
+    crop_w >= image_w.saturating_sub(1)
+        && crop_h >= image_h.saturating_sub(1)
+        && (region.crop_w - image_w as f64).abs() <= 1.0
+        && (region.crop_h - image_h as f64).abs() <= 1.0
+}
+
 pub fn adjust_region_for_crop(
     region: &ImageRegion,
     ocr_data: Option<&str>,
@@ -13,14 +26,16 @@ pub fn adjust_region_for_crop(
         .masks
         .iter()
         .map(|mask| match mask {
-            ImageMask::Rect { x, y, w, h } => ImageMask::Rect {
+            ImageMask::Rect { x, y, w, h, color } => ImageMask::Rect {
                 x: x - crop_x,
                 y: y - crop_y,
                 w: *w,
                 h: *h,
+                color: color.clone(),
             },
-            ImageMask::Ocr { word_ids } => ImageMask::Ocr {
+            ImageMask::Ocr { word_ids, color } => ImageMask::Ocr {
                 word_ids: word_ids.clone(),
+                color: color.clone(),
             },
         })
         .collect();
@@ -56,7 +71,7 @@ pub fn adjust_region_for_crop(
     let remapped_masks: Vec<ImageMask> = adjusted_masks
         .into_iter()
         .filter_map(|mask| match mask {
-            ImageMask::Ocr { word_ids } => {
+            ImageMask::Ocr { word_ids, color } => {
                 let remapped: Vec<usize> = word_ids
                     .iter()
                     .filter_map(|id| id_map.get(id).copied())
@@ -64,7 +79,10 @@ pub fn adjust_region_for_crop(
                 if remapped.is_empty() {
                     None
                 } else {
-                    Some(ImageMask::Ocr { word_ids: remapped })
+                    Some(ImageMask::Ocr {
+                        word_ids: remapped,
+                        color: color.clone(),
+                    })
                 }
             }
             other => Some(other),

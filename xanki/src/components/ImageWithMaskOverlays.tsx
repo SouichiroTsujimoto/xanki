@@ -1,14 +1,19 @@
 import { useRef } from "react";
+import { maskColorVars } from "../lib/maskColors";
 import {
   maskOverlayStyle,
   useImageOverlayLayout,
   type ImageRect,
 } from "../lib/imageOverlay";
 
+export interface ColoredImageRect extends ImageRect {
+  color?: string;
+}
+
 interface Props {
   src: string;
   alt?: string;
-  rects: ImageRect[];
+  rects: ColoredImageRect[];
   rootClassName?: string;
   imageClassName?: string;
   getMaskClassName?: (index: number) => string;
@@ -55,6 +60,10 @@ export function ImageWithMaskOverlays({
           ]
             .filter(Boolean)
             .join(" ");
+          const style = {
+            ...maskOverlayStyle(rect, layout),
+            ...maskColorVars(rect.color),
+          };
 
           if (interactive && onMaskClick) {
             return (
@@ -62,7 +71,7 @@ export function ImageWithMaskOverlays({
                 key={`${rect.x}-${rect.y}-${rect.w}-${rect.h}-${index}`}
                 type="button"
                 className={className}
-                style={maskOverlayStyle(rect, layout)}
+                style={style}
                 onClick={() => onMaskClick(index)}
                 aria-label="マスクを削除"
               />
@@ -73,7 +82,7 @@ export function ImageWithMaskOverlays({
             <div
               key={`${rect.x}-${rect.y}-${rect.w}-${rect.h}-${index}`}
               className={className}
-              style={maskOverlayStyle(rect, layout)}
+              style={style}
             />
           );
         })}

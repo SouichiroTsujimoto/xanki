@@ -19,8 +19,9 @@ WAL モード。App Data 配下 `xanki.db`。
 |----|-----|------|
 | id | TEXT PK | UUID v7 |
 | deck_id | TEXT FK | |
-| kind | TEXT | `text` \| `image` |
-| content | TEXT | kind=text の原文 |
+| kind | TEXT | `text` \| `image` \| `qa` |
+| content | TEXT | kind=text/qa の問題文（qa）または原文（text） |
+| answer | TEXT | kind=qa の解答（migration 003） |
 | image_path | TEXT | kind=image、App Data からの相対パス（**クロップ後**） |
 | ocr_text | TEXT | 検索用 OCR 全文 |
 | ocr_data | TEXT | OCR JSON（words + bbox） |
@@ -55,10 +56,12 @@ WAL モード。App Data 配下 `xanki.db`。
 
 ```json
 [
-  { "type": "rect", "x": 120, "y": 88, "w": 210, "h": 32 },
-  { "type": "ocr", "wordIds": [4, 5, 6] }
+  { "type": "rect", "x": 120, "y": 88, "w": 210, "h": 32, "color": "chartreuse" },
+  { "type": "ocr", "wordIds": [4, 5, 6], "color": "pink" }
 ]
 ```
+
+- `rect` / `ocr` の `color` は任意（`chartreuse` | `yellow` | `pink` | `cyan` | `orange`）。省略時は `chartreuse`
 
 ### ocr_data JSON
 

@@ -91,6 +91,18 @@ pub fn save_image_cards(
     let source_image = request.image_path.clone();
     let mut all_cards = Vec::new();
 
+    let source_dims = {
+        let source_path =
+            crate::capture::resolve_image_path(&state.app_data_dir, &source_image);
+        if source_path.exists() {
+            image::open(&source_path)
+                .ok()
+                .map(|img| (img.width(), img.height()))
+        } else {
+            None
+        }
+    };
+
     for region in request.regions {
         if region.crop_w <= 0.0 || region.crop_h <= 0.0 {
             continue;
@@ -103,14 +115,29 @@ pub fn save_image_cards(
             continue;
         }
 
-        let cropped = crate::capture::crop_image(
-            &state.app_data_dir,
-            &source_image,
-            region.crop_x,
-            region.crop_y,
-            region.crop_w,
-            region.crop_h,
-        )?;
+        let cropped = if let Some((w, h)) = source_dims {
+            if crate::capture::is_full_image_region(&region, w, h) {
+                source_image.clone()
+            } else {
+                crate::capture::crop_image(
+                    &state.app_data_dir,
+                    &source_image,
+                    region.crop_x,
+                    region.crop_y,
+                    region.crop_w,
+                    region.crop_h,
+                )?
+            }
+        } else {
+            crate::capture::crop_image(
+                &state.app_data_dir,
+                &source_image,
+                region.crop_x,
+                region.crop_y,
+                region.crop_w,
+                region.crop_h,
+            )?
+        };
 
         let mut adjusted_region = region.clone();
         adjusted_region.masks = masks;
@@ -138,6 +165,23 @@ pub fn save_image_cards(
 }
 
 #[tauri::command]
+pub fn save_qa_card(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    request: SaveQaCardRequest,
+) -> AppResult<Card> {
+    let deck_id = request.deck_id.clone();
+    let card = state
+        .db
+        .with_conn(|conn| repos::save_qa_card(conn, &request))?;
+    if let Ok(mut last) = state.last_used_deck_id.lock() {
+        *last = Some(deck_id);
+    }
+    notify_library_changed(&app, &state);
+    Ok(card)
+}
+
+#[tauri::command]
 pub fn update_text_card(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -146,6 +190,19 @@ pub fn update_text_card(
     let card = state
         .db
         .with_conn(|conn| repos::update_text_card(conn, &request))?;
+    notify_library_changed(&app, &state);
+    Ok(card)
+}
+
+#[tauri::command]
+pub fn update_qa_card(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    request: UpdateQaCardRequest,
+) -> AppResult<Card> {
+    let card = state
+        .db
+        .with_conn(|conn| repos::update_qa_card(conn, &request))?;
     notify_library_changed(&app, &state);
     Ok(card)
 }

@@ -40,6 +40,16 @@ export function LibraryCardPreview({ card }: { card: Card }) {
     );
   }
 
+  if (card.kind === "qa" && card.content) {
+    const masks = parseTextMasks(card.masks);
+    return (
+      <div className="flashcard-preview flashcard-preview-text qa-preview">
+        {renderTextWithMasks(card.content, masks, { hide: true })}
+        {card.answer && <p className="qa-preview-note">解答あり</p>}
+      </div>
+    );
+  }
+
   if (card.kind === "image" && imageSrc) {
     const masks = parseImageMasks(card.masks);
     const ocrData: OcrResult | null = card.ocrData

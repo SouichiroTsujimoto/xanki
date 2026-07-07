@@ -30,6 +30,14 @@ export const api = {
     note?: string;
     sourceHint?: string;
   }) => invoke<Card>("save_text_card", { request }),
+  saveQaCard: (request: {
+    deckId: string;
+    content: string;
+    answer: string;
+    masks: TextMask[];
+    note?: string;
+    sourceHint?: string;
+  }) => invoke<Card>("save_qa_card", { request }),
   saveImageCards: (request: {
     deckId: string;
     imagePath: string;
@@ -45,6 +53,14 @@ export const api = {
     masks: TextMask[];
     note?: string;
   }) => invoke<Card>("update_text_card", { request }),
+  updateQaCard: (request: {
+    cardId: string;
+    deckId: string;
+    content: string;
+    answer: string;
+    masks: TextMask[];
+    note?: string;
+  }) => invoke<Card>("update_qa_card", { request }),
   updateImageCard: (request: {
     cardId: string;
     deckId: string;

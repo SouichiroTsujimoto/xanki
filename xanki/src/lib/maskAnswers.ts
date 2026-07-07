@@ -1,10 +1,38 @@
 import { parseImageMasks, parseTextMasks } from "./tauri/api";
-import type { Card, MaskAnswer, OcrResult } from "../types";
+import type { Card, MaskAnswer, OcrResult, TextMask } from "../types";
+
+function buildQaPrompt(content: string, masks: TextMask[]): string {
+  if (masks.length === 0) return content;
+
+  const sorted = [...masks].sort((a, b) => a.start - b.start);
+  let cursor = 0;
+  let prompt = "";
+
+  for (const mask of sorted) {
+    prompt += content.slice(cursor, mask.start);
+    prompt += "【  】";
+    cursor = mask.end;
+  }
+
+  prompt += content.slice(cursor);
+  return prompt;
+}
 
 export function extractMaskAnswers(cards: Card[]): MaskAnswer[] {
   const answers: MaskAnswer[] = [];
 
   for (const card of cards) {
+    if (card.kind === "qa" && card.content && card.answer) {
+      const masks = parseTextMasks(card.masks);
+      answers.push({
+        cardId: card.id,
+        prompt: buildQaPrompt(card.content, masks),
+        answer: card.answer,
+        kind: "qa",
+      });
+      continue;
+    }
+
     if (card.kind === "text" && card.content) {
       const masks = parseTextMasks(card.masks);
       for (const mask of masks) {

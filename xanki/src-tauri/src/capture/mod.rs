@@ -1,6 +1,6 @@
 mod region;
 
-pub use region::adjust_region_for_crop;
+pub use region::{adjust_region_for_crop, is_full_image_region};
 
 use crate::error::{AppError, AppResult};
 use std::path::{Path, PathBuf};

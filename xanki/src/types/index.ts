@@ -9,8 +9,9 @@ export interface Deck {
 export interface Card {
   id: string;
   deckId: string;
-  kind: "text" | "image";
+  kind: "text" | "image" | "qa";
   content?: string;
+  answer?: string;
   imagePath?: string;
   ocrText?: string;
   ocrData?: string;
@@ -36,11 +37,13 @@ export interface RectMask {
   y: number;
   w: number;
   h: number;
+  color?: string;
 }
 
 export interface OcrMask {
   type: "ocr";
   wordIds: number[];
+  color?: string;
 }
 
 export type ImageMask = RectMask | OcrMask;
@@ -79,8 +82,9 @@ export interface ImageRegion {
 }
 
 export interface EditorInitPayload {
-  mode: "text" | "image";
+  mode: "text" | "qa" | "image";
   content?: string;
+  answer?: string;
   imagePath?: string;
   cardId?: string;
   deckId?: string;
@@ -103,7 +107,7 @@ export interface MaskAnswer {
   cardId: string;
   prompt: string;
   answer: string;
-  kind: "text" | "image";
+  kind: "text" | "image" | "qa";
 }
 
 export interface MaskSuggester {

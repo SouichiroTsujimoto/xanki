@@ -33,7 +33,7 @@ export function SettingsView({ permissions, onRefresh }: Props) {
               <kbd>⌥⌘S</kbd>
               <div>
                 <strong>スクショ取込</strong>
-                <p>範囲キャプチャ後、カード範囲とマスクを指定します。</p>
+                <p>範囲キャプチャ後、マスクを配置して 1 枚のカードとして保存します。</p>
               </div>
             </div>
           </div>

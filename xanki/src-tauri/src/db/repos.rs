@@ -1,5 +1,5 @@
 use crate::error::{AppError, AppResult};
-use crate::models::{Card, Deck, DeckExport, ReviewCard, SaveImageCardsRequest, SaveTextCardRequest, StudyFilter, UpdateImageCardRequest, UpdateTextCardRequest};
+use crate::models::{Card, Deck, DeckExport, ReviewCard, SaveImageCardsRequest, SaveQaCardRequest, SaveTextCardRequest, StudyFilter, UpdateImageCardRequest, UpdateQaCardRequest, UpdateTextCardRequest};
 use crate::scheduler::{LeitnerScheduler, Scheduler};
 use chrono::Utc;
 use rusqlite::{params, Connection, Row};
@@ -25,21 +25,22 @@ fn map_card(row: &Row) -> rusqlite::Result<Card> {
         deck_id: row.get(1)?,
         kind: row.get(2)?,
         content: row.get(3)?,
-        image_path: row.get(4)?,
-        ocr_text: row.get(5)?,
-        ocr_data: row.get(6)?,
-        masks: row.get(7)?,
-        note: row.get(8)?,
-        source_hint: row.get(9)?,
-        created_at: row.get(10)?,
-        updated_at: row.get(11)?,
-        starred: row.get::<_, i32>(12).unwrap_or(0) != 0,
-        box_num: row.get(13).ok(),
-        due_at: row.get(14).ok(),
+        answer: row.get(4)?,
+        image_path: row.get(5)?,
+        ocr_text: row.get(6)?,
+        ocr_data: row.get(7)?,
+        masks: row.get(8)?,
+        note: row.get(9)?,
+        source_hint: row.get(10)?,
+        created_at: row.get(11)?,
+        updated_at: row.get(12)?,
+        starred: row.get::<_, i32>(13).unwrap_or(0) != 0,
+        box_num: row.get(14).ok(),
+        due_at: row.get(15).ok(),
     })
 }
 
-const CARD_SELECT: &str = "SELECT c.id, c.deck_id, c.kind, c.content, c.image_path, c.ocr_text, c.ocr_data,
+const CARD_SELECT: &str = "SELECT c.id, c.deck_id, c.kind, c.content, c.answer, c.image_path, c.ocr_text, c.ocr_data,
                 c.masks, c.note, c.source_hint, c.created_at, c.updated_at, c.starred,
                 rs.box, rs.due_at";
 
@@ -132,7 +133,8 @@ pub fn list_cards(conn: &Connection, deck_id: Option<&str>, query: Option<&str>)
         params.push(Box::new(did.to_string()));
     }
     if let Some(q) = search {
-        sql.push_str(" AND (c.content LIKE ? OR c.note LIKE ? OR c.ocr_text LIKE ?)");
+        sql.push_str(" AND (c.content LIKE ? OR c.note LIKE ? OR c.ocr_text LIKE ? OR c.answer LIKE ?)");
+        params.push(Box::new(q.clone()));
         params.push(Box::new(q.clone()));
         params.push(Box::new(q.clone()));
         params.push(Box::new(q));
@@ -169,6 +171,33 @@ pub fn save_text_card(conn: &Connection, req: &SaveTextCardRequest) -> AppResult
             id,
             req.deck_id,
             req.content,
+            masks,
+            req.note,
+            req.source_hint,
+            now,
+            now
+        ],
+    )?;
+    let due_at = LeitnerScheduler::initial_due_at(now);
+    conn.execute(
+        "INSERT INTO review_state (card_id, box, due_at) VALUES (?1, 1, ?2)",
+        params![id, due_at],
+    )?;
+    get_card(conn, &id)
+}
+
+pub fn save_qa_card(conn: &Connection, req: &SaveQaCardRequest) -> AppResult<Card> {
+    let now = now_ms();
+    let id = Uuid::now_v7().to_string();
+    let masks = serde_json::to_string(&req.masks)?;
+    conn.execute(
+        "INSERT INTO cards (id, deck_id, kind, content, answer, masks, note, source_hint, created_at, updated_at)
+         VALUES (?1, ?2, 'qa', ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        params![
+            id,
+            req.deck_id,
+            req.content,
+            req.answer,
             masks,
             req.note,
             req.source_hint,
@@ -237,6 +266,28 @@ pub fn update_text_card(conn: &Connection, req: &UpdateTextCardRequest) -> AppRe
     get_card(conn, &req.card_id)
 }
 
+pub fn update_qa_card(conn: &Connection, req: &UpdateQaCardRequest) -> AppResult<Card> {
+    let now = now_ms();
+    let masks = serde_json::to_string(&req.masks)?;
+    let updated = conn.execute(
+        "UPDATE cards SET kind = 'qa', content = ?1, answer = ?2, masks = ?3, note = ?4, deck_id = ?5, updated_at = ?6
+         WHERE id = ?7 AND deleted_at IS NULL AND kind IN ('text', 'qa')",
+        params![
+            req.content,
+            req.answer,
+            masks,
+            req.note,
+            req.deck_id,
+            now,
+            req.card_id
+        ],
+    )?;
+    if updated == 0 {
+        return Err(AppError::NotFound(format!("card {} not found", req.card_id)));
+    }
+    get_card(conn, &req.card_id)
+}
+
 pub fn update_image_card(conn: &Connection, req: &UpdateImageCardRequest) -> AppResult<Card> {
     let now = now_ms();
     let masks = serde_json::to_string(&req.masks)?;
@@ -285,13 +336,14 @@ pub fn duplicate_card(conn: &Connection, card_id: &str) -> AppResult<Card> {
     let now = now_ms();
     let id = Uuid::now_v7().to_string();
     conn.execute(
-        "INSERT INTO cards (id, deck_id, kind, content, image_path, ocr_text, ocr_data, masks, note, source_hint, starred, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+        "INSERT INTO cards (id, deck_id, kind, content, answer, image_path, ocr_text, ocr_data, masks, note, source_hint, starred, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
         params![
             id,
             source.deck_id,
             source.kind,
             source.content,
+            source.answer,
             source.image_path,
             source.ocr_text,
             source.ocr_data,
@@ -388,13 +440,14 @@ pub fn import_deck(conn: &Connection, export: &DeckExport) -> AppResult<Deck> {
         let id = Uuid::now_v7().to_string();
         let starred = if card.starred { 1 } else { 0 };
         conn.execute(
-            "INSERT INTO cards (id, deck_id, kind, content, image_path, ocr_text, ocr_data, masks, note, source_hint, starred, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+            "INSERT INTO cards (id, deck_id, kind, content, answer, image_path, ocr_text, ocr_data, masks, note, source_hint, starred, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
             params![
                 id,
                 deck_id,
                 card.kind,
                 card.content,
+                card.answer,
                 card.image_path,
                 card.ocr_text,
                 card.ocr_data,

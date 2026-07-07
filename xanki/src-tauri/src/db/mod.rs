@@ -29,6 +29,7 @@ impl Database {
         })?;
         conn.execute_batch(include_str!("../../migrations/001_init.sql"))?;
         let _ = conn.execute_batch(include_str!("../../migrations/002_starred.sql"));
+        let _ = conn.execute_batch(include_str!("../../migrations/003_qa_answer.sql"));
         Ok(())
     }
 

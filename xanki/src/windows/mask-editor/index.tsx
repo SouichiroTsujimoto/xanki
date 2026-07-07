@@ -93,6 +93,20 @@ export function MaskEditorApp() {
     );
   }
 
+  if (payload.mode === "qa" && payload.content) {
+    return (
+      <TextMaskEditor
+        initialContent={payload.content}
+        initialAnswer={payload.answer ?? ""}
+        initialQaMode
+        cardId={payload.cardId}
+        initialDeckId={payload.deckId}
+        initialMasks={payload.masks ? parseTextMasks(payload.masks) : []}
+        initialNote={payload.note ?? ""}
+      />
+    );
+  }
+
   if (payload.mode === "image" && payload.imagePath) {
     const initialOcr: OcrResult | null = payload.ocrData
       ? (JSON.parse(payload.ocrData) as OcrResult)

@@ -12,7 +12,8 @@
 | [architecture.md](./architecture.md) | 技術スタック、ウィンドウ、イベント、拡張フック |
 | [capture.md](./capture.md) | ⌥⌘M / ⌥⌘S、権限、クリップボード |
 | [text-masks.md](./text-masks.md) | テキストマスクエディタ、座標、保存 |
-| [image-masks.md](./image-masks.md) | 画像マスク、crop、OCR、座標系 |
+| [qa-cards.md](./qa-cards.md) | 一問一答カード（Q ボタン、問題文/解答） |
+| [image-masks.md](./image-masks.md) | 画像マスク、OCR、座標系、マスクカラー |
 | [data-model.md](./data-model.md) | SQLite スキーマ、JSON 形式 |
 | [library.md](./library.md) | デッキ、カード一覧、削除、インポート |
 | [study.md](./study.md) | 学習モード、SRS、キーボード操作 |

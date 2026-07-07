@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../../lib/tauri/api";
 import {
-  StudyCardDisplay,
   StudyEmpty,
+  StudyFlipCard,
   StudyProgress,
   useStudyQueue,
 } from "./shared";
@@ -44,12 +44,12 @@ export function LearnMode({ deckId }: Props) {
         e.preventDefault();
         setRevealed((v) => !v);
       }
-      if (e.key === "1" && revealed) void submit(0);
-      if (e.key === "2" && revealed) void submit(1);
+      if (e.key === "1") void submit(0);
+      if (e.key === "2") void submit(1);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [current, revealed, submit]);
+  }, [current, submit]);
 
   if (!current) {
     return (
@@ -64,24 +64,19 @@ export function LearnMode({ deckId }: Props) {
   return (
     <div className="review-stage" tabIndex={0}>
       <StudyProgress index={index} total={queue.length} progress={progress} />
-      <p className="review-hint study-hint">Space 答え · 1 できない · 2 できた</p>
-      <StudyCardDisplay card={current} revealed={revealed} interactive />
+      <p className="review-hint study-hint">Space / クリック 答え · 1 できない · 2 できた</p>
+      <StudyFlipCard
+        card={current}
+        revealed={revealed}
+        onRevealedChange={setRevealed}
+        interactive
+      />
       <div className="review-actions">
-        <button
-          type="button"
-          className="ghost-button"
-          disabled={!revealed}
-          onClick={() => void submit(0)}
-        >
+        <button type="button" className="ghost-button" onClick={() => void submit(0)}>
           <kbd>1</kbd>
           できなかった
         </button>
-        <button
-          type="button"
-          className="accent-button"
-          disabled={!revealed}
-          onClick={() => void submit(1)}
-        >
+        <button type="button" className="accent-button" onClick={() => void submit(1)}>
           <kbd>2</kbd>
           できた
         </button>
