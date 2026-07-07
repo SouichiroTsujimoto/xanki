@@ -68,6 +68,13 @@ export function CardCollection({
   }, [loadCards, libraryRevision]);
 
   useEffect(() => {
+    if (!api.subscribeLibraryChanged) return;
+    return api.subscribeLibraryChanged(() => {
+      void loadCards({ silent: true });
+    });
+  }, [api, loadCards]);
+
+  useEffect(() => {
     if (!pendingDeleteId) return;
 
     function onKeyDown(event: KeyboardEvent) {
@@ -104,17 +111,11 @@ export function CardCollection({
     setPendingDeleteId(cardId);
   }
 
-  async function handleToggleStar(cardId: string, event: MouseEvent) {
-    event.stopPropagation();
-    await api.toggleStar(cardId);
-    await loadCards({ silent: true });
-  }
-
   if (!deckId) {
     return (
       <div className="empty-panel card-collection-empty">
-        <p className="empty-title">{copy.study.selectDeckTitle}</p>
-        <p className="empty-copy">{copy.study.selectDeckCopy}</p>
+        <p className="empty-title">{copy.deckStudy.selectDeckTitle}</p>
+        <p className="empty-copy">{copy.deckStudy.selectDeckCopy}</p>
       </div>
     );
   }
@@ -160,19 +161,6 @@ export function CardCollection({
                   tabIndex={0}
                   aria-label={copy.cards.previewAria(cardKindLabel(card.kind))}
                 >
-                  <div className="flashcard-tile-head">
-                    <button
-                      type="button"
-                      className={`star-button ${card.starred ? "active" : ""}`}
-                      onClick={(event) => void handleToggleStar(card.id, event)}
-                      aria-label={copy.cards.star}
-                    >
-                      ★
-                    </button>
-                    {card.boxNum != null && (
-                      <span className="box-pill">Box {card.boxNum}</span>
-                    )}
-                  </div>
                   <LibraryCardPreview card={card} />
                   {card.note && <p className="card-note">{card.note}</p>}
                 </div>

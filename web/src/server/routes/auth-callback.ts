@@ -1,0 +1,93 @@
+import { Hono } from "hono";
+import { createAuth } from "../auth";
+import type { Env } from "../env";
+
+const DESKTOP_CALLBACK_ERROR_HTML = `<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>xanki</title></head>
+<body>
+  <p>ログインに失敗しました。ブラウザを閉じて、xanki アプリから再度 Google ログインを試してください。</p>
+</body>
+</html>`;
+
+const DESKTOP_CALLBACK_SUCCESS_HTML = (redirectTarget: string) => `<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>xanki</title></head>
+<body>
+  <p>ログインしました。xanki アプリに戻ります…</p>
+  <script>window.location.replace(${JSON.stringify(redirectTarget)});</script>
+  <p><a href=${JSON.stringify(redirectTarget)}>アプリが開かない場合はこちら</a></p>
+</body>
+</html>`;
+
+function isLoopbackReturnUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === "http:" &&
+      (parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost") &&
+      parsed.pathname === "/callback"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export const authCallbackRoutes = new Hono<{ Bindings: Env }>();
+
+authCallbackRoutes.get("/desktop-sign-in", async (c) => {
+  const returnParam = c.req.query("return");
+  const returnUrl =
+    returnParam && isLoopbackReturnUrl(returnParam) ? returnParam : null;
+  const callbackURL = returnUrl
+    ? `${new URL("/auth/desktop-callback", c.req.url).origin}/auth/desktop-callback?return=${encodeURIComponent(returnUrl)}`
+    : new URL("/auth/desktop-callback", c.req.url).toString();
+  const signInUrl = new URL("/api/auth/sign-in/social", c.req.url);
+  const signInResponse = await fetch(signInUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      provider: "google",
+      callbackURL,
+    }),
+  });
+
+  if (!signInResponse.ok) {
+    return c.text("ログイン開始に失敗しました", 500);
+  }
+
+  const data = (await signInResponse.json()) as { url?: string };
+  const googleUrl = data.url ?? signInResponse.headers.get("Location");
+  if (!googleUrl) {
+    return c.text("OAuth URL を取得できませんでした", 500);
+  }
+
+  const res = c.redirect(googleUrl, 302);
+  const setCookies =
+    typeof signInResponse.headers.getSetCookie === "function"
+      ? signInResponse.headers.getSetCookie()
+      : [];
+  for (const cookie of setCookies) {
+    res.headers.append("Set-Cookie", cookie);
+  }
+  return res;
+});
+
+authCallbackRoutes.get("/desktop-callback", async (c) => {
+  const auth = createAuth(c.env);
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  const token = session?.session?.token;
+  if (!token) {
+    return c.html(DESKTOP_CALLBACK_ERROR_HTML, 401);
+  }
+
+  const returnParam = c.req.query("return");
+  const returnUrl =
+    returnParam && isLoopbackReturnUrl(returnParam) ? returnParam : null;
+  const redirectTarget = returnUrl
+    ? `${returnUrl}?token=${encodeURIComponent(token)}`
+    : `xanki://auth/callback?token=${encodeURIComponent(token)}`;
+  return c.html(DESKTOP_CALLBACK_SUCCESS_HTML(redirectTarget));
+});

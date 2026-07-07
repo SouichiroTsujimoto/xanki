@@ -22,24 +22,44 @@ export function createLibrarySyncController(deps: LibrarySyncControllerDeps) {
     refreshHandler = handler;
   }
 
+  let refreshPending = false;
+
+  function runRefresh() {
+    if (!refreshHandler) return;
+    if (refreshInFlight) {
+      refreshPending = true;
+      return;
+    }
+    refreshInFlight = refreshHandler().finally(() => {
+      refreshInFlight = null;
+      if (refreshPending) {
+        refreshPending = false;
+        runRefresh();
+      }
+    });
+  }
+
   function scheduleLibraryRefresh() {
     if (!refreshHandler) return;
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(() => {
-      if (!refreshHandler) return;
-      if (refreshInFlight) return;
-      refreshInFlight = refreshHandler().finally(() => {
-        refreshInFlight = null;
-      });
+      runRefresh();
     }, LIBRARY_REFRESH_DEBOUNCE_MS);
   }
 
   function flushLibraryRefresh() {
     if (!refreshHandler) return Promise.resolve();
     clearTimeout(refreshTimer);
-    if (refreshInFlight) return refreshInFlight;
+    if (refreshInFlight) {
+      refreshPending = true;
+      return refreshInFlight;
+    }
     refreshInFlight = refreshHandler().finally(() => {
       refreshInFlight = null;
+      if (refreshPending) {
+        refreshPending = false;
+        runRefresh();
+      }
     });
     return refreshInFlight;
   }

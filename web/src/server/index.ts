@@ -11,6 +11,7 @@ import { cardRoutes, deckRoutes, reviewRoutes } from "./routes/web-data";
 import { eventRoutes } from "./routes/events";
 import { gcStaleBlobs } from "./services/blobs";
 import { UserSyncHub } from "./durable-objects/user-sync-hub";
+import { authCallbackRoutes } from "./routes/auth-callback";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -40,6 +41,8 @@ app.all("/api/auth/*", async (c) => {
   const auth = createAuth(c.env);
   return auth.handler(c.req.raw);
 });
+
+app.route("/auth", authCallbackRoutes);
 
 app.all("*", async (c) => {
   return c.env.ASSETS.fetch(c.req.raw);

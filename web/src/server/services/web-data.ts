@@ -16,6 +16,50 @@ async function finishMutation(db: Db, env: Env | undefined, userId: string): Pro
   }
 }
 
+async function requireDeckOwnedByUser(db: Db, userId: string, deckId: string): Promise<void> {
+  const deck = await db
+    .select({ id: decks.id })
+    .from(decks)
+    .where(and(eq(decks.userId, userId), eq(decks.id, deckId), isNull(decks.deletedAt)))
+    .get();
+  if (!deck) throw new Error("deck_not_found");
+}
+
+/**
+ * deck_id が自ユーザーの deck に属さないカードを論理削除する。
+ * 再発防止は requireDeckOwnedByUser（書き込み検証）が担う。本関数は不正状態の残骸処理のみ。
+ */
+export async function purgeOrphanedCards(db: Db, userId: string, env?: Env): Promise<number> {
+  const ownedDecks = await db
+    .select({ id: decks.id })
+    .from(decks)
+    .where(and(eq(decks.userId, userId), isNull(decks.deletedAt)))
+    .all();
+  const ownedIds = new Set(ownedDecks.map((d) => d.id));
+
+  const cardRows = await db
+    .select({ id: cards.id, deckId: cards.deckId })
+    .from(cards)
+    .where(and(eq(cards.userId, userId), isNull(cards.deletedAt)))
+    .all();
+
+  const orphaned = cardRows.filter((c) => !ownedIds.has(c.deckId));
+  if (orphaned.length === 0) return 0;
+
+  const now = nowMs();
+  for (const card of orphaned) {
+    await db
+      .update(cards)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(and(eq(cards.userId, userId), eq(cards.id, card.id)));
+    await db
+      .delete(reviewState)
+      .where(and(eq(reviewState.userId, userId), eq(reviewState.cardId, card.id)));
+  }
+  await finishMutation(db, env, userId);
+  return orphaned.length;
+}
+
 export async function ensureDefaultDeck(db: Db, userId: string, env?: Env) {
   const existing = await db
     .select({ id: decks.id })
@@ -30,6 +74,7 @@ export async function ensureDefaultDeck(db: Db, userId: string, env?: Env) {
 
 export async function listDecks(db: Db, userId: string, env?: Env) {
   await ensureDefaultDeck(db, userId, env);
+  await purgeOrphanedCards(db, userId, env);
 
   const deckRows = await db
     .select()
@@ -43,6 +88,10 @@ export async function listDecks(db: Db, userId: string, env?: Env) {
       count: sql<number>`count(*)`.mapWith(Number),
     })
     .from(cards)
+    .innerJoin(
+      decks,
+      and(eq(cards.deckId, decks.id), eq(decks.userId, userId), isNull(decks.deletedAt)),
+    )
     .where(and(eq(cards.userId, userId), isNull(cards.deletedAt)))
     .groupBy(cards.deckId)
     .all();
@@ -112,7 +161,14 @@ export async function deleteDeck(db: Db, userId: string, id: string, env?: Env) 
 }
 
 export async function listCards(db: Db, userId: string, deckId?: string, q?: string) {
-  const conditions = [eq(cards.userId, userId), isNull(cards.deletedAt)];
+  await purgeOrphanedCards(db, userId);
+
+  const conditions = [
+    eq(cards.userId, userId),
+    isNull(cards.deletedAt),
+    eq(decks.userId, userId),
+    isNull(decks.deletedAt),
+  ];
   if (deckId) {
     conditions.push(eq(cards.deckId, deckId));
   }
@@ -128,8 +184,24 @@ export async function listCards(db: Db, userId: string, deckId?: string, q?: str
   }
 
   const cardRows = await db
-    .select()
+    .select({
+      id: cards.id,
+      deckId: cards.deckId,
+      kind: cards.kind,
+      content: cards.content,
+      answer: cards.answer,
+      imageHash: cards.imageHash,
+      ocrText: cards.ocrText,
+      ocrData: cards.ocrData,
+      masks: cards.masks,
+      note: cards.note,
+      sourceHint: cards.sourceHint,
+      starred: cards.starred,
+      createdAt: cards.createdAt,
+      updatedAt: cards.updatedAt,
+    })
     .from(cards)
+    .innerJoin(decks, eq(cards.deckId, decks.id))
     .where(and(...conditions))
     .all();
 
@@ -189,6 +261,8 @@ interface CardInput {
 }
 
 export async function upsertCard(db: Db, userId: string, card: CardInput, env?: Env) {
+  await requireDeckOwnedByUser(db, userId, card.deck_id);
+
   const existing = await db
     .select()
     .from(cards)
@@ -259,7 +333,7 @@ export async function submitReview(
   db: Db,
   userId: string,
   cardId: string,
-  result: 0 | 1,
+  result: 0 | 1 | 2 | 3,
   env?: Env,
 ) {
   const existing = await db
@@ -268,8 +342,8 @@ export async function submitReview(
     .where(and(eq(reviewState.userId, userId), eq(reviewState.cardId, cardId)))
     .get();
   const now = nowMs();
-  let box = existing?.box ?? 1;
-  const next = leitnerScheduler.submitReview(box, result === 1, now);
+  const box = existing?.box ?? 1;
+  const next = leitnerScheduler.submitReviewGrade(box, result, now);
 
   if (existing) {
     await db

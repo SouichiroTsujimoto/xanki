@@ -15,11 +15,12 @@ export function LibraryCardPreview({ card }: { card: Card }) {
     let active = true;
 
     async function loadImage() {
-      if (card.kind !== "image" || !card.imagePath) {
+      const imageKey = card.imagePath ?? card.imageHash;
+      if (card.kind !== "image" || !imageKey) {
         setImageSrc(null);
         return;
       }
-      const url = await api.resolveImageUrl(card.imagePath);
+      const url = await api.resolveImageUrl(imageKey);
       if (active) {
         setImageSrc(url);
       }
@@ -29,7 +30,7 @@ export function LibraryCardPreview({ card }: { card: Card }) {
     return () => {
       active = false;
     };
-  }, [api, card.kind, card.imagePath]);
+  }, [api, card.imageHash, card.imagePath, card.kind]);
 
   if (card.kind === "text" && card.content) {
     const masks = api.parseTextMasks(card.masks);
@@ -62,7 +63,7 @@ export function LibraryCardPreview({ card }: { card: Card }) {
         <ImageWithMaskOverlays
           src={imageSrc}
           rects={overlayRects}
-          rootClassName="image-card library-image-frame"
+          rootClassName="image-overlay-root image-card library-image-frame"
         />
       </div>
     );

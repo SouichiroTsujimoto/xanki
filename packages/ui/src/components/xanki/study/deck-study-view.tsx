@@ -4,12 +4,11 @@ import { CardCollection } from "../card-collection";
 import { CollectionAddBar } from "../collection-add-bar";
 import { StudyCardCoverflow } from "./study-card-coverflow";
 import { useAppShell } from "../../../context/app-shell-context";
-import { copy, studyModeList } from "../../../copy";
+import { copy, deckStudyModeList } from "../../../copy";
 import { springSnappy } from "../../../lib/motion-presets";
 import { useReducedMotion } from "../../../lib/use-reduced-motion";
-import type { Card, ReviewCard, StudyMode } from "../../../types";
+import type { Card, DeckStudyMode, ReviewCard } from "../../../types";
 import { FlashcardsMode } from "./flashcards-mode";
-import { LearnMode } from "./learn-mode";
 import { MatchMode } from "./match-mode";
 import { TestMode } from "./test-mode";
 import { WriteMode } from "./write-mode";
@@ -27,9 +26,9 @@ interface Props {
   onSessionChange: (session: StudySessionInfo) => void;
 }
 
-const MODES = studyModeList;
+const MODES = deckStudyModeList;
 
-export function StudyView({
+export function DeckStudyView({
   deckId,
   searchQuery,
   libraryRevision = 0,
@@ -38,7 +37,7 @@ export function StudyView({
   const reduced = useReducedMotion();
   const { sidebarOpen, setSidebarOpen, setStudySessionActive } = useAppShell();
   const sidebarOpenBeforeSessionRef = useRef<boolean | null>(null);
-  const [phase, setPhase] = useState<StudyMode | "hub">("hub");
+  const [phase, setPhase] = useState<DeckStudyMode | "hub">("hub");
   const [shuffle, setShuffle] = useState(false);
   const [singleCard, setSingleCard] = useState<ReviewCard | null>(null);
 
@@ -58,7 +57,7 @@ export function StudyView({
   }, [setSidebarOpen]);
 
   const startSession = useCallback(
-    (mode: StudyMode) => {
+    (mode: DeckStudyMode) => {
       setSingleCard(null);
       setPhase(mode);
       beginStudySession();
@@ -85,7 +84,7 @@ export function StudyView({
     const mode = MODES.find((item) => item.id === phase);
     onSessionChange({
       active: true,
-      modeLabel: singleCard ? copy.study.cardPreview : (mode?.label ?? null),
+      modeLabel: singleCard ? copy.deckStudy.cardPreview : (mode?.label ?? null),
       exit: exitSession,
     });
   }, [exitSession, onSessionChange, phase, setStudySessionActive, singleCard]);
@@ -100,58 +99,58 @@ export function StudyView({
     <div className="study-view-root">
       {phase === "hub" ? (
         <div className="study-hub">
-            <StudyCardCoverflow
-              deckId={deckId ?? null}
-              libraryRevision={libraryRevision}
-              onSelectCard={startCardPreview}
-            />
+          <StudyCardCoverflow
+            deckId={deckId ?? null}
+            libraryRevision={libraryRevision}
+            onSelectCard={startCardPreview}
+          />
 
-            <section className="study-hub-toolbar" aria-label={copy.study.modesAriaLabel}>
-              <div className="study-hub-toolbar-head">
-                <div>
-                  <p className="eyebrow">{copy.study.modesEyebrow}</p>
-                  <h2 className="study-hub-toolbar-title">{copy.study.hubTitle}</h2>
-                </div>
-                <label className="shuffle-toggle">
-                  <input
-                    type="checkbox"
-                    checked={shuffle}
-                    onChange={(e) => setShuffle(e.target.checked)}
-                  />
-                  {copy.study.shuffle}
-                </label>
+          <section className="study-hub-toolbar" aria-label={copy.deckStudy.modesAriaLabel}>
+            <div className="study-hub-toolbar-head">
+              <div>
+                <p className="eyebrow">{copy.deckStudy.modesEyebrow}</p>
+                <h2 className="study-hub-toolbar-title">{copy.deckStudy.hubTitle}</h2>
               </div>
-              <div className="study-mode-launcher">
-                {MODES.map((item) => (
-                  <motion.button
-                    key={item.id}
-                    type="button"
-                    className="study-mode-launch-button"
-                    data-mode={item.id}
-                    disabled={!deckId}
-                    onClick={() => startSession(item.id)}
-                    whileHover={deckId && !reduced ? { y: -2 } : undefined}
-                    whileTap={deckId && !reduced ? { scale: 0.98 } : undefined}
-                    transition={springSnappy}
-                  >
-                    <span className="study-mode-launch-label">{item.label}</span>
-                    <span className="study-mode-launch-desc">{item.desc}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </section>
+              <label className="shuffle-toggle">
+                <input
+                  type="checkbox"
+                  checked={shuffle}
+                  onChange={(e) => setShuffle(e.target.checked)}
+                />
+                {copy.deckStudy.shuffle}
+              </label>
+            </div>
+            <div className="study-mode-launcher">
+              {MODES.map((item) => (
+                <motion.button
+                  key={item.id}
+                  type="button"
+                  className="study-mode-launch-button"
+                  data-mode={item.id}
+                  disabled={!deckId}
+                  onClick={() => startSession(item.id)}
+                  whileHover={deckId && !reduced ? { y: -2 } : undefined}
+                  whileTap={deckId && !reduced ? { scale: 0.98 } : undefined}
+                  transition={springSnappy}
+                >
+                  <span className="study-mode-launch-label">{item.label}</span>
+                  <span className="study-mode-launch-desc">{item.desc}</span>
+                </motion.button>
+              ))}
+            </div>
+          </section>
 
-            <CollectionAddBar deckId={deckId ?? null} />
+          <CollectionAddBar deckId={deckId ?? null} />
 
-            <CardCollection
-              deckId={deckId ?? null}
-              searchQuery={searchQuery}
-              libraryRevision={libraryRevision}
-              onPreviewCard={startCardPreview}
-            />
+          <CardCollection
+            deckId={deckId ?? null}
+            searchQuery={searchQuery}
+            libraryRevision={libraryRevision}
+            onPreviewCard={startCardPreview}
+          />
         </div>
       ) : (
-        <div className="study-session">
+        <div className="study-session deck-study-session">
           <div className="study-session-body">
             {phase === "flashcards" && (
               <FlashcardsMode
@@ -161,10 +160,9 @@ export function StudyView({
                 onSingleExit={exitSession}
               />
             )}
-            {phase === "learn" && <LearnMode deckId={deckId} />}
             {phase === "write" && <WriteMode deckId={deckId} shuffle={shuffle} />}
             {phase === "test" && <TestMode deckId={deckId} shuffle={shuffle} />}
-            {phase === "match" && <MatchMode deckId={deckId} />}
+            {phase === "match" && <MatchMode deckId={deckId} shuffle={shuffle} />}
           </div>
         </div>
       )}

@@ -11,7 +11,9 @@
 | 画像マスク・座標 | [image-masks.md](./docs/spec/image-masks.md) |
 | DB / JSON | [data-model.md](./docs/spec/data-model.md) |
 | ライブラリ | [library.md](./docs/spec/library.md)（用語: [glossary.md](./docs/spec/glossary.md)） |
-| 学習 | [study.md](./docs/spec/study.md) |
+| 学習（索引） | [study.md](./docs/spec/study.md) |
+| デッキ学習 | [deck-study.md](./docs/spec/deck-study.md) |
+| Leitner学習 | [leitner-study.md](./docs/spec/leitner-study.md) |
 | UI / ダイアログ | [ui.md](./docs/spec/ui.md) |
 | 用語・UI 文言 | [glossary.md](./docs/spec/glossary.md) |
 | クラウド層 | [cloud.md](./docs/spec/cloud.md) |

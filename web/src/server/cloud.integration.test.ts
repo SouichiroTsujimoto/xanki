@@ -1,25 +1,6 @@
 import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { createAuth } from "./auth";
-
-async function bearerFor(email: string): Promise<string> {
-  const auth = createAuth(env);
-  const ctx = await auth.$context;
-
-  await auth.api.sendVerificationOTP({
-    body: { email, type: "sign-in" },
-  });
-  const otp = ctx.test.getOTP(email);
-  if (!otp) throw new Error("otp_not_captured");
-
-  const res = await auth.api.signInEmailOTP({
-    body: { email, otp },
-    asResponse: true,
-  });
-  const token = res.headers.get("set-auth-token");
-  if (!token) throw new Error("bearer_missing");
-  return token;
-}
+import { createTestUserSession } from "./test-auth";
 
 async function json(path: string, init: RequestInit = {}) {
   const res = await SELF.fetch(`http://localhost${path}`, {
@@ -38,7 +19,7 @@ describe("cloud API smoke", () => {
     await json("/api/health");
 
     const email = `smoke-${Date.now()}@xanki.local`;
-    const token = await bearerFor(email);
+    const { token } = await createTestUserSession(env, email);
     const auth = { Authorization: `Bearer ${token}` };
 
     const me = await json("/api/me", { headers: auth });
@@ -98,5 +79,29 @@ describe("cloud API smoke", () => {
       body: JSON.stringify({ text: "photosynthesis", kind: "qa", count: 1 }),
     });
     expect(ai.items?.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("rejects card create when deck_id belongs to another user", async () => {
+    const userA = await createTestUserSession(env);
+    const userB = await createTestUserSession(env);
+    const authA = { Authorization: `Bearer ${userA.token}` };
+    const authB = { Authorization: `Bearer ${userB.token}` };
+
+    const decksB = await json("/api/decks", { headers: authB });
+    const foreignDeckId = decksB[0].id;
+
+    const res = await SELF.fetch("http://localhost/api/cards", {
+      method: "POST",
+      headers: { ...authA, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deckId: foreignDeckId,
+        kind: "text",
+        content: "should fail",
+        masks: JSON.stringify([{ type: "range", start: 0, end: 1 }]),
+      }),
+    });
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error).toBe("deck_not_found");
   });
 });

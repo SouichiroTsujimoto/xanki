@@ -105,11 +105,6 @@ export function createCloudClient(options: CloudClientOptions) {
         method: "DELETE",
       }),
 
-    toggleStar: (cardId: string) =>
-      request<ApiCard>(`/api/cards/${encodeURIComponent(cardId)}/star`, {
-        method: "POST",
-      }),
-
     submitReview: (payload: SubmitReviewRequest) =>
       request<{ ok: boolean }>("/api/review/submit", {
         method: "POST",

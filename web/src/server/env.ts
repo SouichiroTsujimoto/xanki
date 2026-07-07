@@ -8,7 +8,8 @@ export interface Env {
   USER_SYNC: DurableObjectNamespace;
   APP_URL: string;
   BETTER_AUTH_SECRET: string;
-  RESEND_API_KEY?: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_PRO?: string;

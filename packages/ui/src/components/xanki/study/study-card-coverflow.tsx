@@ -255,7 +255,7 @@ export function StudyCardCoverflow({
   }
 
   return (
-    <section className="study-coverflow" aria-label={copy.study.coverflowAria}>
+    <section className="study-coverflow" aria-label={copy.deckStudy.coverflowAria}>
       <div
         className={`study-coverflow-stage${isDragging ? " is-dragging" : ""}${
           loading && cards.length === 0 ? " is-loading" : ""
@@ -300,13 +300,6 @@ export function StudyCardCoverflow({
                     : transitionForReduced(reduced, springSnappy)
                 }
               >
-                {card.starred && (
-                  <div className="study-coverflow-slide-head">
-                    <span className="study-coverflow-star" aria-hidden>
-                      ★
-                    </span>
-                  </div>
-                )}
                 <div className="study-coverflow-slide-body">
                   <LibraryCardPreview card={card} />
                 </div>

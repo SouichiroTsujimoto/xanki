@@ -9,6 +9,22 @@ pub struct CloudSession {
 }
 
 #[tauri::command]
+pub fn cloud_prepare_google_sign_in(
+    app: tauri::AppHandle,
+    cloud_url: String,
+) -> AppResult<GoogleSignInStart> {
+    Ok(GoogleSignInStart {
+        sign_in_url: cloud::build_google_sign_in_url(&app, &cloud_url)?,
+    })
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GoogleSignInStart {
+    pub sign_in_url: String,
+}
+
+#[tauri::command]
 pub fn cloud_get_session() -> AppResult<CloudSession> {
     Ok(CloudSession {
         token: cloud::get_session_token()?,

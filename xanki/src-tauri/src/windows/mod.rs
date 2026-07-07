@@ -7,6 +7,38 @@ use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use uuid::Uuid;
 
+const WINDOW_BG: tauri::window::Color = tauri::window::Color(245, 245, 247, 255);
+const EDITOR_WINDOW_BG: tauri::window::Color = tauri::window::Color(255, 255, 255, 255);
+
+fn sync_macos_window_chrome(
+    window: &tauri::WebviewWindow,
+    bg: tauri::window::Color,
+) -> AppResult<()> {
+    window
+        .set_background_color(Some(bg))
+        .map_err(|e| AppError::Other(e.to_string()))?;
+
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_app_kit::{NSColor, NSWindow};
+
+        let tauri::window::Color(r, g, b, _) = bg;
+        let ns_window_ptr = window
+            .ns_window()
+            .map_err(|e| AppError::Other(e.to_string()))?;
+        let ns_window = unsafe { &*(ns_window_ptr as *const NSWindow) };
+        let ns_bg = NSColor::colorWithRed_green_blue_alpha(
+            f64::from(r) / 255.0,
+            f64::from(g) / 255.0,
+            f64::from(b) / 255.0,
+            1.0,
+        );
+        ns_window.setBackgroundColor(Some(&ns_bg));
+    }
+
+    Ok(())
+}
+
 fn store_editor_init(app: &AppHandle, label: &str, payload: EditorInitPayload) {
     match app.try_state::<AppState>() {
         Some(state) => state.store_editor_init(label, payload),
@@ -24,7 +56,7 @@ fn store_and_open_editor(
     store_editor_init(app, label, payload);
 
     let url = WebviewUrl::App(format!("/editor?label={label}").into());
-    let window = WebviewWindowBuilder::new(app, label, url)
+    let mut builder = WebviewWindowBuilder::new(app, label, url)
         .title("xanki — マスクエディタ")
         .inner_size(width, height)
         .decorations(true)
@@ -32,9 +64,19 @@ fn store_and_open_editor(
         .center()
         .visible(false)
         .theme(Some(tauri::Theme::Light))
-        .background_color(tauri::window::Color(255, 255, 255, 255))
+        .background_color(EDITOR_WINDOW_BG);
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true)
+            .traffic_light_position(tauri::LogicalPosition::new(16.0, 20.0));
+    }
+    let window = builder
         .build()
         .map_err(|e| AppError::Other(e.to_string()))?;
+
+    sync_macos_window_chrome(&window, EDITOR_WINDOW_BG)?;
 
     let app_handle = app.clone();
     let label_for_cleanup = label.to_string();
@@ -232,10 +274,7 @@ pub fn configure_main_window(window: &tauri::WebviewWindow) -> AppResult<()> {
     window
         .set_theme(Some(tauri::Theme::Light))
         .map_err(|e| AppError::Other(e.to_string()))?;
-    window
-        .set_background_color(Some(tauri::window::Color(255, 255, 255, 255)))
-        .map_err(|e| AppError::Other(e.to_string()))?;
-    Ok(())
+    sync_macos_window_chrome(window, WINDOW_BG)
 }
 
 pub fn show_main_window(app: &AppHandle) -> AppResult<()> {

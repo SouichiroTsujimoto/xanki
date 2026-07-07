@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
+import type { ReviewGrade } from "../../../types";
 import {
   StudyEmpty,
   StudyFlipCard,
@@ -10,14 +11,22 @@ import {
 
 interface Props {
   deckId?: string | null;
+  shuffle?: boolean;
 }
 
-export function LearnMode({ deckId }: Props) {
+const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
+  { result: 0, label: copy.leitnerStudy.gradeAgain, className: "ghost-button" },
+  { result: 1, label: copy.leitnerStudy.gradeHard, className: "ghost-button" },
+  { result: 2, label: copy.leitnerStudy.gradeGood, className: "accent-button" },
+  { result: 3, label: copy.leitnerStudy.gradeEasy, className: "accent-button" },
+];
+
+export function LearnMode({ deckId, shuffle = false }: Props) {
   const api = useAppApi();
   const { queue, index, current, progress, loadQueue, next } = useStudyQueue(
     deckId,
     "due",
-    false,
+    shuffle,
   );
   const [revealed, setRevealed] = useState(false);
 
@@ -26,7 +35,7 @@ export function LearnMode({ deckId }: Props) {
   }, [current]);
 
   const submit = useCallback(
-    async (result: 0 | 1) => {
+    async (result: ReviewGrade) => {
       if (!current) return;
       await api.submitReview(current.card.id, result);
       setRevealed(false);
@@ -48,6 +57,8 @@ export function LearnMode({ deckId }: Props) {
       }
       if (e.key === "1") void submit(0);
       if (e.key === "2") void submit(1);
+      if (e.key === "3") void submit(2);
+      if (e.key === "4") void submit(3);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -56,32 +67,38 @@ export function LearnMode({ deckId }: Props) {
   if (!current) {
     return (
       <StudyEmpty
-        title={copy.study.reviewComplete}
-        copy={copy.study.reviewCompleteHint}
+        eyebrow={copy.leitnerStudy.emptyEyebrow}
+        title={copy.leitnerStudy.completeTitle}
+        copy={copy.leitnerStudy.completeHint}
         onReload={() => void loadQueue()}
       />
     );
   }
 
   return (
-    <div className="review-stage" tabIndex={0}>
+    <div className="review-stage leitner-review-stage" tabIndex={0}>
       <StudyProgress index={index} total={queue.length} progress={progress} />
-      <p className="review-hint study-hint">Space / クリック 答え · 1 できない · 2 できた</p>
-      <StudyFlipCard
-        card={current}
-        revealed={revealed}
-        onRevealedChange={setRevealed}
-        interactive
-      />
-      <div className="review-actions">
-        <button type="button" className="ghost-button" onClick={() => void submit(0)}>
-          <kbd>1</kbd>
-          できなかった
-        </button>
-        <button type="button" className="accent-button" onClick={() => void submit(1)}>
-          <kbd>2</kbd>
-          できた
-        </button>
+      <p className="review-hint study-hint">{copy.leitnerStudy.hint}</p>
+      <div className="study-flip-slot">
+        <StudyFlipCard
+          card={current}
+          revealed={revealed}
+          onRevealedChange={setRevealed}
+          interactive
+        />
+      </div>
+      <div className="review-actions leitner-grade-actions">
+        {GRADES.map((grade, gradeIndex) => (
+          <button
+            key={grade.result}
+            type="button"
+            className={grade.className}
+            onClick={() => void submit(grade.result)}
+          >
+            <kbd>{gradeIndex + 1}</kbd>
+            {grade.label}
+          </button>
+        ))}
       </div>
     </div>
   );

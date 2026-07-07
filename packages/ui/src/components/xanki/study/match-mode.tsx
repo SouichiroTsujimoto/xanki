@@ -1,11 +1,13 @@
 import { copy } from "../../../copy";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
 import { extractMaskAnswers, shuffleArray } from "../../../lib/maskAnswers";
-import { StudyEmpty } from "./shared";
+import type { MaskAnswer } from "../../../types";
+import { DeckStudySessionProgress, StudyEmpty } from "./shared";
 
 interface Props {
   deckId?: string | null;
+  shuffle: boolean;
 }
 
 interface MatchTile {
@@ -15,44 +17,85 @@ interface MatchTile {
   side: "prompt" | "answer";
 }
 
-export function MatchMode({ deckId }: Props) {
+const BATCH_SIZE = 6;
+
+function buildTiles(answers: MaskAnswer[]): MatchTile[] {
+  const built: MatchTile[] = [];
+  answers.forEach((answer, i) => {
+    const pairId = `p-${i}`;
+    built.push({
+      id: `${pairId}-prompt`,
+      text: answer.prompt.slice(0, 60),
+      pairId,
+      side: "prompt",
+    });
+    built.push({
+      id: `${pairId}-answer`,
+      text: answer.answer,
+      pairId,
+      side: "answer",
+    });
+  });
+  return shuffleArray(built);
+}
+
+export function MatchMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
+  const [remaining, setRemaining] = useState<MaskAnswer[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [tiles, setTiles] = useState<MatchTile[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [wrong, setWrong] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const [roundComplete, setRoundComplete] = useState(false);
+
+  const loadSession = useCallback(async () => {
+    const cards = await api.listCards(deckId ?? undefined);
+    const extracted = extractMaskAnswers(cards);
+    const ordered = shuffle ? shuffleArray(extracted) : extracted;
+    setRemaining(ordered);
+    setTotalCount(ordered.length);
+    setRoundComplete(false);
+  }, [api, deckId, shuffle]);
 
   useEffect(() => {
-    async function load() {
-      const cards = await api.listCards(deckId ?? undefined);
-      const answers = extractMaskAnswers(cards).slice(0, 6);
-      const built: MatchTile[] = [];
-      answers.forEach((a, i) => {
-        const pairId = `p-${i}`;
-        built.push({
-          id: `${pairId}-prompt`,
-          text: a.prompt.slice(0, 60),
-          pairId,
-          side: "prompt",
-        });
-        built.push({
-          id: `${pairId}-answer`,
-          text: a.answer,
-          pairId,
-          side: "answer",
-        });
-      });
-      setTiles(shuffleArray(built));
+    void loadSession();
+  }, [loadSession]);
+
+  const batch = useMemo(
+    () => remaining.slice(0, Math.min(BATCH_SIZE, remaining.length)),
+    [remaining],
+  );
+
+  useEffect(() => {
+    if (batch.length === 0) {
+      setTiles([]);
       setSelected(null);
       setMatched(new Set());
       setWrong(null);
+      setRoundComplete(false);
+      return;
     }
-    void load();
-  }, [deckId, reloadKey, api]);
+    setTiles(buildTiles(batch));
+    setSelected(null);
+    setMatched(new Set());
+    setWrong(null);
+    setRoundComplete(false);
+  }, [batch]);
+
+  const totalPairs = tiles.length / 2;
+  const matchedPairs = matched.size / 2;
+  const allPairsMatched =
+    tiles.length > 0 && matchedPairs >= totalPairs && totalPairs > 0;
+
+  useEffect(() => {
+    if (allPairsMatched && !roundComplete) {
+      setRoundComplete(true);
+    }
+  }, [allPairsMatched, roundComplete]);
 
   function handlePick(id: string) {
-    if (matched.has(id)) return;
+    if (roundComplete || matched.has(id)) return;
 
     if (!selected) {
       setSelected(id);
@@ -68,10 +111,7 @@ export function MatchMode({ deckId }: Props) {
     const second = tiles.find((t) => t.id === id);
     if (!first || !second) return;
 
-    if (
-      first.pairId === second.pairId &&
-      first.side !== second.side
-    ) {
+    if (first.pairId === second.pairId && first.side !== second.side) {
       setMatched((prev) => new Set([...prev, first.id, second.id]));
       setSelected(null);
       setWrong(null);
@@ -84,41 +124,71 @@ export function MatchMode({ deckId }: Props) {
     }
   }
 
-  const totalPairs = tiles.length / 2;
-  const matchedPairs = matched.size / 2;
-  const complete = tiles.length > 0 && matchedPairs >= totalPairs && totalPairs > 0;
+  const markKnown = useCallback(() => {
+    if (batch.length === 0) return;
+    setRemaining((prev) => prev.slice(batch.length));
+    setRoundComplete(false);
+  }, [batch.length]);
 
-  if (tiles.length === 0) {
+  const markStill = useCallback(() => {
+    if (batch.length === 0) return;
+    setRemaining((prev) => {
+      const next = [...prev];
+      const chunk = next.splice(0, batch.length);
+      next.push(...chunk);
+      return next;
+    });
+    setRoundComplete(false);
+  }, [batch.length]);
+
+  useEffect(() => {
+    if (!roundComplete) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "1") markStill();
+      if (e.key === "2") markKnown();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [markKnown, markStill, roundComplete]);
+
+  const remainingCount = remaining.length;
+  const progress =
+    totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
+  const isComplete = totalCount > 0 && remainingCount === 0;
+
+  if (remainingCount === 0 && totalCount === 0) {
     return (
       <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
         title={copy.matchMode.emptyTitle}
         copy={copy.matchMode.emptyCopy}
       />
     );
   }
 
-  if (complete) {
+  if (isComplete) {
     return (
-      <div className="review-stage empty">
-        <div className="review-complete">
-          <p className="eyebrow">{copy.matchMode.completeEyebrow}</p>
-          <h2>{copy.matchMode.completeTitle}</h2>
-          <button
-            type="button"
-            className="accent-button"
-            onClick={() => setReloadKey((k) => k + 1)}
-          >
-            {copy.matchMode.retry}
-          </button>
-        </div>
-      </div>
+      <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
+        title={copy.deckStudy.sessionCompleteTitle}
+        copy={copy.deckStudy.sessionCompleteCopy}
+        onReload={() => void loadSession()}
+        reloadLabel={copy.deckStudy.sessionRestart}
+      />
     );
   }
 
   return (
     <div className="review-stage match-mode">
+      <DeckStudySessionProgress
+        remaining={remainingCount}
+        total={totalCount}
+        progress={progress}
+      />
       <p className="review-hint study-hint">
-        問題と答えのペアを選んでください · {matchedPairs}/{totalPairs}
+        {roundComplete
+          ? "1 まだ · 2 覚えた"
+          : `問題と答えのペアを選んでください · ${matchedPairs}/${totalPairs}`}
       </p>
       <div className="match-grid">
         {tiles.map((tile) => (
@@ -131,12 +201,24 @@ export function MatchMode({ deckId }: Props) {
               wrong === tile.id ? "wrong" : ""
             }`}
             onClick={() => handlePick(tile.id)}
-            disabled={matched.has(tile.id)}
+            disabled={matched.has(tile.id) || roundComplete}
           >
             {tile.text}
           </button>
         ))}
       </div>
+      {roundComplete && (
+        <div className="review-actions">
+          <button type="button" className="ghost-button" onClick={markStill}>
+            <kbd>1</kbd>
+            {copy.deckStudy.still}
+          </button>
+          <button type="button" className="accent-button" onClick={markKnown}>
+            <kbd>2</kbd>
+            {copy.deckStudy.known}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

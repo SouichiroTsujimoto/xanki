@@ -558,16 +558,56 @@ export function StudyProgress({
   );
 }
 
-export function StudyEmpty({ title, copy, onReload }: { title: string; copy: string; onReload?: () => void }) {
+export function DeckStudySessionProgress({
+  remaining,
+  total,
+  progress,
+}: {
+  remaining: number;
+  total: number;
+  progress: number;
+}) {
+  const reduced = useReducedMotion();
+
+  return (
+    <>
+      <div className="review-progress">
+        <motion.div
+          className="review-progress-bar"
+          initial={false}
+          animate={{ width: `${progress}%` }}
+          transition={transitionForReduced(reduced, springSnappy)}
+        />
+      </div>
+      <div className="review-meta">
+        <span>{uiCopy.deckStudy.sessionRemaining(remaining, total)}</span>
+      </div>
+    </>
+  );
+}
+
+export function StudyEmpty({
+  title,
+  copy: bodyCopy,
+  eyebrow,
+  onReload,
+  reloadLabel = "再読み込み",
+}: {
+  title: string;
+  copy: string;
+  eyebrow?: string;
+  onReload?: () => void;
+  reloadLabel?: string;
+}) {
   return (
     <div className="review-stage empty">
       <div className="review-complete">
-        <p className="eyebrow">{uiCopy.study.emptyEyebrow}</p>
+        <p className="eyebrow">{eyebrow ?? uiCopy.deckStudy.emptyEyebrow}</p>
         <h2>{title}</h2>
-        <p>{copy}</p>
+        <p>{bodyCopy}</p>
         {onReload && (
           <button type="button" className="accent-button" onClick={onReload}>
-            再読み込み
+            {reloadLabel}
           </button>
         )}
       </div>
@@ -575,9 +615,11 @@ export function StudyEmpty({ title, copy, onReload }: { title: string; copy: str
   );
 }
 
+export { useDeckStudySession } from "./use-deck-study-session";
+
 export function useStudyQueue(
   deckId: string | null | undefined,
-  filter: "due" | "all" | "starred",
+  filter: "due" | "all",
   shuffle: boolean,
 ) {
   const api = useAppApi();

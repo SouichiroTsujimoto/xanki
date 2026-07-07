@@ -199,8 +199,14 @@ export function useImageOverlayLayout(
     update();
     const observer = new ResizeObserver(update);
     observer.observe(img);
+    if (img.parentElement) {
+      observer.observe(img.parentElement);
+    }
     img.addEventListener("load", update);
     window.addEventListener("resize", update);
+    if (img.complete) {
+      requestAnimationFrame(update);
+    }
 
     return () => {
       observer.disconnect();

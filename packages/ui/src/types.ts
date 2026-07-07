@@ -7,9 +7,13 @@ import type {
   UpdateDeckRequest,
 } from "@xanki/shared";
 
-export type StudyFilter = "due" | "all" | "starred";
+export type StudyFilter = "due" | "all";
 
 export type StudyMode = "flashcards" | "learn" | "write" | "test" | "match";
+
+export type DeckStudyMode = Exclude<StudyMode, "learn">;
+
+export type ReviewGrade = 0 | 1 | 2 | 3;
 
 export type Card = ApiCard & {
   imagePath?: string | null;
@@ -112,9 +116,8 @@ export interface AppApi {
   listCards(deckId?: string, query?: string): Promise<Card[]>;
   getCard(cardId: string): Promise<Card>;
   deleteCard(cardId: string): Promise<void>;
-  toggleStar(cardId: string): Promise<Card>;
   openCardEditor(cardId: string): Promise<void>;
-  submitReview(cardId: string, result: 0 | 1): Promise<void>;
+  submitReview(cardId: string, result: ReviewGrade): Promise<void>;
   getDueCount(): Promise<number>;
   getDueCards(deckId?: string, limit?: number): Promise<ReviewCard[]>;
   getStudyCards(filter: StudyFilter, deckId?: string, limit?: number): Promise<ReviewCard[]>;

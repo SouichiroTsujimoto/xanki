@@ -26,10 +26,12 @@
 | 概念 | コード / API | UI 表示（正） | 旧称・禁止 | 参照 |
 |------|-------------|--------------|-----------|------|
 | ホームタブ | `AppTab.home`, `navigate: "home"` | サイドバー **ホーム** / トップバー **ホーム** | Home, デッキ管理（旧トップバー） | [library.md](./library.md), [ui.md](./ui.md) |
-| 学習タブ | `AppTab.study`, `navigate: "study"` | サイドバー **学習** / トップバー 選択デッキ名 | Study | [study.md](./study.md) |
+| デッキ学習タブ | `AppTab.deckStudy`, `navigate: "deckStudy"` / `"study"` | サイドバー **デッキ学習** | 学習（旧タブ名） | [deck-study.md](./deck-study.md) |
+| Leitner学習タブ | `AppTab.leitner`, `navigate: "leitner"` / `"review"` | サイドバー **Leitner学習** | 復習タブ | [leitner-study.md](./leitner-study.md) |
 | 設定タブ | `AppTab.settings` | **設定** | Settings | [ui.md](./ui.md) |
-| 学習ハブ | `phase === "hub"` | （専用ラベルなし） | — | [study.md](./study.md) §学習ハブ |
-| 学習セッション | `studySessionActive`, `phase !== "hub"` | モード名 + **戻る** | — | [study.md](./study.md) §学習セッション |
+| デッキ学習ハブ | `DeckStudyView`, `phase === "hub"` | （専用ラベルなし） | 学習ハブ | [deck-study.md](./deck-study.md) |
+| Leitner学習ハブ | `LeitnerStudyView`, `phase === "hub"` | **Leitner学習** | — | [leitner-study.md](./leitner-study.md) |
+| 学習セッション | `studySessionActive`, `phase !== "hub"` | 手段名 / 復習中 + **戻る** | — | [deck-study.md](./deck-study.md), [leitner-study.md](./leitner-study.md) |
 | サイドバー | `sidebarOpen` | **サイドバー** | — | [ui.md](./ui.md) |
 | メインウィンドウ | Tauri label `main` | **メインウィンドウ** | — | [architecture.md](./architecture.md) |
 | マスクエディタ | `mask-editor-{uuid}` | **マスクエディタ**（種別: テキスト / 画像） | — | [text-masks.md](./text-masks.md), [image-masks.md](./image-masks.md) |
@@ -40,7 +42,7 @@
 
 | 概念 | コード / API | UI 表示（正） | 旧称・禁止 | 参照 |
 |------|-------------|--------------|-----------|------|
-| Tray 復習件数 | `dueCount`, `update_tray_due_count` | **今日の復習: N件** | review（navigate 互換のみ） | [study.md](./study.md) |
+| Tray 復習件数 | `dueCount`, `update_tray_due_count` | **今日の復習: N件** | — | [leitner-study.md](./leitner-study.md) |
 | Tray ホーム | menu id `library` | **ホームを開く** | Home を開く | [architecture.md](./architecture.md) |
 | テキスト取込 | `triggerTextCapture`, ⌥⌘M | **テキスト取込** | Capture | [capture.md](./capture.md) |
 | スクショ取込 | `triggerScreenshotCapture`, ⌥⌘S | **スクショ取込** | — | [capture.md](./capture.md) |
@@ -57,26 +59,28 @@
 | カード | `Card`, `/api/cards` | **カード** | — | [library.md](./library.md) |
 | カード一覧 | `CardCollection`, `library-main` | 見出し **カード** | Collection, **ライブラリ**（タブ名意味） | [library.md](./library.md) |
 | カード追加バー | `CollectionAddBar` | **カードの追加** | — | [library.md](./library.md) |
-| Coverflow | `StudyCardCoverflow` | **Coverflow**（固有名） | — | [study.md](./study.md) |
+| Coverflow | `StudyCardCoverflow` | **Coverflow**（固有名） | — | [deck-study.md](./deck-study.md) |
 | 変更通知 refetch | `libraryRevision`, `library-sync` | （UI 非表示） | library-changed | [architecture.md](./architecture.md) |
 | 検索 | `searchQuery` | placeholder **カードを検索...** | — | [ui.md](./ui.md) |
-| 復習待ちバナー | `dueCount` | **N 件が復習待ち** | due（コード） | [study.md](./study.md) |
+| 復習待ちバナー | `dueCount` | **N 件が復習待ち** | due（コード） | [leitner-study.md](./leitner-study.md) |
 
 ---
 
-## D. 学習モード（StudyMode）
+## D. 学習手段（StudyMode / DeckStudyMode）
 
-| 概念 | コード | UI 表示（正） | 旧称・禁止 | 参照 |
-|------|--------|--------------|-----------|------|
-| フラッシュカード | `flashcards` | **フラッシュカード** | Flashcards | [study.md](./study.md) |
-| SRS 復習 | `learn` | **復習** | **学習**（モード名として） | [study.md](./study.md) |
-| 書く | `write` | **書く** | Write | [study.md](./study.md) |
-| テスト | `test` | **テスト** | Test | [study.md](./study.md) |
-| マッチ | `match` | **マッチ** | Match | [study.md](./study.md) |
-| カードプレビュー | `singleCard` + flashcards | **カードプレビュー** | — | [study.md](./study.md) |
-| モード起動 | `study-hub-toolbar` | **学習を始める** / 見出し **学習モード** | Study Modes | [study.md](./study.md) |
-| シャッフル | `shuffle` | **シャッフル** | — | [study.md](./study.md) |
-| 戻る | `exitSession` | **戻る** | — | [study.md](./study.md) |
+| 概念 | コード | UI 表示（正） | タブ | 参照 |
+|------|--------|--------------|------|------|
+| フラッシュカード | `flashcards` | **フラッシュカード** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| Leitner 出題 | `learn` | （Leitner学習セッション内） | Leitner学習 | [leitner-study.md](./leitner-study.md) |
+| 書く | `write` | **書く** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| テスト | `test` | **テスト** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| マッチ | `match` | **マッチ** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| 覚えた / まだ | セッション操作 | **覚えた** / **まだ** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| 復習を始める | `LeitnerStudyView` ヒーローカード | **復習を始める** | Leitner学習 | [leitner-study.md](./leitner-study.md) |
+| カードプレビュー | `singleCard` + flashcards | **カードプレビュー** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| 手段起動 | `study-hub-toolbar` | **学習を始める** / **学習モード** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| シャッフル | `shuffle` | **シャッフル** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| 戻る | `exitSession` | **戻る** | 両方 | [study.md](./study.md) |
 
 ---
 
@@ -88,8 +92,7 @@
 | Q&A カード | `kind: "qa"` | **Q&A** | [qa-cards.md](./qa-cards.md) |
 | 画像カード | `kind: "image"` | **画像** | [image-masks.md](./image-masks.md) |
 | マスク | `masks` JSON | **マスク** | [data-model.md](./data-model.md) |
-| スター | `starred` | **スター** | [library.md](./library.md) |
-| Leitner 箱 | `boxNum`, `review_state.box` | **Box**（一覧表示） | [study.md](./study.md) |
+| Leitner 箱 | `boxNum`, `review_state.box` | **Box**（Leitner 学習。デッキ学習一覧では非表示） | [study.md](./study.md) |
 
 ---
 
@@ -107,15 +110,15 @@
 
 ---
 
-## G. 復習・SRS
+## G. Leitner・SRS
 
 | 概念 | コード | UI / 説明（正） | 備考 |
 |------|--------|----------------|------|
 | 復習予定 | `dueAt`, `StudyFilter.due` | **復習予定**（説明） | コード `due` 維持 |
-| 復習待ち | `dueCount` | **N 件が復習待ち** | Tray「今日の復習」と連動 |
-| 復習結果 | `submitReview(0\|1)` | **不可 / 可**（1/2 キー） | |
-| 復習完了 | `LearnMode` empty | **今日の復習は完了です** | |
-| Leitner | `LeitnerScheduler` | （UI 非表示） | spec・開発用 |
+| 復習待ち | `dueCount` | **N 件が復習待ち** / Tray **今日の復習** | Leitner学習タブ |
+| 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **再度 / 難しい / 良好 / 簡単**（1–4 キー） | |
+| Leitner 完了 | `LearnMode` empty | **今日の Leitner 学習は完了です** | |
+| Leitner 箱 | `LeitnerScheduler` | **Box**（Leitner 学習。デッキ学習一覧では非表示） | spec・開発用 |
 
 ---
 
@@ -124,8 +127,7 @@
 | 概念 | UI 表示（正） | 参照 |
 |------|--------------|------|
 | ログイン | **ログイン** | [cloud.md](./cloud.md) |
-| メール OTP | **メール OTP でログイン** / **コードを送信** | [cloud.md](./cloud.md) |
-| 確認コード | **6桁コード** / **コードを再送** | [cloud.md](./cloud.md) |
+| Google ログイン | **Google でログイン** / **Google で続ける** | [cloud.md](./cloud.md) |
 | アカウント | **アカウント** | [cloud.md](./cloud.md) |
 | プラン | **プラン** | [cloud.md](./cloud.md) |
 | Pro / Free | **Pro** / **Free**（英字） | [cloud.md](./cloud.md) |
@@ -139,10 +141,10 @@
 |------|-----------|----------------------|
 | **ライブラリ**（タブ・画面名） | 学習タブ内カード一覧 / 会話上の総称 | `library.md` ファイル名, `libraryRevision`, `LibraryCardPreview` |
 | **library** (`navigate`) | `home` タブ | `resolveTab`, Tray menu id |
-| **review** (`navigate`) | `study` タブ | Tray menu id `review` |
-| **Home**（ナビ英語） | **ホーム** | — |
-| **Collection** | カード一覧見出し **カード** | — |
-| **学習**（StudyMode `learn`） | **復習** | — |
+| **review** (`navigate`) | **Leitner学習**タブ | Tray menu id `review` |
+| **study** (`navigate`) | **デッキ学習**タブ | 後方互換 |
+| **学習**（旧タブ名） | **デッキ学習** / **Leitner学習** | — |
+| **学習**（StudyMode `learn`） | Leitner学習セッション（コード `learn`） | — |
 | **デッキ管理**（トップバー） | **ホーム** | — |
 
 ---

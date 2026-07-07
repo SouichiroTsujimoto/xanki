@@ -237,8 +237,8 @@ export function TextMaskEditor({
 
   return (
     <div className="editor-shell text-editor">
-      <header className="editor-hero">
-        <div>
+      <header className="editor-hero" data-tauri-drag-region>
+        <div className="editor-hero-copy">
           <p className="eyebrow">
             {cardId
               ? qaMode
@@ -264,8 +264,8 @@ export function TextMaskEditor({
         </div>
       </header>
 
-      <div className="editor-toolbar">
-        <label className="field-inline">
+      <div className="editor-toolbar" data-tauri-drag-region="false">
+        <label className="field-inline" data-tauri-drag-region="false">
           <span>{copy.editor.deck}</span>
           <select value={deckId} onChange={(e) => setDeckId(e.target.value)}>
             {decks.map((deck) => (
@@ -275,9 +275,10 @@ export function TextMaskEditor({
             ))}
           </select>
         </label>
-        <label className="field-inline note-field">
+        <label className="field-inline note-field" data-tauri-drag-region="false">
           <span>{copy.editor.note}</span>
           <input
+            data-tauri-drag-region="false"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={copy.editor.notePlaceholder}
@@ -287,6 +288,7 @@ export function TextMaskEditor({
           <button
             type="button"
             className="qa-toolbar-button"
+            data-tauri-drag-region="false"
             disabled={!content.trim()}
             onClick={enterQaMode}
             title={copy.editor.qaToggle}
@@ -326,13 +328,14 @@ export function TextMaskEditor({
         </div>
       </div>
 
-      <footer className="editor-footer">
-        <button type="button" className="ghost-button" onClick={() => onClose()}>
+      <footer className="editor-footer" data-tauri-drag-region="false">
+        <button type="button" className="ghost-button" data-tauri-drag-region="false" onClick={() => onClose()}>
           キャンセル
         </button>
         <button
           type="button"
           className="accent-button"
+          data-tauri-drag-region="false"
           disabled={!canSave || saving}
           onClick={() => void handleSave()}
         >

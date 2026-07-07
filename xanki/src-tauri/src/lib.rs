@@ -17,11 +17,22 @@ use tauri::{
     Emitter, Manager, RunEvent,
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_deep_link::DeepLinkExt;
+
+fn handle_auth_deep_link(app: &tauri::AppHandle, url: &str) {
+    if let Some(token) = cloud::handle_auth_callback_url(url) {
+        if cloud::save_session_token(&token).is_ok() {
+            let _ = app.emit("xanki:auth-complete", ());
+            let _ = windows::show_main_window(app);
+        }
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(
@@ -36,13 +47,17 @@ pub fn run() {
                         Shortcut::new(Some(Modifiers::SUPER | Modifiers::ALT), Code::KeyS);
 
                     if shortcut == &text_shortcut {
-                        windows::handle_text_import(app, None);
+                        let deck_id = app
+                            .try_state::<AppState>()
+                            .and_then(|state| state.capture_deck_id());
+                        windows::handle_text_import(app, deck_id);
                     } else if shortcut == &screenshot_shortcut {
                         if let Some(state) = app.try_state::<AppState>() {
+                            let deck_id = state.capture_deck_id();
                             windows::handle_screenshot_import(
                                 app,
                                 state.app_data_dir.clone(),
-                                None,
+                                deck_id,
                             );
                         }
                     }
@@ -75,7 +90,7 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "review" => {
                         let _ = windows::show_main_window(app);
-                        let _ = app.emit("navigate", "study");
+                        let _ = app.emit("navigate", "leitner");
                     }
                     "library" => {
                         let _ = windows::open_home_window(app);
@@ -128,6 +143,13 @@ pub fn run() {
                 });
             }
 
+            let handle = app.handle().clone();
+            app.deep_link().on_open_url(move |event| {
+                for url in event.urls() {
+                    handle_auth_deep_link(&handle, url.as_ref());
+                }
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -146,8 +168,10 @@ pub fn run() {
             commands::open_editor_with_payload,
             commands::update_tray_due_count,
             commands::cloud::cloud_get_session,
+            commands::cloud::cloud_prepare_google_sign_in,
             commands::cloud::cloud_set_session,
             commands::cloud::cloud_clear_session,
+            commands::set_capture_deck_id,
             commands::cloud::read_image_bytes,
             commands::cloud::write_image_bytes,
         ])

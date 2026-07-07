@@ -21,6 +21,7 @@
     "core:app:allow-app-hide",
     "core:tray:default",
     "opener:default",
+    "deep-link:default",
     "global-shortcut:allow-is-registered",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",

@@ -1,11 +1,14 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { z } from "zod";
 import type { Env } from "../env";
+import { createDb } from "../db/index";
 import { entitlements } from "../db/schema";
 import { authMiddleware, type AppVars } from "../middleware/auth";
 import { getEntitlement } from "../services/entitlements";
 import { getRevision } from "../services/revision";
 import { getStorageUsed } from "../services/web-data";
+import { purgeUserByEmail } from "../services/user-purge";
 import { PLAN_LIMITS } from "@xanki/shared";
 import { nowMs } from "../utils";
 
@@ -44,7 +47,7 @@ export const devRoutes = new Hono<{ Bindings: Env; Variables: AppVars }>();
 
 /** ローカル開発専用: Stripe なしで Pro を試す */
 devRoutes.post("/promote-pro", authMiddleware, async (c) => {
-  if (c.env.RESEND_API_KEY) {
+  if (!c.env.APP_URL.startsWith("http://localhost")) {
     return c.json({ error: "disabled" }, 404);
   }
   const user = c.get("user");
@@ -62,4 +65,16 @@ devRoutes.post("/promote-pro", authMiddleware, async (c) => {
     })
     .where(eq(entitlements.userId, user.id));
   return c.json({ ok: true, plan: "pro" });
+});
+
+/** ローカル開発専用: 指定メールのユーザーと全関連データを削除 */
+devRoutes.post("/purge-user", async (c) => {
+  if (!c.env.APP_URL.startsWith("http://localhost")) {
+    return c.json({ error: "disabled" }, 404);
+  }
+  const body = z.object({ email: z.string().email() }).parse(await c.req.json());
+  const db = createDb(c.env.DB);
+  const removed = await purgeUserByEmail(db, c.env, body.email);
+  if (!removed) return c.json({ error: "not_found" }, 404);
+  return c.json({ ok: true, email: body.email });
 });

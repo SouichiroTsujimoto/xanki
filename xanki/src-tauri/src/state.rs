@@ -8,6 +8,7 @@ pub struct AppState {
     pub app_data_dir: PathBuf,
     pub ocr: SidecarOcrProvider,
     pub pending_editors: Mutex<HashMap<String, EditorInitPayload>>,
+    pub capture_deck_id: Mutex<Option<String>>,
 }
 
 impl AppState {
@@ -16,6 +17,7 @@ impl AppState {
             app_data_dir,
             ocr: SidecarOcrProvider::dev_fallback(),
             pending_editors: Mutex::new(HashMap::new()),
+            capture_deck_id: Mutex::new(None),
         }
     }
 
@@ -36,5 +38,18 @@ impl AppState {
         if let Ok(mut pending) = self.pending_editors.lock() {
             pending.remove(label);
         }
+    }
+
+    pub fn set_capture_deck_id(&self, deck_id: Option<String>) {
+        if let Ok(mut slot) = self.capture_deck_id.lock() {
+            *slot = deck_id;
+        }
+    }
+
+    pub fn capture_deck_id(&self) -> Option<String> {
+        self.capture_deck_id
+            .lock()
+            .ok()
+            .and_then(|slot| slot.clone())
     }
 }

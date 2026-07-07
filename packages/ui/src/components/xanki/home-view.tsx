@@ -10,7 +10,8 @@ interface Props {
   selectedDeckId: string | null;
   dueCount: number;
   onSelectDeck: (id: string | null) => void;
-  onGoToStudy: () => void;
+  onGoToDeckStudy: () => void;
+  onGoToLeitner?: () => void;
 }
 
 export function HomeView({
@@ -18,7 +19,8 @@ export function HomeView({
   selectedDeckId,
   dueCount,
   onSelectDeck,
-  onGoToStudy,
+  onGoToDeckStudy,
+  onGoToLeitner,
 }: Props) {
   const api = useAppApi();
   const [newDeckName, setNewDeckName] = useState("");
@@ -128,9 +130,14 @@ export function HomeView({
             )}
           </div>
           <div className="home-spotlight-actions">
-            <button type="button" className="accent-button" onClick={onGoToStudy}>
-              {copy.study.hubTitle}
+            <button type="button" className="accent-button" onClick={onGoToDeckStudy}>
+              {copy.deckStudy.hubTitle}
             </button>
+            {dueCount > 0 && onGoToLeitner && (
+              <button type="button" className="ghost-button" onClick={onGoToLeitner}>
+                {copy.leitnerStudy.goFromHome}
+              </button>
+            )}
           </div>
         </section>
       ) : (
@@ -255,10 +262,10 @@ export function HomeView({
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectDeck(deck.id);
-                        onGoToStudy();
+                        onGoToDeckStudy();
                       }}
                     >
-                      学習タブへ
+                      {copy.home.goToDeckStudy}
                     </button>
                   </>
                 )}

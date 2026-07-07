@@ -89,27 +89,34 @@ cardRoutes.post("/", async (c) => {
     .parse(await c.req.json());
   const now = nowMs();
   const id = randomId();
-  await upsertCard(
-    c.get("db"),
-    c.get("user").id,
-    {
-      id,
-      deck_id: body.deckId,
-      kind: body.kind,
-      content: body.content ?? null,
-      answer: body.answer ?? null,
-      image_hash: body.imageHash ?? null,
-      ocr_text: body.ocrText ?? null,
-      ocr_data: body.ocrData ?? null,
-      masks: body.masks,
-      note: body.note ?? null,
-      source_hint: body.sourceHint ?? null,
-      starred: 0,
-      created_at: now,
-      updated_at: now,
-    },
-    c.env,
-  );
+  try {
+    await upsertCard(
+      c.get("db"),
+      c.get("user").id,
+      {
+        id,
+        deck_id: body.deckId,
+        kind: body.kind,
+        content: body.content ?? null,
+        answer: body.answer ?? null,
+        image_hash: body.imageHash ?? null,
+        ocr_text: body.ocrText ?? null,
+        ocr_data: body.ocrData ?? null,
+        masks: body.masks,
+        note: body.note ?? null,
+        source_hint: body.sourceHint ?? null,
+        starred: 0,
+        created_at: now,
+        updated_at: now,
+      },
+      c.env,
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message === "deck_not_found") {
+      return c.json({ error: "deck_not_found" }, 404);
+    }
+    throw error;
+  }
   const cards = await listCards(c.get("db"), c.get("user").id);
   return c.json(cards.find((item) => item.id === id));
 });
@@ -157,36 +164,6 @@ cardRoutes.patch("/:id", async (c) => {
   return c.json(updated.find((item) => item.id === existing.id));
 });
 
-cardRoutes.post("/:id/star", async (c) => {
-  const cards = await listCards(c.get("db"), c.get("user").id);
-  const existing = cards.find((item) => item.id === c.req.param("id"));
-  if (!existing) return c.json({ error: "not_found" }, 404);
-  const now = nowMs();
-  await upsertCard(
-    c.get("db"),
-    c.get("user").id,
-    {
-      id: existing.id,
-      deck_id: existing.deckId,
-      kind: existing.kind,
-      content: existing.content ?? null,
-      answer: existing.answer ?? null,
-      image_hash: existing.imageHash ?? null,
-      ocr_text: existing.ocrText ?? null,
-      ocr_data: existing.ocrData ?? null,
-      masks: existing.masks,
-      note: existing.note ?? null,
-      source_hint: existing.sourceHint ?? null,
-      starred: existing.starred ? 0 : 1,
-      created_at: existing.createdAt,
-      updated_at: now,
-    },
-    c.env,
-  );
-  const updated = await listCards(c.get("db"), c.get("user").id);
-  return c.json(updated.find((item) => item.id === existing.id));
-});
-
 cardRoutes.delete("/:id", async (c) => {
   const cards = await listCards(c.get("db"), c.get("user").id);
   const existing = cards.find((item) => item.id === c.req.param("id"));
@@ -222,7 +199,10 @@ reviewRoutes.use("*", authMiddleware);
 
 reviewRoutes.post("/submit", async (c) => {
   const body = z
-    .object({ cardId: z.string(), result: z.union([z.literal(0), z.literal(1)]) })
+    .object({
+      cardId: z.string(),
+      result: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
+    })
     .parse(await c.req.json());
   await submitReview(c.get("db"), c.get("user").id, body.cardId, body.result, c.env);
   return c.json({ ok: true });

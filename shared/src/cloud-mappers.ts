@@ -6,7 +6,7 @@ import {
   type TextMask,
 } from "./masks.js";
 
-export type StudyFilter = "due" | "all" | "starred";
+export type StudyFilter = "due" | "all";
 
 export type MappedDeck = ApiDeck & { cardCount: number };
 
@@ -59,7 +59,7 @@ export function mapApiCardWithImagePath(
   });
 }
 
-export function filterStudyCards<T extends { deckId: string; dueAt?: number; starred?: boolean }>(
+export function filterStudyCards<T extends { deckId: string; dueAt?: number }>(
   cards: T[],
   filter: StudyFilter,
   deckId?: string,
@@ -72,8 +72,6 @@ export function filterStudyCards<T extends { deckId: string; dueAt?: number; sta
   switch (filter) {
     case "due":
       return filtered.filter((card) => (card.dueAt ?? 0) <= now);
-    case "starred":
-      return filtered.filter((card) => card.starred);
     case "all":
       return filtered;
     default: {

@@ -1,19 +1,23 @@
-import type { StudyMode } from "./types";
+import type { DeckStudyMode, StudyMode } from "./types";
 
 /** ユーザー向け UI 文言 SSOT — 正本: docs/spec/glossary.md */
 export const copy = {
   nav: {
     home: "ホーム",
-    study: "学習",
+    deckStudy: "デッキ学習",
+    leitner: "Leitner学習",
     settings: "設定",
     homeHint: "デッキ",
-    studyHint: "学習",
+    deckStudyHint: "仕上げ",
+    leitnerHint: "今日の due",
     settingsHint: "設定",
   },
   topbar: {
     home: "ホーム",
-    studyDefault: "学習",
+    deckStudyDefault: "デッキ学習",
+    leitnerDefault: "Leitner学習",
     settings: "設定",
+    sessionLabel: "復習中",
   },
   sidebar: {
     captureSection: "取込",
@@ -35,22 +39,47 @@ export const copy = {
     noDecksTitle: "デッキがありません",
     noDecksCopy: "上のフォームから最初のデッキを作成してください。",
     decksSection: "デッキ一覧",
+    goToDeckStudy: "デッキ学習へ",
   },
-  study: {
+  deckStudy: {
     hubTitle: "学習を始める",
     modesEyebrow: "学習モード",
     modesAriaLabel: "学習モード",
     shuffle: "シャッフル",
     back: "戻る",
     searchPlaceholder: "カードを検索...",
-    dueBannerSuffix: "件が復習待ち",
     cardPreview: "カードプレビュー",
     coverflowAria: "デッキカード",
-    reviewComplete: "今日の復習は完了です",
-    reviewCompleteHint: "⌥⌘M / ⌥⌘S で新しいカードを追加できます。",
     selectDeckTitle: "デッキが選択されていません",
     selectDeckCopy: "ホームでデッキを選んでから学習を始めてください。",
-    emptyEyebrow: "学習",
+    emptyEyebrow: "デッキ学習",
+    sessionRemaining: (remaining: number, total: number) => `残り ${remaining} / ${total}`,
+    known: "覚えた",
+    still: "まだ",
+    sessionCompleteTitle: "このデッキの仕上げが完了しました",
+    sessionCompleteCopy: "すべてのカードを覚えました。",
+    sessionRestart: "もう一度",
+  },
+  leitnerStudy: {
+    hubTitle: "Leitner学習",
+    hubEyebrow: "定着",
+    dueToday: (count: number) => `今日 ${count} 件`,
+    dueBannerSuffix: "件が復習待ち",
+    startAllHero: "復習を始める",
+    startAllHint: "全デッキの due をランダムに復習",
+    goFromHome: "Leitner学習へ",
+    sessionActiveLabel: "復習中",
+    decksSection: "デッキ別",
+    deckDue: (count: number) => `${count} 件`,
+    back: "戻る",
+    completeTitle: "今日の Leitner 学習は完了です",
+    completeHint: "⌥⌘M / ⌥⌘S で新しいカードを追加できます。",
+    emptyEyebrow: "Leitner学習",
+    hint: "Space / クリック 答え · 1 再度 · 2 難しい · 3 良好 · 4 簡単",
+    gradeAgain: "再度",
+    gradeHard: "難しい",
+    gradeGood: "良好",
+    gradeEasy: "簡単",
   },
   studyModes: {
     flashcards: {
@@ -58,8 +87,8 @@ export const copy = {
       desc: "答えを確認しながら全カードを巡る",
     },
     learn: {
-      label: "復習",
-      desc: "復習予定のカードを Leitner で定着",
+      label: "Leitner",
+      desc: "due カードを定着させる",
     },
     write: {
       label: "書く",
@@ -88,7 +117,6 @@ export const copy = {
     kindText: "テキスト",
     kindQa: "Q&A",
     kindImage: "画像",
-    star: "スター",
     previewAria: (kind: string) => `${kind} カードをプレビュー`,
     deleteTitle: "カードを削除しますか？",
   },
@@ -126,16 +154,8 @@ export const copy = {
   },
   login: {
     eyebrow: "ログイン",
-    title: "メール OTP でログイン",
-    emailPlaceholder: "email@example.com",
-    sendCode: "コードを送信",
-    codePlaceholder: "6桁コード",
-    codeSentTo: (email: string) => `${email} に確認コードを送信しました`,
-    resendCode: "コードを再送",
-    resendCooldown: (seconds: number) => `${seconds} 秒後に再送できます`,
-    changeEmail: "メールアドレスを変更",
-    devOtpHint: "開発時: wrangler ログの [dev OTP] を入力",
-    submit: "ログイン",
+    title: "Google でログイン",
+    googleButton: "Google で続ける",
     sessionExpired: "セッションの有効期限が切れました。再度ログインしてください。",
     brandDescription: "クラウドでデッキを同期し、どこからでも学習できます。",
   },
@@ -145,11 +165,11 @@ export const copy = {
     permissionsEyebrow: "権限",
     permissionsTitle: "権限",
     studyEyebrow: "学習",
-    studyTitle: "学習モード",
+    studyTitle: "学習",
     maskEyebrow: "マスク",
     maskTitle: "マスク表示",
     studyNote:
-      "「学習」タブから各モードを切り替えられます。ホームではデッキ操作、学習タブではカードの編集・スター、デッキのエクスポート/インポートも利用できます。",
+      "「デッキ学習」で試験前の仕上げ、「Leitner学習」で due カードの定着を行います。ホームではデッキ操作、デッキ学習タブではカードの編集・スター、デッキのエクスポート/インポートも利用できます。",
     maskNote:
       "復習時のマスクは Black で不透明表示されます。アクセントカラーは Chartreuse（#CEFF1A）です。",
     refreshPermissions: "権限状態を再確認",
@@ -205,6 +225,13 @@ export const copy = {
 export const studyModeList = (
   Object.entries(copy.studyModes) as [StudyMode, (typeof copy.studyModes)[StudyMode]][]
 ).map(([id, mode]) => ({ id, ...mode }));
+
+export type DeckStudyMode = Exclude<StudyMode, "learn">;
+
+export const deckStudyModeList = studyModeList.filter(
+  (mode): mode is (typeof studyModeList)[number] & { id: DeckStudyMode } =>
+    mode.id !== "learn",
+);
 
 export function cardKindLabel(kind: string): string {
   switch (kind) {

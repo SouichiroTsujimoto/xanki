@@ -22,6 +22,12 @@ pub fn clear_editor_init(state: State<'_, AppState>, window_label: String) -> Ap
 }
 
 #[tauri::command]
+pub fn set_capture_deck_id(state: State<'_, AppState>, deck_id: Option<String>) -> AppResult<()> {
+    state.set_capture_deck_id(deck_id);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn trigger_text_capture(app: AppHandle, deck_id: Option<String>) {
     crate::windows::handle_text_import(&app, deck_id);
 }

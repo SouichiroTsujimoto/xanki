@@ -282,13 +282,13 @@ export function ImageMaskEditor({
 
   return (
     <div className="editor-shell image-editor">
-      <header className="image-editor-header">
+      <header className="image-editor-header" data-tauri-drag-region>
         <div className="image-editor-header-row image-editor-title-row">
           <h1 className="image-editor-title">
             {cardId ? copy.editor.editImage : copy.editor.createImage}
           </h1>
 
-          <label className="field-inline">
+          <label className="field-inline" data-tauri-drag-region="false">
             <span>{copy.editor.deck}</span>
             <select value={deckId} onChange={(e) => setDeckId(e.target.value)}>
               {decks.map((deck) => (
@@ -299,7 +299,7 @@ export function ImageMaskEditor({
             </select>
           </label>
 
-          <label className="field-inline note-field image-editor-note">
+          <label className="field-inline note-field image-editor-note" data-tauri-drag-region="false">
             <span>{copy.editor.note}</span>
             <input
               value={note}
@@ -309,7 +309,7 @@ export function ImageMaskEditor({
           </label>
         </div>
 
-        <div className="image-editor-header-row image-editor-tools-row">
+        <div className="image-editor-header-row image-editor-tools-row" data-tauri-drag-region="false">
           <div className="image-zoom-controls">
             <button
               type="button"

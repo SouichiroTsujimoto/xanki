@@ -29,6 +29,13 @@ export function MaskEditorApp() {
   };
 
   useLayoutEffect(() => {
+    document.documentElement.classList.add("tauri-desktop", "tauri-macos");
+    return () => {
+      document.documentElement.classList.remove("tauri-desktop", "tauri-macos");
+    };
+  }, []);
+
+  useLayoutEffect(() => {
     let active = true;
     const windowLabel = resolveWindowLabel();
 

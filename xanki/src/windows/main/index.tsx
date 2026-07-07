@@ -8,10 +8,11 @@ import {
   AppShellProvider,
   AppTabLayer,
   copy,
+  DeckStudyView,
   HomeView,
+  LeitnerStudyView,
   OnboardingView,
   SettingsView,
-  StudyView,
   type AppTab,
   type StudySessionInfo,
 } from "@xanki/ui";
@@ -45,9 +46,12 @@ function resolveTab(payload: string): AppTab | null {
     case "home":
     case "library":
       return "home";
+    case "deckStudy":
     case "study":
+      return "deckStudy";
+    case "leitner":
     case "review":
-      return "study";
+      return "leitner";
     case "settings":
       return "settings";
     default:
@@ -57,24 +61,16 @@ function resolveTab(payload: string): AppTab | null {
 
 function CloudSettingsSection() {
   const cloudAccount = useCloudAccount();
-  const [accountEmail, setAccountEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    void cloud
-      .me()
-      .then((me) => setAccountEmail(me.email))
-      .catch(() => setAccountEmail(null));
-  }, [cloudAccount.status]);
 
   return (
     <>
       <p className="eyebrow">Cloud</p>
       <h2>{copy.account.title}</h2>
-      {accountEmail && (
-        <p className="settings-note">{copy.account.loggedInAs(accountEmail)}</p>
+      {cloudAccount.accountEmail && (
+        <p className="settings-note">{copy.account.loggedInAs(cloudAccount.accountEmail)}</p>
       )}
       <p className="settings-note">{cloudAccount.status}</p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="settings-inline-actions">
         <button type="button" className="ghost-button" onClick={() => void cloudAccount.upgrade()}>
           {copy.billing.upgradePro}
         </button>
@@ -109,12 +105,20 @@ export function MainApp() {
   const [tab, setTab] = useState<AppTab>("home");
   const tabRef = useRef(tab);
   tabRef.current = tab;
-  const [studySession, setStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
+  const [deckStudySession, setDeckStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
+  const [leitnerSession, setLeitnerSession] = useState<StudySessionInfo>(EMPTY_SESSION);
   const [libraryRevision, setLibraryRevision] = useState(0);
   const [permissions, setPermissions] = useState<PermissionStatus>({
     accessibility: false,
     screenRecording: false,
   });
+
+  useEffect(() => {
+    document.documentElement.classList.add("tauri-desktop", "tauri-macos");
+    return () => {
+      document.documentElement.classList.remove("tauri-desktop", "tauri-macos");
+    };
+  }, []);
 
   const refreshLibrary = useCallback(async () => {
     try {
@@ -128,19 +132,25 @@ export function MainApp() {
           updatedAt: deck.updatedAt ?? Date.now(),
         })),
       );
+      const deckIds = new Set(deckList.map((deck) => deck.id));
+      const lastUsed = localStorage.getItem("xanki:lastUsedDeckId");
+      if (lastUsed && !deckIds.has(lastUsed)) {
+        localStorage.removeItem("xanki:lastUsedDeckId");
+        void invoke("set_capture_deck_id", { deckId: null });
+      } else if (lastUsed && deckIds.has(lastUsed)) {
+        setSelectedDeckId(lastUsed);
+      }
       const now = Date.now();
       const count = allCards.filter((card) => Number(card.dueAt ?? 0) <= now).length;
       setDueCount(count);
-      if (tabRef.current === "study") {
-        setLibraryRevision((value) => value + 1);
-      }
+      setLibraryRevision((value) => value + 1);
       await invoke("update_tray_due_count", { count });
     } catch (e) {
       if (isCloudUnauthorized(e)) {
         await auth.syncFromSession();
       }
     }
-  }, [auth.syncFromSession, setDecks, setDueCount]);
+  }, [auth.syncFromSession, setDecks, setDueCount, setSelectedDeckId]);
 
   const refreshLibraryRef = useRef(refreshLibrary);
   refreshLibraryRef.current = refreshLibrary;
@@ -164,13 +174,25 @@ export function MainApp() {
   const handleTabChange = useCallback(
     (nextTab: AppTab) => {
       setTab(nextTab);
-      if (nextTab !== "study") {
-        setStudySession(EMPTY_SESSION);
+      if (nextTab === "deckStudy") {
+        void flushLibraryRefresh();
+      }
+      if (nextTab !== "deckStudy") {
+        setDeckStudySession(EMPTY_SESSION);
+      }
+      if (nextTab !== "leitner") {
+        setLeitnerSession(EMPTY_SESSION);
+      }
+      if (nextTab !== "deckStudy" && nextTab !== "leitner") {
         setStudySessionActive(false);
       }
     },
     [setStudySessionActive],
   );
+
+  useEffect(() => {
+    setStudySessionActive(deckStudySession.active || leitnerSession.active);
+  }, [deckStudySession.active, leitnerSession.active, setStudySessionActive]);
 
   useEffect(() => {
     void getCurrentWindow().setTheme("light");
@@ -203,6 +225,12 @@ export function MainApp() {
   }, [auth.loggedIn, decks, selectedDeckId, setSelectedDeckId]);
 
   useEffect(() => {
+    if (!selectedDeckId) return;
+    localStorage.setItem("xanki:lastUsedDeckId", selectedDeckId);
+    void invoke("set_capture_deck_id", { deckId: selectedDeckId });
+  }, [selectedDeckId]);
+
+  useEffect(() => {
     if (!auth.loggedIn) return;
     setRevisionErrorHandler((error) => {
       if (isCloudUnauthorized(error)) {
@@ -221,6 +249,9 @@ export function MainApp() {
 
   useEffect(() => {
     if (!auth.loggedIn) return;
+    const unlistenLibrary = listen("xanki:library-changed", () => {
+      void flushLibraryRefresh();
+    });
     const unlistenNavigate = listen<string>("navigate", (event) => {
       const nextTab = resolveTab(event.payload);
       if (nextTab) handleTabChange(nextTab);
@@ -230,6 +261,7 @@ export function MainApp() {
     });
 
     return () => {
+      void unlistenLibrary.then((fn) => fn());
       void unlistenNavigate.then((fn) => fn());
       void unlistenCount.then((fn) => fn());
     };
@@ -261,42 +293,55 @@ export function MainApp() {
         setStudySessionActive={setStudySessionActive}
       >
         <AppShell
-        tab={tab}
-        onTabChange={handleTabChange}
-        sidebarOpen={sidebarOpen}
-        onSidebarOpenChange={setSidebarOpen}
-        studySessionActive={studySessionActive}
-        studySessionModeLabel={studySession.modeLabel}
-        onStudySessionExit={studySession.exit}
-        dueCount={dueCount}
-        selectedDeck={selectedDeck}
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-      >
-        {tab === "home" && (
-          <HomeView
-            decks={decks}
-            selectedDeckId={selectedDeckId}
-            dueCount={dueCount}
-            onSelectDeck={setSelectedDeckId}
-            onGoToStudy={() => handleTabChange("study")}
-          />
-        )}
-        <AppTabLayer active={tab === "study"}>
-          <StudyView
-            deckId={selectedDeckId}
-            searchQuery={searchQuery}
-            libraryRevision={libraryRevision}
-            onSessionChange={setStudySession}
-          />
-        </AppTabLayer>
-        {tab === "settings" && (
-          <SettingsView
-            permissions={permissions}
-            onRefresh={() => void refreshPermissions()}
-            cloudSection={<CloudSettingsSection />}
-          />
-        )}
+          tab={tab}
+          onTabChange={handleTabChange}
+          sidebarOpen={sidebarOpen}
+          onSidebarOpenChange={setSidebarOpen}
+          studySessionActive={studySessionActive}
+          deckStudySessionActive={deckStudySession.active}
+          deckStudySessionModeLabel={deckStudySession.modeLabel}
+          onDeckStudySessionExit={deckStudySession.exit}
+          leitnerSessionActive={leitnerSession.active}
+          leitnerSessionModeLabel={leitnerSession.modeLabel}
+          onLeitnerSessionExit={leitnerSession.exit}
+          dueCount={dueCount}
+          selectedDeck={selectedDeck}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+        >
+          {tab === "home" && (
+            <HomeView
+              decks={decks}
+              selectedDeckId={selectedDeckId}
+              dueCount={dueCount}
+              onSelectDeck={setSelectedDeckId}
+              onGoToDeckStudy={() => handleTabChange("deckStudy")}
+              onGoToLeitner={() => handleTabChange("leitner")}
+            />
+          )}
+          <AppTabLayer active={tab === "deckStudy"}>
+            <DeckStudyView
+              deckId={selectedDeckId}
+              searchQuery={searchQuery}
+              libraryRevision={libraryRevision}
+              onSessionChange={setDeckStudySession}
+            />
+          </AppTabLayer>
+          <AppTabLayer active={tab === "leitner"}>
+            <LeitnerStudyView
+              decks={decks}
+              dueCount={dueCount}
+              libraryRevision={libraryRevision}
+              onSessionChange={setLeitnerSession}
+            />
+          </AppTabLayer>
+          {tab === "settings" && (
+            <SettingsView
+              permissions={permissions}
+              onRefresh={() => void refreshPermissions()}
+              cloudSection={<CloudSettingsSection />}
+            />
+          )}
         </AppShell>
       </AppShellProvider>
     </AppApiProvider>

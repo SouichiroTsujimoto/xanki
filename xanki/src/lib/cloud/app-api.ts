@@ -1,5 +1,6 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import {
   countDueCards,
   filterStudyCards,
@@ -19,6 +20,8 @@ import { cloud, ensureLocalImage, readLocalImageBytes } from "./client";
 import { nativeApi } from "../tauri/native-api";
 
 const LAST_DECK_KEY = "xanki:lastUsedDeckId";
+
+const libraryChangedListeners = new Set<() => void>();
 
 function mapCard(raw: Parameters<typeof mapApiCardWithImagePath>[0]) {
   return mapApiCardWithImagePath(raw, (hash) => `images/${hash}.webp`) as Card;
@@ -60,6 +63,10 @@ async function uploadImageHash(relativePath: string): Promise<string> {
 export function createCloudAppApi(onLibraryChanged?: () => void): AppApi {
   const notify = () => {
     onLibraryChanged?.();
+    for (const listener of libraryChangedListeners) {
+      listener();
+    }
+    void emit("xanki:library-changed", {}).catch(() => {});
   };
 
   return {
@@ -119,7 +126,6 @@ export function createCloudAppApi(onLibraryChanged?: () => void): AppApi {
       await cloud.deleteCard(cardId);
       notify();
     },
-    toggleStar: async (cardId) => mapCard(await cloud.toggleStar(cardId)),
     openCardEditor: async (cardId) => {
       const card = mapCard(await cloud.getCard(cardId));
       let imagePath: string | undefined;
@@ -258,6 +264,11 @@ export function createCloudAppApi(onLibraryChanged?: () => void): AppApi {
     triggerTextCapture: (deckId) => nativeApi.triggerTextCapture(deckId),
     triggerScreenshotCapture: (deckId) => nativeApi.triggerScreenshotCapture(deckId),
     openNewCardEditor: (request) => nativeApi.openNewCardEditor(request),
-    subscribeLibraryChanged: () => () => {},
+    subscribeLibraryChanged: (listener) => {
+      libraryChangedListeners.add(listener);
+      return () => {
+        libraryChangedListeners.delete(listener);
+      };
+    },
   };
 }

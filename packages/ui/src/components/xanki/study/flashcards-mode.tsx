@@ -1,17 +1,16 @@
 import { copy } from "../../../copy";
 import { useCallback, useEffect, useState } from "react";
 import {
+  DeckStudySessionProgress,
   StudyEmpty,
   StudyFlipCard,
-  StudyProgress,
-  useStudyQueue,
+  useDeckStudySession,
 } from "./shared";
-import type { ReviewCard } from "../../../types";
 
 interface Props {
   deckId?: string | null;
   shuffle: boolean;
-  singleCard?: ReviewCard | null;
+  singleCard?: import("../../../types").ReviewCard | null;
   onSingleExit?: () => void;
 }
 
@@ -22,30 +21,36 @@ export function FlashcardsMode({
   onSingleExit,
 }: Props) {
   const isSingle = singleCard != null;
-  const { queue, index, current, progress, loadQueue, next } = useStudyQueue(
+  const { current, sessionMeta, markKnown, markStill, restart } = useDeckStudySession(
     deckId,
-    "all",
     shuffle,
+    !isSingle,
   );
   const [revealed, setRevealed] = useState(false);
 
   const activeCard = isSingle ? singleCard : current;
-  const activeIndex = isSingle ? 0 : index;
-  const activeTotal = isSingle ? 1 : queue.length;
-  const activeProgress = isSingle ? 100 : progress;
+  const activeRemaining = isSingle ? 1 : sessionMeta.remaining;
+  const activeTotal = isSingle ? 1 : sessionMeta.total;
+  const activeProgress = isSingle ? 100 : sessionMeta.progress;
 
   useEffect(() => {
     setRevealed(false);
   }, [activeCard]);
 
-  const handleAdvance = useCallback(() => {
+  const handleKnown = useCallback(() => {
     if (isSingle) {
       onSingleExit?.();
       return;
     }
-    next();
     setRevealed(false);
-  }, [isSingle, next, onSingleExit]);
+    markKnown();
+  }, [isSingle, markKnown, onSingleExit]);
+
+  const handleStill = useCallback(() => {
+    if (isSingle) return;
+    setRevealed(false);
+    markStill();
+  }, [isSingle, markStill]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -54,9 +59,9 @@ export function FlashcardsMode({
         e.preventDefault();
         setRevealed((v) => !v);
       }
-      if (e.key === "ArrowRight") {
-        handleAdvance();
-      }
+      if (!revealed) return;
+      if (e.key === "1") handleStill();
+      if (e.key === "2") handleKnown();
       if (isSingle && e.key === "Escape") {
         e.preventDefault();
         onSingleExit?.();
@@ -64,29 +69,44 @@ export function FlashcardsMode({
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeCard, handleAdvance, isSingle, onSingleExit]);
+  }, [activeCard, handleKnown, handleStill, isSingle, onSingleExit, revealed]);
+
+  if (!isSingle && sessionMeta.ready && sessionMeta.isComplete) {
+    return (
+      <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
+        title={copy.deckStudy.sessionCompleteTitle}
+        copy={copy.deckStudy.sessionCompleteCopy}
+        onReload={restart}
+        reloadLabel={copy.deckStudy.sessionRestart}
+      />
+    );
+  }
 
   if (!activeCard) {
     return (
       <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
         title={copy.flashcardsMode.emptyTitle}
         copy={copy.flashcardsMode.emptyCopy}
-        onReload={() => void loadQueue()}
+        onReload={restart}
       />
     );
   }
 
   return (
     <div className="review-stage" tabIndex={0}>
-      <StudyProgress
-        index={activeIndex}
+      <DeckStudySessionProgress
+        remaining={activeRemaining}
         total={activeTotal}
         progress={activeProgress}
       />
       <p className="review-hint study-hint">
         {isSingle
           ? "Space / クリック 答え · Esc または戻るで閉じる"
-          : "Space / クリック 答え · → 次へ"}
+          : revealed
+            ? "1 まだ · 2 覚えた"
+            : "Space / クリック 答え"}
       </p>
       <div className="study-flip-slot">
         <StudyFlipCard
@@ -97,16 +117,31 @@ export function FlashcardsMode({
         />
       </div>
       <div className="review-actions">
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={() => setRevealed((v) => !v)}
-        >
-          {revealed ? "隠す" : "答えを見る"}
-        </button>
-        <button type="button" className="accent-button" onClick={handleAdvance}>
-          {isSingle ? "閉じる" : "次のカード"}
-        </button>
+        {isSingle ? (
+          <>
+            <button type="button" className="ghost-button" onClick={() => setRevealed((v) => !v)}>
+              {revealed ? "隠す" : "答えを見る"}
+            </button>
+            <button type="button" className="accent-button" onClick={() => onSingleExit?.()}>
+              閉じる
+            </button>
+          </>
+        ) : revealed ? (
+          <>
+            <button type="button" className="ghost-button" onClick={handleStill}>
+              <kbd>1</kbd>
+              {copy.deckStudy.still}
+            </button>
+            <button type="button" className="accent-button" onClick={handleKnown}>
+              <kbd>2</kbd>
+              {copy.deckStudy.known}
+            </button>
+          </>
+        ) : (
+          <button type="button" className="ghost-button" onClick={() => setRevealed(true)}>
+            答えを見る
+          </button>
+        )}
       </div>
     </div>
   );

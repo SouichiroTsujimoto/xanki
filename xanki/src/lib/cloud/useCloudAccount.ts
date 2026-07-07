@@ -5,33 +5,32 @@ import {
   cloud,
   getSession,
   logout,
-  sendOtp,
   SESSION_CLEARED_EVENT,
-  verifyOtp,
 } from "./client";
 
 export function useCloudAccount() {
   const [session, setSession] = useState<{ token: string | null }>({ token: null });
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [sent, setSent] = useState(false);
   const [status, setStatus] = useState<string>("未ログイン");
   const [error, setError] = useState<string | null>(null);
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const s = await getSession();
     setSession(s);
     if (!s.token) {
       setStatus("未ログイン");
+      setAccountEmail(null);
       return;
     }
     try {
-      const info = await cloud.getStorage();
+      const [me, info] = await Promise.all([cloud.me(), cloud.getStorage()]);
+      setAccountEmail(me.email);
       setStatus(
         `rev=${info.rev} / 容量 ${Math.round(info.storageUsed / 1024 / 1024)}MB / プラン ${info.plan}`,
       );
     } catch {
       setStatus("ログイン中");
+      setAccountEmail(null);
     }
   }, []);
 
@@ -39,38 +38,14 @@ export function useCloudAccount() {
     void refresh();
   }, [refresh]);
 
-  async function sendOtpAction(): Promise<boolean> {
-    setError(null);
-    try {
-      await sendOtp(email);
-      setSent(true);
-      return true;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "確認コードの送信に失敗しました");
-      return false;
-    }
-  }
-
-  async function verifyOtpAction(): Promise<boolean> {
-    setError(null);
-    try {
-      await verifyOtp(email, code);
-      await refresh();
-      return true;
-    } catch (e) {
-      const session = await getSession();
-      if (session.token) {
-        await refresh();
-        return true;
-      }
-      setError(e instanceof Error ? e.message : "ログインに失敗しました");
-      return false;
-    }
-  }
-
   async function logoutAction() {
-    await logout();
-    await refresh();
+    setError(null);
+    try {
+      await logout();
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ログアウトに失敗しました");
+    }
   }
 
   async function upgrade() {
@@ -85,23 +60,12 @@ export function useCloudAccount() {
 
   return {
     session,
-    email,
-    setEmail: (value: string) => {
-      setError(null);
-      setEmail(value);
-    },
-    code,
-    setCode: (value: string) => {
-      setError(null);
-      setCode(value);
-    },
-    sent,
+    accountEmail,
     status,
     error,
-    sendOtp: sendOtpAction,
-    verifyOtp: verifyOtpAction,
     logout: logoutAction,
     upgrade,
+    refresh,
   };
 }
 

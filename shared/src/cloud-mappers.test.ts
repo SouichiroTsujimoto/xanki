@@ -14,15 +14,14 @@ describe("cloud-mappers", () => {
     expect(deck.createdAt).toBeGreaterThan(0);
   });
 
-  it("filterStudyCards due and starred", () => {
+  it("filterStudyCards due and all", () => {
     const now = Date.now();
     const cards = [
-      { deckId: "d1", dueAt: now - 1, starred: false },
-      { deckId: "d1", dueAt: now + 1, starred: true },
-      { deckId: "d2", dueAt: now - 1, starred: false },
+      { deckId: "d1", dueAt: now - 1 },
+      { deckId: "d1", dueAt: now + 1 },
+      { deckId: "d2", dueAt: now - 1 },
     ];
     expect(filterStudyCards(cards, "due", "d1")).toHaveLength(1);
-    expect(filterStudyCards(cards, "starred", "d1")).toHaveLength(1);
     expect(filterStudyCards(cards, "all", "d1")).toHaveLength(2);
   });
 

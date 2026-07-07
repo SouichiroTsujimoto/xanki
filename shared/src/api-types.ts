@@ -73,7 +73,7 @@ export interface UpdateCardRequest {
 
 export interface SubmitReviewRequest {
   cardId: string;
-  result: 0 | 1;
+  result: 0 | 1 | 2 | 3;
 }
 
 export interface AiQaGenerateRequest {

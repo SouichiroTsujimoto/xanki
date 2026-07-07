@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import {
   AppApiProvider,
   AppShell,
@@ -7,13 +7,15 @@ import {
   AppTabLayer,
   copy,
   HomeView,
+  DeckStudyView,
+  LeitnerStudyView,
   SettingsView,
-  StudyView,
   Toaster,
   type AppTab,
   type Deck,
   type StudySessionInfo,
 } from "@xanki/ui";
+import { authClient } from "./auth-client";
 import { cloudApi, SESSION_CLEARED_EVENT } from "./api";
 import { createCloudAppApi } from "./app-api";
 import {
@@ -29,36 +31,14 @@ const EMPTY_SESSION: StudySessionInfo = {
   exit: () => {},
 };
 
-function BillingSection({ plan }: { plan: string }) {
-  return (
-    <>
-      <p className="eyebrow">{copy.billing.eyebrow}</p>
-      <h2>{copy.billing.title}</h2>
-      <p className="settings-note">{copy.billing.currentPlan(plan)}</p>
-      {plan !== "pro" && (
-        <button
-          type="button"
-          className="accent-button"
-          onClick={() => {
-            void cloudApi.checkout().then(({ url }) => {
-              window.location.href = url;
-            });
-          }}
-        >
-          {copy.billing.upgradePro}
-        </button>
-      )}
-      <p className="settings-note">{copy.billing.webOcrNote}</p>
-    </>
-  );
-}
-
 function AuthenticatedApp({
   email,
   plan,
+  onLogout,
 }: {
   email: string;
   plan: string;
+  onLogout: () => void;
 }) {
   const [tab, setTab] = useState<AppTab>("home");
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -67,7 +47,8 @@ function AuthenticatedApp({
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [studySessionActive, setStudySessionActive] = useState(false);
-  const [studySession, setStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
+  const [deckStudySession, setDeckStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
+  const [leitnerSession, setLeitnerSession] = useState<StudySessionInfo>(EMPTY_SESSION);
   const [libraryRevision, setLibraryRevision] = useState(0);
 
   const refreshDecks = useCallback(async () => {
@@ -130,11 +111,20 @@ function AuthenticatedApp({
 
   const handleTabChange = useCallback((nextTab: AppTab) => {
     setTab(nextTab);
-    if (nextTab !== "study") {
-      setStudySession(EMPTY_SESSION);
+    if (nextTab !== "deckStudy") {
+      setDeckStudySession(EMPTY_SESSION);
+    }
+    if (nextTab !== "leitner") {
+      setLeitnerSession(EMPTY_SESSION);
+    }
+    if (nextTab !== "deckStudy" && nextTab !== "leitner") {
       setStudySessionActive(false);
     }
   }, []);
+
+  useEffect(() => {
+    setStudySessionActive(deckStudySession.active || leitnerSession.active);
+  }, [deckStudySession.active, leitnerSession.active]);
 
   return (
     <AppApiProvider api={appApi}>
@@ -149,8 +139,12 @@ function AuthenticatedApp({
           sidebarOpen={sidebarOpen}
           onSidebarOpenChange={setSidebarOpen}
           studySessionActive={studySessionActive}
-          studySessionModeLabel={studySession.modeLabel}
-          onStudySessionExit={studySession.exit}
+          deckStudySessionActive={deckStudySession.active}
+          deckStudySessionModeLabel={deckStudySession.modeLabel}
+          onDeckStudySessionExit={deckStudySession.exit}
+          leitnerSessionActive={leitnerSession.active}
+          leitnerSessionModeLabel={leitnerSession.modeLabel}
+          onLeitnerSessionExit={leitnerSession.exit}
           dueCount={dueCount}
           selectedDeck={selectedDeck}
           searchQuery={searchQuery}
@@ -163,15 +157,24 @@ function AuthenticatedApp({
               selectedDeckId={selectedDeckId}
               dueCount={dueCount}
               onSelectDeck={setSelectedDeckId}
-              onGoToStudy={() => handleTabChange("study")}
+              onGoToDeckStudy={() => handleTabChange("deckStudy")}
+              onGoToLeitner={() => handleTabChange("leitner")}
             />
           )}
-          <AppTabLayer active={tab === "study"}>
-            <StudyView
+          <AppTabLayer active={tab === "deckStudy"}>
+            <DeckStudyView
               deckId={selectedDeckId}
               searchQuery={searchQuery}
               libraryRevision={libraryRevision}
-              onSessionChange={setStudySession}
+              onSessionChange={setDeckStudySession}
+            />
+          </AppTabLayer>
+          <AppTabLayer active={tab === "leitner"}>
+            <LeitnerStudyView
+              decks={decks}
+              dueCount={dueCount}
+              libraryRevision={libraryRevision}
+              onSessionChange={setLeitnerSession}
             />
           </AppTabLayer>
           {tab === "settings" && (
@@ -183,9 +186,40 @@ function AuthenticatedApp({
                   <p className="eyebrow">Cloud</p>
                   <h2>{copy.account.title}</h2>
                   <p className="settings-note">{copy.account.loggedInAs(email)}</p>
+                  <div className="settings-inline-actions">
+                    {plan !== "pro" && (
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        onClick={() => {
+                          void cloudApi.checkout().then(({ url }) => {
+                            window.location.href = url;
+                          });
+                        }}
+                      >
+                        {copy.billing.upgradePro}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => {
+                        void authClient.signOut().finally(onLogout);
+                      }}
+                    >
+                      ログアウト
+                    </button>
+                  </div>
                 </>
               }
-              billingSection={<BillingSection plan={plan} />}
+              billingSection={
+                <>
+                  <p className="eyebrow">{copy.billing.eyebrow}</p>
+                  <h2>{copy.billing.title}</h2>
+                  <p className="settings-note">{copy.billing.currentPlan(plan)}</p>
+                  <p className="settings-note">{copy.billing.webOcrNote}</p>
+                </>
+              }
             />
           )}
         </AppShell>
@@ -197,7 +231,6 @@ function AuthenticatedApp({
 export function App() {
   const [user, setUser] = useState<{ email: string; plan: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     cloudApi
@@ -216,7 +249,13 @@ export function App() {
   }, []);
 
   if (loading) {
-    return <div className="empty-panel">読み込み中…</div>;
+    return (
+      <div className="app-bootstrap">
+        <div className="empty-panel">
+          <p className="empty-title">読み込み中…</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -224,14 +263,7 @@ export function App() {
       <Routes>
         <Route
           path="*"
-          element={
-            <LoginPage
-              onLoggedIn={(email, plan) => {
-                setUser({ email, plan });
-                navigate("/");
-              }}
-            />
-          }
+          element={<LoginPage />}
         />
       </Routes>
     );
@@ -241,7 +273,7 @@ export function App() {
     <>
       <Toaster />
       <Routes>
-        <Route path="/" element={<AuthenticatedApp email={user.email} plan={user.plan} />} />
+        <Route path="/" element={<AuthenticatedApp email={user.email} plan={user.plan} onLogout={() => setUser(null)} />} />
         <Route path="/study" element={<Navigate to="/" replace />} />
         <Route path="/settings" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

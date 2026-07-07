@@ -1,5 +1,5 @@
 import { copy } from "../../../copy";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
 import {
   answersMatch,
@@ -8,7 +8,7 @@ import {
   shuffleArray,
 } from "../../../lib/maskAnswers";
 import type { MaskAnswer } from "../../../types";
-import { StudyEmpty } from "./shared";
+import { DeckStudySessionProgress, StudyEmpty } from "./shared";
 
 interface Props {
   deckId?: string | null;
@@ -17,88 +17,106 @@ interface Props {
 
 export function WriteMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
-  const [answers, setAnswers] = useState<MaskAnswer[]>([]);
+  const [remaining, setRemaining] = useState<MaskAnswer[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<"idle" | "ok" | "ng">("idle");
-  const [score, setScore] = useState({ ok: 0, total: 0 });
 
   useEffect(() => {
     async function load() {
       const cards = await api.listCards(deckId ?? undefined);
       const extracted = extractMaskAnswers(cards);
-      setAnswers(shuffle ? shuffleArray(extracted) : extracted);
+      const ordered = shuffle ? shuffleArray(extracted) : extracted;
+      setRemaining(ordered);
+      setTotalCount(ordered.length);
       setIndex(0);
       setInput("");
       setFeedback("idle");
-      setScore({ ok: 0, total: 0 });
     }
     void load();
   }, [deckId, shuffle, api]);
 
-  const current = answers[index];
-  const progress = answers.length > 0 ? ((index + 1) / answers.length) * 100 : 0;
+  const current = remaining[index];
+  const remainingCount = Math.max(remaining.length - index, 0);
+  const progress =
+    totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
+  const isComplete = totalCount > 0 && index >= remaining.length;
 
   const hint = useMemo(() => {
     if (!current) return "";
-    const len = current.answer.length;
-    return `${len} 文字`;
+    return `${current.answer.length} 文字`;
   }, [current]);
 
   function checkAnswer() {
     if (!current) return;
     const ok = answersMatch(input, current.answer);
     setFeedback(ok ? "ok" : "ng");
-    setScore((s) => ({ ok: s.ok + (ok ? 1 : 0), total: s.total + 1 }));
   }
 
-  function nextQuestion() {
+  const markKnown = useCallback(() => {
+    if (!current) return;
+    setRemaining((prev) => prev.filter((_, i) => i !== index));
     setInput("");
     setFeedback("idle");
-    if (index + 1 < answers.length) {
-      setIndex((i) => i + 1);
-    }
-  }
+  }, [current, index]);
 
-  if (answers.length === 0) {
+  const markStill = useCallback(() => {
+    if (!current) return;
+    setRemaining((prev) => {
+      if (index >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.push(item);
+      return next;
+    });
+    setInput("");
+    setFeedback("idle");
+  }, [current, index]);
+
+  if (remaining.length === 0 && totalCount === 0) {
     return (
       <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
         title={copy.writeMode.emptyTitle}
         copy={copy.writeMode.emptyCopy}
       />
     );
   }
 
-  if (index >= answers.length && score.total > 0) {
+  if (isComplete) {
     return (
-      <div className="review-stage empty">
-        <div className="review-complete">
-          <p className="eyebrow">{copy.writeMode.completeEyebrow}</p>
-          <h2>
-            {score.ok} / {score.total} 正解
-          </h2>
-          <button
-            type="button"
-            className="accent-button"
-            onClick={() => {
-              setIndex(0);
-              setScore({ ok: 0, total: 0 });
-              setAnswers(shuffle ? shuffleArray(answers) : [...answers]);
-            }}
-          >
-            {copy.writeMode.retry}
-          </button>
-        </div>
-      </div>
+      <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
+        title={copy.deckStudy.sessionCompleteTitle}
+        copy={copy.deckStudy.sessionCompleteCopy}
+        onReload={() => {
+          void (async () => {
+            const cards = await api.listCards(deckId ?? undefined);
+            const extracted = extractMaskAnswers(cards);
+            const ordered = shuffle ? shuffleArray(extracted) : extracted;
+            setRemaining(ordered);
+            setTotalCount(ordered.length);
+            setIndex(0);
+          })();
+        }}
+        reloadLabel={copy.deckStudy.sessionRestart}
+      />
     );
   }
 
   return (
     <div className="review-stage write-mode">
-      <div className="review-progress">
-        <div className="review-progress-bar" style={{ width: `${progress}%` }} />
-      </div>
-      <p className="review-hint study-hint">隠された語句を入力 · Enter 確認</p>
+      <DeckStudySessionProgress
+        remaining={remainingCount}
+        total={totalCount}
+        progress={progress}
+      />
+      <p className="review-hint study-hint">
+        {feedback === "idle"
+          ? "隠された語句を入力 · Enter 確認"
+          : "1 まだ · 2 覚えた"}
+      </p>
 
       <div className="write-prompt">
         <p className="eyebrow">{copy.writeMode.promptEyebrow}</p>
@@ -112,7 +130,8 @@ export function WriteMode({ deckId, shuffle }: Props) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && feedback === "idle") checkAnswer();
-            if (e.key === "Enter" && feedback !== "idle") nextQuestion();
+            if (feedback !== "idle" && e.key === "1") markStill();
+            if (feedback !== "idle" && e.key === "2") markKnown();
           }}
           placeholder={copy.writeMode.answerPlaceholder}
           disabled={feedback !== "idle"}
@@ -123,9 +142,16 @@ export function WriteMode({ deckId, shuffle }: Props) {
             確認
           </button>
         ) : (
-          <button type="button" className="accent-button" onClick={nextQuestion}>
-            次へ
-          </button>
+          <>
+            <button type="button" className="ghost-button" onClick={markStill}>
+              <kbd>1</kbd>
+              {copy.deckStudy.still}
+            </button>
+            <button type="button" className="accent-button" onClick={markKnown}>
+              <kbd>2</kbd>
+              {copy.deckStudy.known}
+            </button>
+          </>
         )}
       </div>
 

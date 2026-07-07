@@ -95,7 +95,7 @@ export interface EditorInitPayload {
   ocrData?: string;
 }
 
-export type StudyFilter = "due" | "all" | "starred";
+export type StudyFilter = "due" | "all";
 
 export type StudyMode = "flashcards" | "learn" | "write" | "test" | "match";
 

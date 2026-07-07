@@ -26,11 +26,12 @@ function useNarrowViewport(): boolean {
   return isNarrow;
 }
 
-export type AppTab = "home" | "study" | "settings";
+export type AppTab = "home" | "deckStudy" | "leitner" | "settings";
 
 const NAV: { id: AppTab; label: string; hint: string }[] = [
   { id: "home", label: copy.nav.home, hint: copy.nav.homeHint },
-  { id: "study", label: copy.nav.study, hint: copy.nav.studyHint },
+  { id: "deckStudy", label: copy.nav.deckStudy, hint: copy.nav.deckStudyHint },
+  { id: "leitner", label: copy.nav.leitner, hint: copy.nav.leitnerHint },
   { id: "settings", label: copy.nav.settings, hint: copy.nav.settingsHint },
 ];
 
@@ -40,8 +41,12 @@ export interface AppShellProps {
   sidebarOpen: boolean;
   onSidebarOpenChange: (open: boolean) => void;
   studySessionActive: boolean;
-  studySessionModeLabel: string | null;
-  onStudySessionExit: () => void;
+  deckStudySessionActive: boolean;
+  deckStudySessionModeLabel: string | null;
+  onDeckStudySessionExit: () => void;
+  leitnerSessionActive: boolean;
+  leitnerSessionModeLabel: string | null;
+  onLeitnerSessionExit: () => void;
   dueCount: number;
   selectedDeck: Deck | null;
   searchQuery: string;
@@ -56,8 +61,12 @@ export function AppShell({
   sidebarOpen,
   onSidebarOpenChange,
   studySessionActive,
-  studySessionModeLabel,
-  onStudySessionExit,
+  deckStudySessionActive,
+  deckStudySessionModeLabel,
+  onDeckStudySessionExit,
+  leitnerSessionActive,
+  leitnerSessionModeLabel,
+  onLeitnerSessionExit,
   dueCount,
   selectedDeck,
   searchQuery,
@@ -86,6 +95,28 @@ export function AppShell({
     .filter(Boolean)
     .join(" ");
 
+  const topbarEyebrow =
+    tab === "home"
+      ? copy.topbar.home
+      : tab === "deckStudy"
+        ? copy.topbar.deckStudyDefault
+        : tab === "leitner"
+          ? copy.topbar.leitnerDefault
+          : copy.topbar.settings;
+
+  const topbarTitle =
+    tab === "home"
+      ? copy.topbar.home
+      : tab === "deckStudy"
+        ? deckStudySessionActive && deckStudySessionModeLabel
+          ? deckStudySessionModeLabel
+          : (selectedDeck?.name ?? copy.topbar.deckStudyDefault)
+        : tab === "leitner"
+          ? leitnerSessionActive && leitnerSessionModeLabel
+            ? leitnerSessionModeLabel
+            : copy.topbar.leitnerDefault
+          : copy.topbar.settings;
+
   const railContent = (
     <>
       <div className="brand-block">
@@ -98,17 +129,18 @@ export function AppShell({
         </div>
       </div>
 
-      <nav className="rail-nav">
+      <nav className="rail-nav" data-tauri-drag-region="false">
         {NAV.map((item) => (
           <button
             key={item.id}
             type="button"
             className={`rail-link ${tab === item.id ? "active" : ""}`}
+            data-tauri-drag-region="false"
             onClick={() => handleTabChange(item.id)}
           >
             <span className="rail-link-label">{item.label}</span>
             <span className="rail-link-hint">{item.hint}</span>
-            {item.id === "study" && dueCount > 0 && (
+            {item.id === "leitner" && dueCount > 0 && (
               <span className="rail-badge">{dueCount}</span>
             )}
           </button>
@@ -116,7 +148,7 @@ export function AppShell({
       </nav>
 
       {showCaptureShortcuts && (
-        <div className="rail-shortcuts">
+        <div className="rail-shortcuts" data-tauri-drag-region="false">
           <p className="rail-section-title">{copy.sidebar.captureSection}</p>
           <div className="shortcut-chip">
             <kbd>⌥⌘M</kbd>
@@ -148,6 +180,7 @@ export function AppShell({
       {isNarrow ? (
         <motion.aside
           className="app-rail app-rail-motion"
+          data-tauri-drag-region
           initial={false}
           animate={{ x: sidebarOpen ? "0%" : "-100%" }}
           transition={drawerTransition}
@@ -155,14 +188,17 @@ export function AppShell({
           {railContent}
         </motion.aside>
       ) : (
-        <aside className="app-rail">{railContent}</aside>
+        <aside className="app-rail" data-tauri-drag-region>
+          {railContent}
+        </aside>
       )}
 
       <div className="app-main">
-        <header className="app-topbar">
+        <header className="app-topbar" data-tauri-drag-region>
           <button
             type="button"
             className="sidebar-toggle"
+            data-tauri-drag-region="false"
             aria-label={sidebarOpen ? copy.sidebar.close : copy.sidebar.open}
             onClick={() => onSidebarOpenChange(!sidebarOpen)}
           >
@@ -170,47 +206,46 @@ export function AppShell({
           </button>
 
           <div className="topbar-copy">
-            <p className="eyebrow">
-              {tab === "home"
-                ? copy.topbar.home
-                : tab === "study"
-                  ? copy.topbar.studyDefault
-                  : copy.topbar.settings}
-            </p>
-            <h1>
-              {tab === "home" && copy.topbar.home}
-              {tab === "study" &&
-                (studySessionActive && studySessionModeLabel
-                  ? studySessionModeLabel
-                  : selectedDeck?.name ?? copy.topbar.studyDefault)}
-              {tab === "settings" && copy.topbar.settings}
-            </h1>
+            <p className="eyebrow">{topbarEyebrow}</p>
+            <h1>{topbarTitle}</h1>
           </div>
 
-          <div className="topbar-actions">
-            {tab === "study" && studySessionActive && (
+          <div className="topbar-actions" data-tauri-drag-region="false">
+            {tab === "deckStudy" && deckStudySessionActive && (
               <button
                 type="button"
                 className="ghost-button study-back-button"
-                onClick={onStudySessionExit}
+                data-tauri-drag-region="false"
+                onClick={onDeckStudySessionExit}
               >
-                {copy.study.back}
+                {copy.deckStudy.back}
               </button>
             )}
-            {tab === "study" && !studySessionActive && (
-              <label className="search-field">
+            {tab === "leitner" && leitnerSessionActive && (
+              <button
+                type="button"
+                className="ghost-button study-back-button"
+                data-tauri-drag-region="false"
+                onClick={onLeitnerSessionExit}
+              >
+                {copy.leitnerStudy.back}
+              </button>
+            )}
+            {tab === "deckStudy" && !deckStudySessionActive && (
+              <label className="search-field" data-tauri-drag-region="false">
                 <span className="sr-only">{copy.common.search}</span>
                 <input
+                  data-tauri-drag-region="false"
                   value={searchQuery}
                   onChange={(e) => onSearchQueryChange(e.target.value)}
-                  placeholder={copy.study.searchPlaceholder}
+                  placeholder={copy.deckStudy.searchPlaceholder}
                 />
               </label>
             )}
-            {tab === "study" && !studySessionActive && dueCount > 0 && (
+            {tab === "leitner" && !leitnerSessionActive && dueCount > 0 && (
               <div className="due-banner">
                 <span className="due-banner-count">{dueCount}</span>
-                <span>{copy.study.dueBannerSuffix}</span>
+                <span>{copy.leitnerStudy.dueBannerSuffix}</span>
               </div>
             )}
           </div>

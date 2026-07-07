@@ -1,3 +1,4 @@
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
 import { CLOUD_UNAUTHORIZED, createCloudClient, markSessionExpired } from "@xanki/shared";
 
@@ -8,6 +9,7 @@ export interface CloudSession {
 }
 
 export const SESSION_CLEARED_EVENT = "xanki:session-cleared";
+export const AUTH_COMPLETE_EVENT = "xanki:auth-complete";
 
 let handlingUnauthorized = false;
 
@@ -37,99 +39,25 @@ export const cloud = createCloudClient({
   },
 });
 
-type AuthErrorBody = {
-  message?: string;
-  error?: string;
-  code?: string;
-};
-
-function localizeAuthError(message: string): string {
-  switch (message) {
-    case "Invalid OTP":
-      return "確認コードが正しくないか、期限切れです";
-    case "send_otp_failed":
-      return "確認コードの送信に失敗しました";
-    case "invalid_otp":
-      return "ログインに失敗しました";
-    default:
-      return message;
-  }
-}
-
-async function readAuthErrorMessage(res: Response, fallback: string): Promise<string> {
-  try {
-    const data = (await res.json()) as AuthErrorBody;
-    return data.message ?? data.error ?? fallback;
-  } catch {
-    return res.status > 0 ? `${fallback}（HTTP ${res.status}）` : fallback;
-  }
-}
-
 function cloudUnreachableError(): Error {
   return new Error(
     `クラウド API（${CLOUD_URL}）に接続できません。別ターミナルで pnpm dev:cloud が起動しているか確認してください。`,
   );
 }
 
-async function authFetch(url: string, init: RequestInit): Promise<Response> {
+export async function signInWithGoogle(): Promise<void> {
+  let signInUrl: string;
   try {
-    return await fetch(url, init);
+    ({ signInUrl } = await invoke<{ signInUrl: string }>("cloud_prepare_google_sign_in", {
+      cloudUrl: CLOUD_URL,
+    }));
+  } catch {
+    throw new Error("ログインの準備に失敗しました");
+  }
+  try {
+    await openUrl(signInUrl);
   } catch {
     throw cloudUnreachableError();
-  }
-}
-
-const inflightVerifies = new Map<string, Promise<void>>();
-
-async function verifyOtpRequest(email: string, code: string): Promise<void> {
-  const res = await authFetch(`${CLOUD_URL}/api/auth/sign-in/email-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, otp: code }),
-  });
-  const data = (await res.json().catch(() => ({}))) as AuthErrorBody & { token?: string };
-  if (!res.ok) {
-    throw new Error(
-      localizeAuthError(data.message ?? data.error ?? "ログインに失敗しました"),
-    );
-  }
-  // Cross-origin (Tauri localhost:1420 → API :8787) では set-auth-token ヘッダが読めないため body を優先
-  const token = data.token ?? res.headers.get("set-auth-token");
-  if (!token) {
-    throw new Error("ログインに失敗しました（認証トークンを取得できませんでした）");
-  }
-  try {
-    await invoke("cloud_set_session", { token });
-  } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e);
-    throw new Error(`セッションの保存に失敗しました: ${detail}`);
-  }
-}
-
-export async function verifyOtp(email: string, code: string): Promise<void> {
-  const key = `${email.trim().toLowerCase()}:${code.trim()}`;
-  const existing = inflightVerifies.get(key);
-  if (existing) {
-    await existing;
-    return;
-  }
-  const promise = verifyOtpRequest(email, code);
-  inflightVerifies.set(key, promise);
-  try {
-    await promise;
-  } finally {
-    inflightVerifies.delete(key);
-  }
-}
-
-export async function sendOtp(email: string): Promise<void> {
-  const res = await authFetch(`${CLOUD_URL}/api/auth/email-otp/send-verification-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, type: "sign-in" }),
-  });
-  if (!res.ok) {
-    throw new Error(await readAuthErrorMessage(res, "確認コードの送信に失敗しました"));
   }
 }
 
@@ -138,7 +66,20 @@ export async function getSession(): Promise<CloudSession> {
 }
 
 export async function logout(): Promise<void> {
+  const session = await getSession();
+  if (session.token) {
+    try {
+      await fetch(`${CLOUD_URL}/api/auth/sign-out`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+    } catch {
+      // ignore network errors during logout
+    }
+  }
+  localStorage.removeItem("xanki:lastUsedDeckId");
   await invoke("cloud_clear_session");
+  await invoke("set_capture_deck_id", { deckId: null });
 }
 
 export async function readLocalImageBytes(relativePath: string): Promise<Uint8Array> {

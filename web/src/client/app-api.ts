@@ -56,7 +56,6 @@ export function createCloudAppApi(onRevision?: () => void): AppApi {
       await cloudApi.deleteCard(cardId);
       notify();
     },
-    toggleStar: async (cardId) => mapCard(await cloudApi.toggleStar(cardId)),
     openCardEditor: async () => {
       throw new Error("Web ではエディタ未対応");
     },

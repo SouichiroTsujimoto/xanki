@@ -14,7 +14,7 @@
 
 | ID | 機能 | 概要 |
 |----|------|------|
-| C1 | 認証 | better-auth によるアカウント(メール OTP)。デスクトップ/Web 共通。**ログイン必須** |
+| C1 | 認証 | better-auth による **Google OAuth** のみ。デスクトップ/Web 共通。**ログイン必須** |
 | C2 | カードデータ | D1 正規化テーブルが SSoT。Web / Desktop とも REST で読み書き。画像は R2 ブロブ |
 | C3 | Web UI | 学習(全モード)+ ライブラリ + 手動カード作成(テキスト入力/画像アップロード→マスク) |
 | C4 | 課金 | プラン管理・entitlement。決済プロバイダ webhook → D1 |
@@ -61,7 +61,7 @@
 | レイヤ | 選定 | 備考 |
 |--------|------|------|
 | API | Hono on Cloudflare Workers | Workers Paid ($5/月) |
-| 認証 | better-auth (D1 + Drizzle) | メール OTP を主経路。メール送信は Resend |
+| 認証 | better-auth (D1 + Drizzle) | **Google OAuth** のみ。bearer プラグイン |
 | DB | D1 | 正規化 decks/cards/review + blobs + entitlements |
 | リアルタイム | Durable Objects + SSE | `UserSyncHub` |
 | ブロブ | R2 (非公開バケット) | エグレス無料。S3 互換署名 URL |
@@ -72,22 +72,25 @@
 
 ## 4. 認証 (C1)
 
-- **better-auth** + **emailOTP** プラグイン。D1 + Drizzle adapter
-- **主経路: メール OTP**(メールアドレス入力 → 6 桁コード → セッション)
+- **better-auth** + **Google OAuth**（`socialProviders.google`）。D1 + Drizzle adapter。**登録・ログイン同一フロー**
 - better-auth 標準 API（`/api/auth/*`）:
-  - `POST /api/auth/email-otp/send-verification-otp` — body: `{ email, type: "sign-in" }`
-  - `POST /api/auth/sign-in/email-otp` — body: `{ email, otp }`
+  - `POST /api/auth/sign-in/social` — body: `{ provider: "google", callbackURL }` → Google OAuth URL を返す
+  - `GET /api/auth/callback/google` — Google コールバック
+  - `POST /api/auth/sign-out` — ログアウト
 - xanki 固有（better-auth 外）:
   - `GET /api/me` — ログインユーザー + entitlement
+  - `GET /auth/desktop-sign-in?return=http://127.0.0.1:<port>/callback` — Desktop OAuth 開始（loopback 受け口を指定。`tauri dev` でも動作）
+  - `GET /auth/desktop-callback` — Desktop OAuth 完了後、Cookie セッションから bearer を loopback または深リンクへ渡す
   - `POST /api/dev/promote-pro` — ローカル dev のみ（Stripe なし Pro 試用）
-- Web: Cookie セッション(better-auth 標準)
-- デスクトップ: OTP 完了後 `POST /api/auth/sign-in/email-otp` の JSON `{ token }`（ヘッダ `set-auth-token` は同一オリジン Web 用フォールバック）→ **macOS Keychain**（Rust `keyring` + `apple-native` feature、`com.souic.xanki.cloud` / `session`）→ `Authorization: Bearer`
-- ローカル dev: `RESEND_API_KEY` 未設定時は wrangler ログ `[dev OTP]`。自動テストは better-auth **testUtils** (`captureOTP`)
-- **ログイン UI**: OTP 送信後は `{email} に確認コードを送信しました` を表示。**コードを再送**（クールダウン 30 秒）と **メールアドレスを変更**（メール入力へ戻る）を提供
-- dev OTP ヒント（`wrangler ログの [dev OTP]`）は **開発ビルドのみ**表示（`import.meta.env.DEV`）
+- **セッション**: 有効期限 **365 日**（`updateAge: 24h` で延長）。日常利用では再ログインを避ける
+- Web: Cookie セッション（better-auth 標準）。`authClient.signIn.social({ provider: "google" })`
+- デスクトップ: アプリが **127.0.0.1 loopback** を起動 → 外部ブラウザで `/auth/desktop-sign-in?return=...` → Google OAuth → `/auth/desktop-callback` → **`http://127.0.0.1:<port>/callback?token=...`** → **macOS Keychain** → `Authorization: Bearer`（本番 `.app` では `xanki://` 深リンクもフォールバック可）
 - 401 でセッション失効時はログイン画面へ戻し、`sessionStorage` 経由で **セッション切れ** メッセージを 1 回表示
-- **ログイン必須** — Web / Desktop とも未認証ではアプリ本体に入れない（後続で未ログイン緩和可）
-- ソーシャルログインは後追い可(better-auth プラグイン追加のみ)
+- **ログイン必須** — Web / Desktop とも未認証ではアプリ本体に入れない
+- **ログイン UI**: **Google で続ける** ボタン 1 つのみ（[`LoginView`](../../packages/ui/src/components/xanki/login-view.tsx)）
+- 環境変数: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`（本番は wrangler secret）
+- Google Cloud Console redirect URI: `{APP_URL}/api/auth/callback/google`
+- 自動テスト: OTP 不使用。Vitest 専用 `createTestUserSession` で bearer セッションを生成
 
 ## 5. データ API (C2)
 
@@ -100,6 +103,10 @@
 
 - サーバーが authoritative。競合マージ(LWW)は不要（単一 SSoT）
 - 新規 card 作成時に `review_state`(box=1) を同一 TX で insert
+- **`cards.deck_id` は必ず当該 `user_id` の deck を指す**（作成・更新時に `requireDeckOwnedByUser` で検証）。他ユーザーの deck ID は 404
+- **読み取り**は `cards` と `decks` を `user_id` で join し、自 deck に属さない行は返さない
+- 不正な `deck_id` を持つ既存行（移行期の残骸のみ）は読み取り時に **論理削除**（`purgeOrphanedCards`）。再発防止は書き込み検証が担う
+- **アカウント切替**: ログアウト時にクライアントが `xanki:lastUsedDeckId` / `capture_deck_id` をクリア
 
 ### 5.2 REST API（Web / Desktop 共通）
 
@@ -114,7 +121,6 @@ GET    /api/cards/:id
 POST   /api/cards                    → テキスト/qa/画像(画像は blob 先行)
 PATCH  /api/cards/:id
 DELETE /api/cards/:id
-POST   /api/cards/:id/star           → starred トグル
 
 GET    /api/review-state?deck_id=
 POST   /api/review/submit            { cardId, result: 0|1 }
