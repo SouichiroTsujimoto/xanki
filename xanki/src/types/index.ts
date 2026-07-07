@@ -13,6 +13,7 @@ export interface Card {
   content?: string;
   answer?: string;
   imagePath?: string;
+  imageHash?: string;
   ocrText?: string;
   ocrData?: string;
   masks: string;

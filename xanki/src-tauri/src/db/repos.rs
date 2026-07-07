@@ -27,20 +27,21 @@ fn map_card(row: &Row) -> rusqlite::Result<Card> {
         content: row.get(3)?,
         answer: row.get(4)?,
         image_path: row.get(5)?,
-        ocr_text: row.get(6)?,
-        ocr_data: row.get(7)?,
-        masks: row.get(8)?,
-        note: row.get(9)?,
-        source_hint: row.get(10)?,
-        created_at: row.get(11)?,
-        updated_at: row.get(12)?,
-        starred: row.get::<_, i32>(13).unwrap_or(0) != 0,
-        box_num: row.get(14).ok(),
-        due_at: row.get(15).ok(),
+        image_hash: row.get(6)?,
+        ocr_text: row.get(7)?,
+        ocr_data: row.get(8)?,
+        masks: row.get(9)?,
+        note: row.get(10)?,
+        source_hint: row.get(11)?,
+        created_at: row.get(12)?,
+        updated_at: row.get(13)?,
+        starred: row.get::<_, i32>(14).unwrap_or(0) != 0,
+        box_num: row.get(15).ok(),
+        due_at: row.get(16).ok(),
     })
 }
 
-const CARD_SELECT: &str = "SELECT c.id, c.deck_id, c.kind, c.content, c.answer, c.image_path, c.ocr_text, c.ocr_data,
+const CARD_SELECT: &str = "SELECT c.id, c.deck_id, c.kind, c.content, c.answer, c.image_path, c.image_hash, c.ocr_text, c.ocr_data,
                 c.masks, c.note, c.source_hint, c.created_at, c.updated_at, c.starred,
                 rs.box, rs.due_at";
 
@@ -180,8 +181,8 @@ pub fn save_text_card(conn: &Connection, req: &SaveTextCardRequest) -> AppResult
     )?;
     let due_at = LeitnerScheduler::initial_due_at(now);
     conn.execute(
-        "INSERT INTO review_state (card_id, box, due_at) VALUES (?1, 1, ?2)",
-        params![id, due_at],
+        "INSERT INTO review_state (card_id, box, due_at, updated_at) VALUES (?1, 1, ?2, ?3)",
+        params![id, due_at, now],
     )?;
     get_card(conn, &id)
 }
@@ -207,25 +208,31 @@ pub fn save_qa_card(conn: &Connection, req: &SaveQaCardRequest) -> AppResult<Car
     )?;
     let due_at = LeitnerScheduler::initial_due_at(now);
     conn.execute(
-        "INSERT INTO review_state (card_id, box, due_at) VALUES (?1, 1, ?2)",
-        params![id, due_at],
+        "INSERT INTO review_state (card_id, box, due_at, updated_at) VALUES (?1, 1, ?2, ?3)",
+        params![id, due_at, now],
     )?;
     get_card(conn, &id)
 }
 
-pub fn save_image_cards(conn: &Connection, req: &SaveImageCardsRequest) -> AppResult<Vec<Card>> {
+pub fn save_image_cards(
+    conn: &Connection,
+    req: &SaveImageCardsRequest,
+    image_path: &str,
+    image_hash: &str,
+) -> AppResult<Vec<Card>> {
     let mut saved = Vec::new();
     for region in &req.regions {
         let now = now_ms();
         let id = Uuid::now_v7().to_string();
         let masks = serde_json::to_string(&region.masks)?;
         conn.execute(
-            "INSERT INTO cards (id, deck_id, kind, image_path, ocr_text, ocr_data, masks, note, source_hint, created_at, updated_at)
-             VALUES (?1, ?2, 'image', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            "INSERT INTO cards (id, deck_id, kind, image_path, image_hash, ocr_text, ocr_data, masks, note, source_hint, created_at, updated_at)
+             VALUES (?1, ?2, 'image', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             params![
                 id,
                 req.deck_id,
-                req.image_path,
+                image_path,
+                image_hash,
                 req.ocr_text,
                 req.ocr_data,
                 masks,
@@ -237,8 +244,8 @@ pub fn save_image_cards(conn: &Connection, req: &SaveImageCardsRequest) -> AppRe
         )?;
         let due_at = LeitnerScheduler::initial_due_at(now);
         conn.execute(
-            "INSERT INTO review_state (card_id, box, due_at) VALUES (?1, 1, ?2)",
-            params![id, due_at],
+            "INSERT INTO review_state (card_id, box, due_at, updated_at) VALUES (?1, 1, ?2, ?3)",
+            params![id, due_at, now],
         )?;
         saved.push(get_card(conn, &id)?);
     }
@@ -336,8 +343,8 @@ pub fn duplicate_card(conn: &Connection, card_id: &str) -> AppResult<Card> {
     let now = now_ms();
     let id = Uuid::now_v7().to_string();
     conn.execute(
-        "INSERT INTO cards (id, deck_id, kind, content, answer, image_path, ocr_text, ocr_data, masks, note, source_hint, starred, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+        "INSERT INTO cards (id, deck_id, kind, content, answer, image_path, image_hash, ocr_text, ocr_data, masks, note, source_hint, starred, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
         params![
             id,
             source.deck_id,
@@ -345,6 +352,7 @@ pub fn duplicate_card(conn: &Connection, card_id: &str) -> AppResult<Card> {
             source.content,
             source.answer,
             source.image_path,
+            source.image_hash,
             source.ocr_text,
             source.ocr_data,
             source.masks,
@@ -357,8 +365,8 @@ pub fn duplicate_card(conn: &Connection, card_id: &str) -> AppResult<Card> {
     )?;
     let due_at = LeitnerScheduler::initial_due_at(now);
     conn.execute(
-        "INSERT INTO review_state (card_id, box, due_at) VALUES (?1, 1, ?2)",
-        params![id, due_at],
+        "INSERT INTO review_state (card_id, box, due_at, updated_at) VALUES (?1, 1, ?2, ?3)",
+        params![id, due_at, now],
     )?;
     get_card(conn, &id)
 }
@@ -367,8 +375,8 @@ pub fn reset_card_progress(conn: &Connection, card_id: &str) -> AppResult<Card> 
     let now = now_ms();
     let due_at = LeitnerScheduler::initial_due_at(now);
     conn.execute(
-        "UPDATE review_state SET box = 1, due_at = ?1, last_result = NULL WHERE card_id = ?2",
-        params![due_at, card_id],
+        "UPDATE review_state SET box = 1, due_at = ?1, last_result = NULL, updated_at = ?2 WHERE card_id = ?3",
+        params![due_at, now, card_id],
     )?;
     get_card(conn, card_id)
 }
@@ -461,8 +469,8 @@ pub fn import_deck(conn: &Connection, export: &DeckExport) -> AppResult<Deck> {
         )?;
         let due_at = LeitnerScheduler::initial_due_at(now);
         conn.execute(
-            "INSERT INTO review_state (card_id, box, due_at) VALUES (?1, 1, ?2)",
-            params![id, due_at],
+            "INSERT INTO review_state (card_id, box, due_at, updated_at) VALUES (?1, 1, ?2, ?3)",
+            params![id, due_at, now],
         )?;
     }
 
@@ -546,8 +554,8 @@ pub fn submit_review(conn: &Connection, card_id: &str, result: i32) -> AppResult
     let due_at = scheduler.due_at_for_box(new_box, now);
 
     conn.execute(
-        "UPDATE review_state SET box = ?1, due_at = ?2, last_result = ?3 WHERE card_id = ?4",
-        params![new_box, due_at, result, card_id],
+        "UPDATE review_state SET box = ?1, due_at = ?2, last_result = ?3, updated_at = ?4 WHERE card_id = ?5",
+        params![new_box, due_at, result, now, card_id],
     )?;
 
     let log_id = Uuid::now_v7().to_string();

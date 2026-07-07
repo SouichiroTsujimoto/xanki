@@ -1,0 +1,39 @@
+name = "xanki-web"
+main = "src/server/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "dist/client"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xanki"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "BLOBS"
+bucket_name = "xanki-blobs"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "local-rate-limit"
+
+[triggers]
+crons = ["0 3 * * *"]
+
+[[durable_objects.bindings]]
+name = "USER_SYNC"
+class_name = "UserSyncHub"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["UserSyncHub"]
+
+[vars]
+APP_URL = "http://localhost:8787"
+BETTER_AUTH_SECRET = "dev-better-auth-secret-min-32-chars-local"
+STRIPE_PRICE_PRO = "price_pro_placeholder"
+AI_MODEL = "gpt-4o-mini"

@@ -1,0 +1,18 @@
+{
+  "name": "xanki-monorepo",
+  "private": true,
+  "scripts": {
+    "build:shared": "pnpm --filter @xanki/shared build",
+    "build:ui": "pnpm --filter @xanki/ui typecheck",
+    "setup:cloud": "bash scripts/setup-cloud.sh",
+    "dev:cloud": "bash scripts/dev-cloud.sh",
+    "dev:cloud:all": "bash scripts/dev-cloud.sh --desktop",
+    "dev:cloud:desktop": "cd xanki && pnpm tauri dev",
+    "dev:web": "pnpm --filter @xanki/web dev",
+    "dev:desktop": "pnpm --filter xanki tauri dev",
+    "build:web": "pnpm --filter @xanki/web build",
+    "smoke:cloud": "pnpm --filter @xanki/web test:cloud",
+    "test:auth": "pnpm --filter @xanki/web test:auth",
+    "smoke:cloud:full": "bash scripts/dev-cloud.sh --smoke --skip-setup"
+  }
+}

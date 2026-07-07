@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment (commit *.example templates only)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cursor agent plans (local); rules under .cursor/rules/ may be tracked
+.cursor/plans/
+
+# Cloudflare Workers local state
+.wrangler/
+.dev.vars
+
+# Rust / Tauri
+**/target/
+**/src-tauri/gen/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Vite
+*.local
+
+# Nested lockfiles (monorepo uses root pnpm-lock.yaml)
+xanki/pnpm-lock.yaml

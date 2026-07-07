@@ -1,0 +1,45 @@
+---
+description: Web/Tauri 共通 UI は @xanki/ui に集約し、重複実装を禁止
+alwaysApply: true
+---
+
+# UI 共通化（必須）
+
+Web (`web/`) と Tauri (`xanki/`) で**同じ意味・同じ見た目**の UI を別々に書かない。
+
+## 正本
+
+| 種別 | 置き場 |
+|------|--------|
+| 画面・ダイアログ・学習 UI | [`packages/ui`](../../packages/ui/)（`@xanki/ui`） |
+| デザイントークン | [`packages/ui/src/styles/tokens.css`](../../packages/ui/src/styles/tokens.css) |
+| 仕様 | [`docs/spec/ui.md`](../../docs/spec/ui.md) |
+
+## ルール
+
+1. **新規 UI** — まず `@xanki/ui` に追加。Web/Tauri は import のみ
+2. **既存の重複** — 見つけたら `@xanki/ui` へ抽出して置き換える
+3. **プラットフォーム差** — 見た目は共有、挙動だけ差し替え:
+   - データ操作 → `AppApi`（[`packages/ui/src/types.ts`](../../packages/ui/src/types.ts)）
+   - 認証など AppApi 外 → **props / 薄い wrapper**（`web/src/client/…`, `xanki/src/…`）に閉じ込める
+4. **禁止** — `web/` と `xanki/` に同型コンポーネントのコピペ、ローカル専用 CSS で同等 UI を再実装
+
+## 例
+
+```tsx
+// ✅ GOOD — 共有 UI + プラットフォーム wrapper
+// packages/ui/src/components/xanki/login-view.tsx
+export function LoginView({ email, onSend, ... }: LoginViewProps) { ... }
+
+// web/src/client/pages/LoginPage.tsx
+export function LoginPage(props) {
+  const auth = useWebAuth();
+  return <LoginView {...auth} />;
+}
+
+// ❌ BAD — Web/Tauri それぞれに onboarding-frame + フォームを直書き
+```
+
+## 変更時
+
+UI を変えたら [`docs/spec/ui.md`](../../docs/spec/ui.md) を同じ PR で更新する。

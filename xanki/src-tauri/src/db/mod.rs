@@ -1,4 +1,5 @@
 pub mod repos;
+pub mod sync;
 
 use crate::error::{AppError, AppResult};
 use rusqlite::Connection;
@@ -30,6 +31,8 @@ impl Database {
         conn.execute_batch(include_str!("../../migrations/001_init.sql"))?;
         let _ = conn.execute_batch(include_str!("../../migrations/002_starred.sql"));
         let _ = conn.execute_batch(include_str!("../../migrations/003_qa_answer.sql"));
+        let _ = conn.execute_batch(include_str!("../../migrations/004_cloud_prep.sql"));
+        let _ = conn.execute_batch(include_str!("../../migrations/005_sync_ms.sql"));
         Ok(())
     }
 

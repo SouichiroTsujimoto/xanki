@@ -27,6 +27,9 @@ tokio = { version = "1", features = ["rt", "time"] }
 enigo = "0.3"
 arboard = "3"
 chrono = { version = "0.4", features = ["serde"] }
+keyring = { version = "3", features = ["apple-native"] }
+sha2 = "0.10"
+hex = "0.4"
 image = "0.25"
 
 [target.'cfg(target_os = "macos")'.dependencies]

@@ -1,0 +1,7 @@
+# wrangler dev 用（コピー: cp .dev.vars.example .dev.vars）
+# BETTER_AUTH_SECRET=  # 本番は wrangler secret put BETTER_AUTH_SECRET
+# RESEND_API_KEY=
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
+# AI_GATEWAY_URL=
+# AI_GATEWAY_TOKEN=

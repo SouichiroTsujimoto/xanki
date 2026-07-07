@@ -1,9 +1,11 @@
 import { useLayoutEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { api, parseImageMasks, parseTextMasks } from "../../lib/tauri/api";
-import { TextMaskEditor } from "../../components/TextMaskEditor";
-import { ImageMaskEditor } from "../../components/ImageMaskEditor";
-import type { EditorInitPayload, OcrResult } from "../../types";
+import {
+  ImageMaskEditor,
+  TextMaskEditor,
+  useAppApi,
+} from "@xanki/ui";
+import type { EditorInitPayload, OcrResult } from "@xanki/ui";
 
 function resolveWindowLabel(): string {
   const params = new URLSearchParams(window.location.search);
@@ -18,8 +20,13 @@ async function revealEditorWindow() {
 }
 
 export function MaskEditorApp() {
+  const api = useAppApi();
   const [payload, setPayload] = useState<EditorInitPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const closeEditor = () => {
+    void getCurrentWindow().close();
+  };
 
   useLayoutEffect(() => {
     let active = true;
@@ -66,7 +73,7 @@ export function MaskEditorApp() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [api]);
 
   if (error) {
     return (
@@ -87,8 +94,9 @@ export function MaskEditorApp() {
         initialContent={payload.content}
         cardId={payload.cardId}
         initialDeckId={payload.deckId}
-        initialMasks={payload.masks ? parseTextMasks(payload.masks) : []}
+        initialMasks={payload.masks ? api.parseTextMasks(payload.masks) : []}
         initialNote={payload.note ?? ""}
+        onClose={closeEditor}
       />
     );
   }
@@ -101,8 +109,9 @@ export function MaskEditorApp() {
         initialQaMode
         cardId={payload.cardId}
         initialDeckId={payload.deckId}
-        initialMasks={payload.masks ? parseTextMasks(payload.masks) : []}
+        initialMasks={payload.masks ? api.parseTextMasks(payload.masks) : []}
         initialNote={payload.note ?? ""}
+        onClose={closeEditor}
       />
     );
   }
@@ -116,9 +125,10 @@ export function MaskEditorApp() {
         imagePath={payload.imagePath}
         cardId={payload.cardId}
         initialDeckId={payload.deckId}
-        initialMasks={payload.masks ? parseImageMasks(payload.masks) : []}
+        initialMasks={payload.masks ? api.parseImageMasks(payload.masks) : []}
         initialNote={payload.note ?? ""}
         initialOcr={initialOcr}
+        onClose={closeEditor}
       />
     );
   }

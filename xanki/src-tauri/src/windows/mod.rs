@@ -52,7 +52,11 @@ fn store_and_open_editor(
     Ok(())
 }
 
-pub fn open_mask_editor_text(app: &AppHandle, text: &str) -> AppResult<()> {
+pub fn open_mask_editor_text(
+    app: &AppHandle,
+    text: &str,
+    deck_id: Option<String>,
+) -> AppResult<()> {
     let label = format!("mask-editor-{}", Uuid::now_v7());
     store_and_open_editor(
         app,
@@ -63,7 +67,7 @@ pub fn open_mask_editor_text(app: &AppHandle, text: &str) -> AppResult<()> {
             answer: None,
             image_path: None,
             card_id: None,
-            deck_id: None,
+            deck_id,
             masks: None,
             note: None,
             ocr_text: None,
@@ -74,7 +78,11 @@ pub fn open_mask_editor_text(app: &AppHandle, text: &str) -> AppResult<()> {
     )
 }
 
-pub fn open_mask_editor_image(app: &AppHandle, image_path: &str) -> AppResult<()> {
+pub fn open_mask_editor_image(
+    app: &AppHandle,
+    image_path: &str,
+    deck_id: Option<String>,
+) -> AppResult<()> {
     let label = format!("mask-editor-{}", Uuid::now_v7());
     store_and_open_editor(
         app,
@@ -85,7 +93,7 @@ pub fn open_mask_editor_image(app: &AppHandle, image_path: &str) -> AppResult<()
             answer: None,
             image_path: Some(image_path.to_string()),
             card_id: None,
-            deck_id: None,
+            deck_id,
             masks: None,
             note: None,
             ocr_text: None,
@@ -105,7 +113,7 @@ where
     }
 }
 
-pub fn handle_text_import(app: &AppHandle) {
+pub fn handle_text_import(app: &AppHandle, deck_id: Option<String>) {
     let app = app.clone();
     let app_for_task = app.clone();
     run_on_main(&app, move || {
@@ -123,7 +131,7 @@ pub fn handle_text_import(app: &AppHandle) {
         };
 
         if let Some(text) = result.text.clone().filter(|value| !value.trim().is_empty()) {
-            if let Err(error) = open_mask_editor_text(&app_for_task, &text) {
+            if let Err(error) = open_mask_editor_text(&app_for_task, &text, deck_id) {
                 eprintln!("failed to open text mask editor: {error}");
             }
             let _ = app_for_task.emit("import-metrics", &result);
@@ -141,12 +149,16 @@ pub fn handle_text_import(app: &AppHandle) {
     });
 }
 
-pub fn handle_screenshot_import(app: &AppHandle, app_data_dir: PathBuf) {
+pub fn handle_screenshot_import(
+    app: &AppHandle,
+    app_data_dir: PathBuf,
+    deck_id: Option<String>,
+) {
     let app = app.clone();
     let app_for_task = app.clone();
     run_on_main(&app, move || match capture_to_app_data(&app_data_dir) {
         Ok(Some(path)) => {
-            if let Err(error) = open_mask_editor_image(&app_for_task, &path) {
+            if let Err(error) = open_mask_editor_image(&app_for_task, &path, deck_id) {
                 eprintln!("failed to open image mask editor: {error}");
             }
         }
@@ -163,61 +175,57 @@ pub fn handle_screenshot_import(app: &AppHandle, app_data_dir: PathBuf) {
     });
 }
 
-pub fn open_card_editor(app: &AppHandle, state: &AppState, card_id: &str) -> AppResult<()> {
-    let card = state
-        .db
-        .with_conn(|conn| crate::db::repos::get_card(conn, card_id))?;
-
+pub fn open_new_card_editor(app: &AppHandle, deck_id: String, mode: &str) -> AppResult<()> {
     let label = format!("mask-editor-{}", Uuid::now_v7());
-    let payload = match card.kind.as_str() {
+    let payload = match mode {
         "text" => EditorInitPayload {
             mode: "text".into(),
-            content: card.content.clone(),
+            content: Some(String::new()),
             answer: None,
             image_path: None,
-            card_id: Some(card.id.clone()),
-            deck_id: Some(card.deck_id.clone()),
-            masks: Some(card.masks.clone()),
-            note: card.note.clone(),
+            card_id: None,
+            deck_id: Some(deck_id),
+            masks: None,
+            note: None,
             ocr_text: None,
             ocr_data: None,
         },
         "qa" => EditorInitPayload {
             mode: "qa".into(),
-            content: card.content.clone(),
-            answer: card.answer.clone(),
+            content: Some(String::new()),
+            answer: Some(String::new()),
             image_path: None,
-            card_id: Some(card.id.clone()),
-            deck_id: Some(card.deck_id.clone()),
-            masks: Some(card.masks.clone()),
-            note: card.note.clone(),
+            card_id: None,
+            deck_id: Some(deck_id),
+            masks: None,
+            note: None,
             ocr_text: None,
             ocr_data: None,
         },
-        "image" => EditorInitPayload {
-            mode: "image".into(),
-            content: None,
-            answer: None,
-            image_path: card.image_path.clone(),
-            card_id: Some(card.id.clone()),
-            deck_id: Some(card.deck_id.clone()),
-            masks: Some(card.masks.clone()),
-            note: card.note.clone(),
-            ocr_text: card.ocr_text.clone(),
-            ocr_data: card.ocr_data.clone(),
-        },
         other => {
-            return Err(AppError::Other(format!("unsupported card kind: {other}")));
+            return Err(AppError::Other(format!("unsupported new card mode: {other}")));
         }
     };
 
-    let (width, height) = if card.kind == "image" {
+    store_and_open_editor(app, &label, payload, 720.0, 600.0)
+}
+
+pub fn open_editor_with_payload(
+    app: &AppHandle,
+    _state: &AppState,
+    payload: EditorInitPayload,
+) -> AppResult<()> {
+    let label = format!("mask-editor-{}", Uuid::now_v7());
+    let (width, height) = if payload.mode == "image" {
         (1000.0, 1000.0)
     } else {
         (720.0, 600.0)
     };
-
     store_and_open_editor(app, &label, payload, width, height)
+}
+
+pub fn refresh_tray_count(app: &AppHandle, _state: &State<'_, AppState>) -> AppResult<()> {
+    Ok(())
 }
 
 pub fn configure_main_window(window: &tauri::WebviewWindow) -> AppResult<()> {
@@ -261,7 +269,7 @@ pub fn update_tray_menu(app: &AppHandle, due_count: i64) -> AppResult<()> {
     let review_label = format!("今日の復習: {due_count}件");
     let review = MenuItem::with_id(app, "review", &review_label, true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
-    let library = MenuItem::with_id(app, "library", "Home を開く", true, None::<&str>)
+    let library = MenuItem::with_id(app, "library", "ホームを開く", true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
     let settings = MenuItem::with_id(app, "settings", "設定", true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
@@ -274,12 +282,5 @@ pub fn update_tray_menu(app: &AppHandle, due_count: i64) -> AppResult<()> {
         .map_err(|e| AppError::Other(e.to_string()))?;
     tray.set_menu(Some(menu))
         .map_err(|e| AppError::Other(e.to_string()))?;
-    Ok(())
-}
-
-pub fn refresh_tray_count(app: &AppHandle, state: &State<'_, AppState>) -> AppResult<()> {
-    let count = state.db.with_conn(crate::db::repos::count_due_cards)?;
-    update_tray_menu(app, count)?;
-    let _ = app.emit("review-count-changed", count);
     Ok(())
 }

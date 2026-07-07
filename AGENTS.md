@@ -10,15 +10,37 @@
 | テキストマスク | [text-masks.md](./docs/spec/text-masks.md) |
 | 画像マスク・座標 | [image-masks.md](./docs/spec/image-masks.md) |
 | DB / JSON | [data-model.md](./docs/spec/data-model.md) |
-| ライブラリ | [library.md](./docs/spec/library.md) |
+| ライブラリ | [library.md](./docs/spec/library.md)（用語: [glossary.md](./docs/spec/glossary.md)） |
 | 学習 | [study.md](./docs/spec/study.md) |
 | UI / ダイアログ | [ui.md](./docs/spec/ui.md) |
+| 用語・UI 文言 | [glossary.md](./docs/spec/glossary.md) |
+| クラウド層 | [cloud.md](./docs/spec/cloud.md) |
+
+## モノレポ
+
+| パッケージ | 役割 |
+|-----------|------|
+| `xanki/` | Tauri デスクトップ（シェル + 取込 + 同期） |
+| `web/` | Cloud SPA + Workers API |
+| `packages/ui/` | 共有 UI（`@xanki/ui`）— Tailwind + shadcn プリミティブ |
+| `shared/` | 型・スキーマ（`@xanki/shared`） |
+
+**クラウド層のローカル動作確認**: [docs/dev-cloud.md](./docs/dev-cloud.md)
+
+```bash
+pnpm setup:cloud          # 初回のみ
+pnpm dev:cloud            # Web API + SPA (8787)
+pnpm smoke:cloud          # API 自動テスト
+pnpm dev:cloud:all        # + Tauri デスクトップ
+```
 
 ## ルール
 
 1. 挙動を変えたら **同じ変更で spec を更新**する
 2. 座標系・JSON・保存フローは spec と実装を必ず一致させる
 3. `window.confirm` / `window.alert` は Tauri で使わない（[ui.md](./docs/spec/ui.md)）
+4. **UI 共通化** — Web / Tauri で同じ画面・ダイアログは [`@xanki/ui`](./packages/ui/) に実装し、各アプリは import または認証などの薄い wrapper のみ（[ui.md](./docs/spec/ui.md) §デザイン SSoT）
+5. **用語** — UI・会話では [glossary.md](./docs/spec/glossary.md) の UI 表示（正）を使う。実装は [`packages/ui/src/copy.ts`](./packages/ui/src/copy.ts)
 
 ## アプリコード
 

@@ -1,4 +1,4 @@
-import { parseImageMasks, parseTextMasks } from "./tauri/api";
+import { parseImageMasks, parseTextMasks } from "./tauri/native-api";
 import type { Card, MaskAnswer, OcrResult, TextMask } from "../types";
 
 function buildQaPrompt(content: string, masks: TextMask[]): string {

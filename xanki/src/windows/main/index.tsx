@@ -1,21 +1,38 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { HomeView } from "../../components/HomeView";
-import { StudyView, type StudySessionInfo } from "../../components/study/StudyView";
-import { SettingsView } from "../../components/SettingsView";
-import { OnboardingView } from "../../components/OnboardingView";
-import { api } from "../../lib/tauri/api";
+import {
+  AppApiProvider,
+  AppShell,
+  AppShellProvider,
+  AppTabLayer,
+  copy,
+  HomeView,
+  OnboardingView,
+  SettingsView,
+  StudyView,
+  type AppTab,
+  type StudySessionInfo,
+} from "@xanki/ui";
+import { isCloudUnauthorized } from "@xanki/shared";
+import { createCloudAppApi } from "../../lib/cloud/app-api";
+import { cloud } from "../../lib/cloud/client";
+import {
+  acquireRevisionSubscription,
+  flushLibraryRefresh,
+  scheduleLibraryRefresh,
+  setLibraryRefreshHandler,
+  setRevisionErrorHandler,
+} from "../../lib/cloud/library-sync";
+import {
+  useAuthGate,
+  useCloudAccount,
+} from "../../lib/cloud/useCloudAccount";
+import { nativeApi } from "../../lib/tauri/native-api";
 import { useAppStore } from "../../stores/appStore";
 import type { PermissionStatus } from "../../types";
-
-type Tab = "home" | "study" | "settings";
-
-const NAV: { id: Tab; label: string; hint: string }[] = [
-  { id: "home", label: "Home", hint: "Decks" },
-  { id: "study", label: "学習", hint: "Study" },
-  { id: "settings", label: "設定", hint: "Prefs" },
-];
+import { LoginPage } from "./LoginPage";
 
 const EMPTY_SESSION: StudySessionInfo = {
   active: false,
@@ -23,7 +40,7 @@ const EMPTY_SESSION: StudySessionInfo = {
   exit: () => {},
 };
 
-function resolveTab(payload: string): Tab | null {
+function resolveTab(payload: string): AppTab | null {
   switch (payload) {
     case "home":
     case "library":
@@ -38,7 +55,29 @@ function resolveTab(payload: string): Tab | null {
   }
 }
 
+function CloudSettingsSection() {
+  const cloudAccount = useCloudAccount();
+
+  return (
+    <>
+      <p className="eyebrow">Cloud</p>
+      <h2>{copy.account.title}</h2>
+      <p className="settings-note">{cloudAccount.status}</p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" className="ghost-button" onClick={() => void cloudAccount.upgrade()}>
+          {copy.billing.upgradePro}
+        </button>
+        <button type="button" className="text-button" onClick={() => void cloudAccount.logout()}>
+          ログアウト
+        </button>
+      </div>
+      {cloudAccount.error && <p className="settings-note">{cloudAccount.error}</p>}
+    </>
+  );
+}
+
 export function MainApp() {
+  const auth = useAuthGate();
   const {
     dueCount,
     decks,
@@ -56,29 +95,63 @@ export function MainApp() {
     setOnboardingComplete,
   } = useAppStore();
 
-  const [tab, setTab] = useState<Tab>("home");
+  const [tab, setTab] = useState<AppTab>("home");
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
   const [studySession, setStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
+  const [libraryRevision, setLibraryRevision] = useState(0);
   const [permissions, setPermissions] = useState<PermissionStatus>({
     accessibility: false,
     screenRecording: false,
   });
 
+  const refreshLibrary = useCallback(async () => {
+    try {
+      const [deckList, allCards] = await Promise.all([cloud.listDecks(), cloud.listCards()]);
+      setDecks(
+        deckList.map((deck) => ({
+          id: deck.id,
+          name: deck.name,
+          cardCount: deck.cardCount ?? 0,
+          createdAt: deck.createdAt ?? Date.now(),
+          updatedAt: deck.updatedAt ?? Date.now(),
+        })),
+      );
+      const now = Date.now();
+      const count = allCards.filter((card) => Number(card.dueAt ?? 0) <= now).length;
+      setDueCount(count);
+      if (tabRef.current === "study") {
+        setLibraryRevision((value) => value + 1);
+      }
+      await invoke("update_tray_due_count", { count });
+    } catch (e) {
+      if (isCloudUnauthorized(e)) {
+        await auth.syncFromSession();
+      }
+    }
+  }, [auth.syncFromSession, setDecks, setDueCount]);
+
+  const refreshLibraryRef = useRef(refreshLibrary);
+  refreshLibraryRef.current = refreshLibrary;
+
+  useEffect(() => {
+    setLibraryRefreshHandler(() => refreshLibraryRef.current());
+    return () => setLibraryRefreshHandler(null);
+  }, []);
+
+  const appApi = useMemo(
+    () => createCloudAppApi(() => scheduleLibraryRefresh()),
+    [],
+  );
+
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? null;
 
-  const refreshDecks = useCallback(async () => {
-    setDecks(await api.listDecks());
-  }, [setDecks]);
-
-  const refreshDueCount = useCallback(async () => {
-    setDueCount(await api.getDueCount());
-  }, [setDueCount]);
-
   const refreshPermissions = useCallback(async () => {
-    setPermissions(await api.checkPermissions());
+    setPermissions(await nativeApi.checkPermissions());
   }, []);
 
   const handleTabChange = useCallback(
-    (nextTab: Tab) => {
+    (nextTab: AppTab) => {
       setTab(nextTab);
       if (nextTab !== "study") {
         setStudySession(EMPTY_SESSION);
@@ -93,33 +166,50 @@ export function MainApp() {
   }, []);
 
   useEffect(() => {
-    void refreshDecks();
-    void refreshDueCount();
-    void refreshPermissions();
-  }, [refreshDecks, refreshDueCount, refreshPermissions]);
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setSidebarOpen(false);
+    }
+  }, [setSidebarOpen]);
 
   useEffect(() => {
-    if (decks.length === 0) {
-      if (selectedDeckId !== null) setSelectedDeckId(null);
-      return;
-    }
+    if (!auth.loggedIn) return;
+    void flushLibraryRefresh();
+    void refreshPermissions();
+  }, [auth.loggedIn, refreshPermissions]);
 
+  useEffect(() => {
+    if (!auth.loggedIn || decks.length === 0) return;
     const selectedExists = selectedDeckId
       ? decks.some((deck) => deck.id === selectedDeckId)
       : false;
     if (selectedExists) return;
-
-    void (async () => {
-      const lastUsed = await api.getLastUsedDeckId();
-      const pick =
-        lastUsed && decks.some((deck) => deck.id === lastUsed)
-          ? lastUsed
-          : decks[0]?.id ?? null;
-      setSelectedDeckId(pick);
-    })();
-  }, [decks, selectedDeckId, setSelectedDeckId]);
+    const lastUsed = localStorage.getItem("xanki:lastUsedDeckId");
+    const pick =
+      lastUsed && decks.some((deck) => deck.id === lastUsed)
+        ? lastUsed
+        : decks[0]?.id ?? null;
+    setSelectedDeckId(pick);
+  }, [auth.loggedIn, decks, selectedDeckId, setSelectedDeckId]);
 
   useEffect(() => {
+    if (!auth.loggedIn) return;
+    setRevisionErrorHandler((error) => {
+      if (isCloudUnauthorized(error)) {
+        void auth.syncFromSession();
+      }
+    });
+    const releaseRevision = acquireRevisionSubscription(() => {
+      scheduleLibraryRefresh();
+    });
+
+    return () => {
+      setRevisionErrorHandler(null);
+      releaseRevision();
+    };
+  }, [auth.loggedIn, auth.syncFromSession]);
+
+  useEffect(() => {
+    if (!auth.loggedIn) return;
     const unlistenNavigate = listen<string>("navigate", (event) => {
       const nextTab = resolveTab(event.payload);
       if (nextTab) handleTabChange(nextTab);
@@ -127,25 +217,20 @@ export function MainApp() {
     const unlistenCount = listen<number>("review-count-changed", (event) => {
       setDueCount(event.payload);
     });
-    const unlistenLibrary = listen("library-changed", () => {
-      void refreshDecks();
-    });
 
     return () => {
       void unlistenNavigate.then((fn) => fn());
       void unlistenCount.then((fn) => fn());
-      void unlistenLibrary.then((fn) => fn());
     };
-  }, [handleTabChange, refreshDecks, setDueCount]);
+  }, [auth.loggedIn, handleTabChange, setDueCount]);
 
-  const frameClassName = [
-    "app-frame",
-    !sidebarOpen && "sidebar-collapsed",
-    studySessionActive && "study-session-shell",
-    studySessionActive && sidebarOpen && "sidebar-overlay-open",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  if (!auth.ready) {
+    return <div className="empty-panel">読み込み中…</div>;
+  }
+
+  if (!auth.loggedIn) {
+    return <LoginPage onLoggedIn={() => void auth.syncFromSession()} />;
+  }
 
   if (!onboardingComplete) {
     return (
@@ -158,129 +243,51 @@ export function MainApp() {
   }
 
   return (
-    <div className={frameClassName}>
-      <aside className="app-rail">
-        <div className="brand-block">
-          <div className="brand-mark" aria-hidden>
-            x
-          </div>
-          <div className="brand-copy">
-            <strong>xanki</strong>
-            <span>mask & recall</span>
-          </div>
-        </div>
-
-        <nav className="rail-nav">
-          {NAV.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`rail-link ${tab === item.id ? "active" : ""}`}
-              onClick={() => handleTabChange(item.id)}
-            >
-              <span className="rail-link-label">{item.label}</span>
-              <span className="rail-link-hint">{item.hint}</span>
-              {item.id === "study" && dueCount > 0 && (
-                <span className="rail-badge">{dueCount}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        <div className="rail-shortcuts">
-          <p className="rail-section-title">Capture</p>
-          <div className="shortcut-chip">
-            <kbd>⌥⌘M</kbd>
-            <span>テキスト</span>
-          </div>
-          <div className="shortcut-chip">
-            <kbd>⌥⌘S</kbd>
-            <span>スクショ</span>
-          </div>
-        </div>
-      </aside>
-
-      <div className="app-main">
-        <header className="app-topbar">
-          <button
-            type="button"
-            className="sidebar-toggle"
-            aria-label={sidebarOpen ? "サイドバーを閉じる" : "サイドバーを開く"}
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            <span aria-hidden>☰</span>
-          </button>
-
-          <div className="topbar-copy">
-            <p className="eyebrow">
-              {tab === "home" ? "Home" : tab === "study" ? "Study" : "Settings"}
-            </p>
-            <h1>
-              {tab === "home" && "デッキ管理"}
-              {tab === "study" &&
-                (studySession.active && studySession.modeLabel
-                  ? studySession.modeLabel
-                  : selectedDeck?.name ?? "学習")}
-              {tab === "settings" && "設定"}
-            </h1>
-          </div>
-
-          <div className="topbar-actions">
-            {tab === "study" && studySession.active && (
-              <button
-                type="button"
-                className="ghost-button study-back-button"
-                onClick={studySession.exit}
-              >
-                戻る
-              </button>
-            )}
-            {tab === "study" && !studySession.active && (
-              <label className="search-field">
-                <span className="sr-only">検索</span>
-                <input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="カードを検索..."
-                />
-              </label>
-            )}
-            {tab === "study" && !studySession.active && dueCount > 0 && (
-              <div className="due-banner">
-                <span className="due-banner-count">{dueCount}</span>
-                <span>件が復習待ち</span>
-              </div>
-            )}
-          </div>
-        </header>
-
-        <div className="app-content">
-          {tab === "home" && (
-            <HomeView
-              decks={decks}
-              selectedDeckId={selectedDeckId}
-              dueCount={dueCount}
-              onSelectDeck={setSelectedDeckId}
-              onRefreshDecks={() => void refreshDecks()}
-              onGoToStudy={() => handleTabChange("study")}
-            />
-          )}
-          {tab === "study" && (
-            <StudyView
-              deckId={selectedDeckId}
-              searchQuery={searchQuery}
-              onRefreshDecks={() => void refreshDecks()}
-              onSessionChange={setStudySession}
-            />
-          )}
-          {tab === "settings" && (
-            <SettingsView
-              permissions={permissions}
-              onRefresh={() => void refreshPermissions()}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+    <AppApiProvider api={appApi}>
+      <AppShellProvider
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        setStudySessionActive={setStudySessionActive}
+      >
+        <AppShell
+        tab={tab}
+        onTabChange={handleTabChange}
+        sidebarOpen={sidebarOpen}
+        onSidebarOpenChange={setSidebarOpen}
+        studySessionActive={studySessionActive}
+        studySessionModeLabel={studySession.modeLabel}
+        onStudySessionExit={studySession.exit}
+        dueCount={dueCount}
+        selectedDeck={selectedDeck}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      >
+        {tab === "home" && (
+          <HomeView
+            decks={decks}
+            selectedDeckId={selectedDeckId}
+            dueCount={dueCount}
+            onSelectDeck={setSelectedDeckId}
+            onGoToStudy={() => handleTabChange("study")}
+          />
+        )}
+        <AppTabLayer active={tab === "study"}>
+          <StudyView
+            deckId={selectedDeckId}
+            searchQuery={searchQuery}
+            libraryRevision={libraryRevision}
+            onSessionChange={setStudySession}
+          />
+        </AppTabLayer>
+        {tab === "settings" && (
+          <SettingsView
+            permissions={permissions}
+            onRefresh={() => void refreshPermissions()}
+            cloudSection={<CloudSettingsSection />}
+          />
+        )}
+        </AppShell>
+      </AppShellProvider>
+    </AppApiProvider>
   );
 }

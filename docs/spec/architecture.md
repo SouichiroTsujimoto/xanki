@@ -7,10 +7,11 @@
 | フレームワーク | Tauri 2.x |
 | フロント | React 19 + TypeScript + Vite |
 | 状態管理 | Zustand（メインウィンドウ） |
-| ネイティブ | Rust（commands, DB, キャプチャ, ショートカット） |
+| ネイティブ | Rust（capture, OCR, 画像 I/O, エディタ, Keychain） |
 | OCR | Swift サイドカー `xanki-ocr`（Vision） |
-| DB | SQLite（rusqlite, WAL） |
-| 画像 | App Data 配下ファイル、DB には相対パス |
+| データ SSoT | Cloudflare D1（REST API） |
+| ローカル | App Data 画像キャッシュ（`images/{hash}.webp`） |
+| リアルタイム | SSE（`UserSyncHub` Durable Object） |
 
 ## ウィンドウ構成
 
@@ -33,15 +34,22 @@
 | `library-changed` | カード/デッキ変更後、ライブラリ再読込 |
 | `review-count-changed` | Tray 復習件数更新 |
 | `navigate` | main ウィンドウのタブ切替（`home` / `study` / `settings`。旧 `library` / `review` も互換） |
+| SSE `revision` | 他端末 / Web からの変更通知 → REST refetch |
 
-## モジュール境界（将来拡張用）
+## モジュール境界
 
-| 抽象 | 現行実装 |
-|------|---------|
-| `CaptureProvider` | `screencapture -i -x` |
+| 抽象 | 実装 |
+|------|------|
+| `AppApi` | `@xanki/ui` インターフェース。Web / Desktop 共通 |
+| データ CRUD | `@xanki/shared` Cloud API クライアント → D1 REST |
+| `CaptureProvider` | Rust `screencapture -i -x` |
 | `OcrProvider` | Swift サイドカー |
-| `Scheduler` | `LeitnerScheduler` |
-| `MaskSuggester` | `NoOpMaskSuggester`（フロント） |
+| `Scheduler` | `LeitnerScheduler`（shared） |
+| `MaskSuggester` | `CloudMaskSuggester`（Pro + ログイン必須） |
+
+## クラウド層
+
+D1 SSoT + REST + SSE。詳細は [cloud.md](./cloud.md)。`@xanki/shared` が TS 側 API 契約正本。
 
 ## 非機能要件（目標）
 
@@ -49,11 +57,11 @@
 |------|------|
 | ⌥⌘M → エディタ表示 | 300ms 以内（体感） |
 | ⌥⌘S → キャプチャ UI | 500ms 以内 |
-| 保存 → エディタ閉じる | 200ms 以内 |
+| 保存 → エディタ閉じる | 200ms 以内（ネットワーク含む） |
 | 常駐メモリ | 150MB 以下（アイドル） |
-| ネットワーク | ゼロ |
+| ネットワーク | **ログイン必須**。REST + SSE + blob 転送 |
 
 ## 背景・制約
 
 - Tauri WebView では `window.confirm` / `window.alert` が信頼できない → アプリ内ダイアログを使う（[ui.md](./ui.md)）
-- 画像表示は Tauri `assetProtocol` + `convertFileSrc` 経由
+- 画像表示: ローカルキャッシュ → `convertFileSrc`、なければ blob URL

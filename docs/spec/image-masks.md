@@ -42,6 +42,7 @@
 
 - 基準: 保存 PNG の natural ピクセル
 - 実装: `ImageWithMaskOverlays` + `useImageOverlayLayout`
+- プレビュー等で `object-fit: cover` / `contain` を使う場合も、`computeImageOverlayLayout` が object-position 込みで表示領域を算出する
 
 ## マスク JSON
 

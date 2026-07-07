@@ -1,0 +1,1 @@
+ALTER TABLE sync_meta ADD COLUMN last_sync_ms INTEGER NOT NULL DEFAULT 0;

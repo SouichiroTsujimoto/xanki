@@ -1,8 +1,10 @@
 mod capture;
 mod clipboard;
+mod cloud;
 mod commands;
 mod db;
 mod error;
+mod image_store;
 mod models;
 mod ocr;
 mod permissions;
@@ -36,12 +38,13 @@ pub fn run() {
                         Shortcut::new(Some(Modifiers::SUPER | Modifiers::ALT), Code::KeyS);
 
                     if shortcut == &text_shortcut {
-                        windows::handle_text_import(app);
+                        windows::handle_text_import(app, None);
                     } else if shortcut == &screenshot_shortcut {
                         if let Some(state) = app.try_state::<AppState>() {
                             windows::handle_screenshot_import(
                                 app,
                                 state.app_data_dir.clone(),
+                                None,
                             );
                         }
                     }
@@ -53,19 +56,16 @@ pub fn run() {
                 .path()
                 .app_data_dir()
                 .expect("failed to resolve app data dir");
-            let db_path = app_data_dir.join("xanki.db");
-            let db = db::Database::open(&db_path).expect("failed to open database");
-            db.with_conn(db::repos::ensure_default_deck)
-                .expect("failed to ensure default deck");
+            std::fs::create_dir_all(&app_data_dir).expect("failed to create app data dir");
 
-            let mut app_state = AppState::new(app_data_dir, db);
+            let mut app_state = AppState::new(app_data_dir);
             if let Ok(ocr) = ocr::SidecarOcrProvider::from_app(app.handle()) {
                 app_state.ocr = ocr;
             }
             app.manage(app_state);
 
             let review = MenuItem::with_id(app, "review", "今日の復習: 0件", true, None::<&str>)?;
-            let library = MenuItem::with_id(app, "library", "Home を開く", true, None::<&str>)?;
+            let library = MenuItem::with_id(app, "library", "ホームを開く", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "設定", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "終了", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
@@ -135,37 +135,23 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::get_editor_init,
             commands::clear_editor_init,
-            commands::list_decks,
-            commands::create_deck,
-            commands::delete_deck,
-            commands::ensure_default_deck,
-            commands::list_cards,
-            commands::get_card,
-            commands::save_text_card,
-            commands::save_qa_card,
-            commands::save_image_cards,
-            commands::update_text_card,
-            commands::update_qa_card,
-            commands::update_image_card,
-            commands::open_card_editor,
-            commands::update_deck,
-            commands::toggle_star,
-            commands::duplicate_card,
-            commands::reset_card_progress,
-            commands::get_study_cards,
-            commands::export_deck,
-            commands::import_deck,
-            commands::delete_card,
-            commands::get_due_count,
-            commands::get_due_cards,
-            commands::submit_review,
-            commands::get_last_used_deck_id,
+            commands::trigger_text_capture,
+            commands::trigger_screenshot_capture,
+            commands::open_new_card_editor,
             commands::check_permissions,
             commands::open_accessibility_settings,
             commands::open_screen_recording_settings,
             commands::resolve_image_url,
             commands::run_ocr,
             commands::crop_image_region,
+            commands::process_image_cards,
+            commands::open_editor_with_payload,
+            commands::update_tray_due_count,
+            commands::cloud::cloud_get_session,
+            commands::cloud::cloud_set_session,
+            commands::cloud::cloud_clear_session,
+            commands::cloud::read_image_bytes,
+            commands::cloud::write_image_bytes,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
@@ -179,7 +165,7 @@ pub fn run() {
                 }
                 #[cfg(target_os = "macos")]
                 RunEvent::Reopen { .. } => {
-                    let _ = windows::open_home_window(app);
+                    let _ = windows::show_main_window(app);
                 }
                 _ => {}
             }

@@ -1,0 +1,12 @@
+packages:
+  - "xanki"
+  - "web"
+  - "shared"
+  - "packages/ui"
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+  "@esbuild-kit/core-utils": true
+  "@esbuild-kit/esm-loader": true

@@ -14,10 +14,13 @@
 | [text-masks.md](./text-masks.md) | テキストマスクエディタ、座標、保存 |
 | [qa-cards.md](./qa-cards.md) | 一問一答カード（Q ボタン、問題文/解答） |
 | [image-masks.md](./image-masks.md) | 画像マスク、OCR、座標系、マスクカラー |
-| [data-model.md](./data-model.md) | SQLite スキーマ、JSON 形式 |
-| [library.md](./library.md) | デッキ、カード一覧、削除、インポート |
+| [data-model.md](./data-model.md) | D1 / データ契約、JSON 形式 |
+| [glossary.md](./glossary.md) | ユビキタス言語（UI 表示名・コード対応） |
+| [library.md](./library.md) | デッキとカード一覧（旧称: ライブラリ） |
 | [study.md](./study.md) | 学習モード、SRS、キーボード操作 |
 | [ui.md](./ui.md) | デザイン原則、ダイアログ、ショートカット表 |
+| [cloud.md](./cloud.md) | 認証・同期・Web UI・課金・AI(クラウド層) |
+| [dev-cloud.md](../dev-cloud.md) | クラウド層ローカル動作確認 |
 
 ## 更新ルール
 
@@ -25,6 +28,7 @@
 2. 「当初の MVP 構想」と「現行仕様」を混ぜない。履歴は Git に任せる
 3. 座標・JSON・保存パイプラインは **データ契約** として最優先で正確に書く
 4. 各 spec 末尾の **受け入れ条件** を手動 QA のチェックリストとして使う
+5. UI 文言・会話用語を変えたら **[glossary.md](./glossary.md)** と [`copy.ts`](../../packages/ui/src/copy.ts) も同じ PR で更新する
 
 ## 旧ドキュメント
 

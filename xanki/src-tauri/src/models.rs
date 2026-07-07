@@ -19,6 +19,7 @@ pub struct Card {
     pub content: Option<String>,
     pub answer: Option<String>,
     pub image_path: Option<String>,
+    pub image_hash: Option<String>,
     pub ocr_text: Option<String>,
     pub ocr_data: Option<String>,
     pub masks: String,
