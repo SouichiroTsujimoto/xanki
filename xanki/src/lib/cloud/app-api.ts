@@ -1,70 +1,31 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
-import type { ApiCard } from "@xanki/shared";
+import {
+  countDueCards,
+  filterStudyCards,
+  mapApiCardWithImagePath,
+  mapApiDeck,
+  parseImageMasksJson,
+  parseTextMasksJson,
+} from "@xanki/shared";
 import type {
   AppApi,
   Card,
-  Deck,
   DeckExport,
   EditorInitPayload,
   ReviewCard,
-  StudyFilter,
 } from "@xanki/ui";
 import { cloud, ensureLocalImage, readLocalImageBytes } from "./client";
-import { nativeApi, parseImageMasks, parseTextMasks } from "../tauri/native-api";
+import { nativeApi } from "../tauri/native-api";
 
 const LAST_DECK_KEY = "xanki:lastUsedDeckId";
 
-function mapDeck(raw: {
-  id: string;
-  name: string;
-  cardCount?: number;
-  createdAt?: number;
-  updatedAt?: number;
-}): Deck {
-  return {
-    id: raw.id,
-    name: raw.name,
-    cardCount: raw.cardCount ?? 0,
-    createdAt: raw.createdAt ?? Date.now(),
-    updatedAt: raw.updatedAt ?? Date.now(),
-  };
+function mapCard(raw: Parameters<typeof mapApiCardWithImagePath>[0]) {
+  return mapApiCardWithImagePath(raw, (hash) => `images/${hash}.webp`) as Card;
 }
 
-function mapCard(raw: ApiCard): Card {
-  return {
-    id: raw.id,
-    deckId: raw.deckId,
-    kind: raw.kind,
-    content: raw.content ?? undefined,
-    answer: raw.answer ?? undefined,
-    imageHash: raw.imageHash ?? undefined,
-    imagePath: raw.imageHash ? `images/${raw.imageHash}.webp` : undefined,
-    ocrText: raw.ocrText ?? undefined,
-    ocrData: raw.ocrData ?? undefined,
-    masks: raw.masks,
-    note: raw.note ?? undefined,
-    sourceHint: raw.sourceHint ?? undefined,
-    starred: Boolean(raw.starred),
-    createdAt: raw.createdAt,
-    updatedAt: raw.updatedAt,
-    boxNum: raw.boxNum,
-    dueAt: raw.dueAt,
-  };
-}
-
-function filterStudyCards(cards: Card[], filter: StudyFilter, deckId?: string): Card[] {
-  const now = Date.now();
-  let filtered = cards;
-  if (deckId) filtered = filtered.filter((c) => c.deckId === deckId);
-  switch (filter) {
-    case "due":
-      return filtered.filter((c) => (c.dueAt ?? 0) <= now);
-    case "starred":
-      return filtered.filter((c) => c.starred);
-    default:
-      return filtered;
-  }
+function mapDeck(raw: Parameters<typeof mapApiDeck>[0]) {
+  return mapApiDeck(raw);
 }
 
 async function toReviewCards(cards: Card[]): Promise<ReviewCard[]> {
@@ -185,8 +146,7 @@ export function createCloudAppApi(onLibraryChanged?: () => void): AppApi {
     },
     getDueCount: async () => {
       const cards = await cloud.listCards();
-      const now = Date.now();
-      return cards.filter((c) => Number(c.dueAt ?? 0) <= now).length;
+      return countDueCards(cards);
     },
     getDueCards: async (deckId, limit) => {
       const cards = (await cloud.listCards(deckId)).map(mapCard);
@@ -200,8 +160,8 @@ export function createCloudAppApi(onLibraryChanged?: () => void): AppApi {
     },
     resolveImageUrl: async (imagePath) =>
       convertFileSrc(await nativeApi.resolveImageUrl(imagePath)),
-    parseTextMasks,
-    parseImageMasks,
+    parseTextMasks: parseTextMasksJson,
+    parseImageMasks: parseImageMasksJson,
     saveTextCard: async (request) => {
       localStorage.setItem(LAST_DECK_KEY, request.deckId);
       const card = await cloud.createCard({

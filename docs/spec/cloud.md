@@ -83,6 +83,9 @@
 - Web: Cookie セッション(better-auth 標準)
 - デスクトップ: OTP 完了後 `POST /api/auth/sign-in/email-otp` の JSON `{ token }`（ヘッダ `set-auth-token` は同一オリジン Web 用フォールバック）→ **macOS Keychain**（Rust `keyring` + `apple-native` feature、`com.souic.xanki.cloud` / `session`）→ `Authorization: Bearer`
 - ローカル dev: `RESEND_API_KEY` 未設定時は wrangler ログ `[dev OTP]`。自動テストは better-auth **testUtils** (`captureOTP`)
+- **ログイン UI**: OTP 送信後は `{email} に確認コードを送信しました` を表示。**コードを再送**（クールダウン 30 秒）と **メールアドレスを変更**（メール入力へ戻る）を提供
+- dev OTP ヒント（`wrangler ログの [dev OTP]`）は **開発ビルドのみ**表示（`import.meta.env.DEV`）
+- 401 でセッション失効時はログイン画面へ戻し、`sessionStorage` 経由で **セッション切れ** メッセージを 1 回表示
 - **ログイン必須** — Web / Desktop とも未認証ではアプリ本体に入れない（後続で未ログイン緩和可）
 - ソーシャルログインは後追い可(better-auth プラグイン追加のみ)
 

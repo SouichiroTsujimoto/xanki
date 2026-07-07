@@ -1,48 +1,47 @@
-import { useRef, useState } from "react";
-import { LoginView } from "@xanki/ui";
-import { useCloudAccount } from "../../lib/cloud/useCloudAccount";
+import { useMemo, useState } from "react";
+import { consumeSessionExpiredNotice } from "@xanki/shared";
+import { LoginView, copy, useEmailOtpLogin } from "@xanki/ui";
+import { sendOtp, verifyOtp } from "../../lib/cloud/client";
 
 export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void | Promise<void> }) {
-  const cloud = useCloudAccount();
-  const [busy, setBusy] = useState(false);
-  const inFlight = useRef(false);
-
-  async function handleSend() {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setBusy(true);
-    try {
-      await cloud.sendOtp();
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
-  }
-
-  async function handleVerify() {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setBusy(true);
-    try {
-      const ok = await cloud.verifyOtp();
-      if (ok) await onLoggedIn();
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
-  }
+  const [initialNotice] = useState(() =>
+    consumeSessionExpiredNotice() ? copy.login.sessionExpired : null,
+  );
+  const port = useMemo(
+    () => ({
+      sendOtp: (email: string) => sendOtp(email),
+      verifyOtp: (email: string, code: string) => verifyOtp(email, code),
+    }),
+    [],
+  );
+  const login = useEmailOtpLogin(port);
 
   return (
     <LoginView
-      email={cloud.email}
-      onEmailChange={cloud.setEmail}
-      code={cloud.code}
-      onCodeChange={cloud.setCode}
-      sent={cloud.sent}
-      error={cloud.error}
-      busy={busy}
-      onSend={handleSend}
-      onVerify={handleVerify}
+      email={login.email}
+      onEmailChange={login.setEmail}
+      code={login.code}
+      onCodeChange={login.setCode}
+      sent={login.sent}
+      error={login.error}
+      busy={login.busy}
+      initialNotice={initialNotice}
+      onSend={() => {
+        void login.send();
+      }}
+      onVerify={async () => {
+        if (await login.verify()) await onLoggedIn();
+      }}
+      onBackToEmail={login.backToEmail}
+      onResend={() => {
+        void login.resend();
+      }}
+      resendDisabled={login.busy || login.resendCooldown > 0}
+      resendLabel={
+        login.resendCooldown > 0
+          ? copy.login.resendCooldown(login.resendCooldown)
+          : copy.login.resendCode
+      }
     />
   );
 }

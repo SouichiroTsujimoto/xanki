@@ -2,13 +2,11 @@ mod capture;
 mod clipboard;
 mod cloud;
 mod commands;
-mod db;
 mod error;
 mod image_store;
 mod models;
 mod ocr;
 mod permissions;
-mod scheduler;
 mod state;
 mod windows;
 

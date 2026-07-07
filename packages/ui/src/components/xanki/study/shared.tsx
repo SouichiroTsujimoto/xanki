@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { copy as uiCopy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
@@ -119,6 +119,40 @@ export function isMaskFlipTarget(target: EventTarget | null): boolean {
 }
 
 const FLIP_DRAG_THRESHOLD_PX = 6;
+const FLIP_MIN_HEIGHT_PX = 240;
+const FLIP_MAX_HEIGHT_PX = 520;
+const FLIP_MAX_HEIGHT_VH = 0.58;
+
+function clampFlipHeight(natural: number): number {
+  const max = Math.min(window.innerHeight * FLIP_MAX_HEIGHT_VH, FLIP_MAX_HEIGHT_PX);
+  return Math.min(max, Math.max(FLIP_MIN_HEIGHT_PX, natural));
+}
+
+function activeFaceCardSelector(revealed: boolean): string {
+  return revealed
+    ? ".study-flip-back .review-card"
+    : ".study-flip-front .review-card";
+}
+
+function measureReviewCard(card: HTMLElement): number {
+  const previous = {
+    height: card.style.height,
+    maxHeight: card.style.maxHeight,
+    overflow: card.style.overflow,
+  };
+
+  card.style.height = "auto";
+  card.style.maxHeight = "none";
+  card.style.overflow = "visible";
+
+  const measured = card.offsetHeight;
+
+  card.style.height = previous.height;
+  card.style.maxHeight = previous.maxHeight;
+  card.style.overflow = previous.overflow;
+
+  return clampFlipHeight(measured);
+}
 
 function hasActiveTextSelection(): boolean {
   const selection = window.getSelection();
@@ -155,7 +189,28 @@ export function FlipScene({
 }: FlipSceneProps) {
   const innerRef = useRef<HTMLDivElement>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const revealedRef = useRef(revealed);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [flipHeight, setFlipHeight] = useState<number | null>(null);
+  const [heightLock, setHeightLock] = useState<number | null>(null);
+
+  const syncFlipHeight = useCallback(() => {
+    const inner = innerRef.current;
+    if (!inner) return;
+    const card = inner.querySelector(activeFaceCardSelector(revealed));
+    if (!(card instanceof HTMLElement)) return;
+    setFlipHeight(measureReviewCard(card));
+  }, [revealed]);
+
+  const lockFlipHeightForAnimation = useCallback((fromRevealed: boolean) => {
+    const inner = innerRef.current;
+    if (!inner) return;
+    const card = inner.querySelector(activeFaceCardSelector(fromRevealed));
+    if (!(card instanceof HTMLElement)) return;
+    const nextHeight = measureReviewCard(card);
+    setHeightLock(nextHeight);
+    setFlipHeight(nextHeight);
+  }, []);
 
   const handleMouseDown = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -172,12 +227,45 @@ export function FlipScene({
       if (isDragPointerGesture(pointerStartRef.current, event)) return;
       if (hasActiveTextSelection()) return;
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        lockFlipHeightForAnimation(revealed);
         setIsAnimating(true);
       }
       onToggle();
     },
-    [clickable, isAnimating, onToggle],
+    [clickable, isAnimating, lockFlipHeightForAnimation, onToggle, revealed],
   );
+
+  useEffect(() => {
+    if (revealedRef.current === revealed) return;
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      lockFlipHeightForAnimation(revealedRef.current);
+    }
+    revealedRef.current = revealed;
+  }, [lockFlipHeightForAnimation, revealed]);
+
+  useEffect(() => {
+    if (isAnimating) return;
+    syncFlipHeight();
+  }, [isAnimating, syncFlipHeight]);
+
+  useEffect(() => {
+    const inner = innerRef.current;
+    if (!inner) return;
+
+    const observer = new ResizeObserver(() => {
+      if (isAnimating) return;
+      syncFlipHeight();
+    });
+
+    for (const selector of [".study-flip-front .review-card", ".study-flip-back .review-card"]) {
+      const card = inner.querySelector(selector);
+      if (card instanceof HTMLElement) {
+        observer.observe(card);
+      }
+    }
+
+    return () => observer.disconnect();
+  }, [isAnimating, syncFlipHeight]);
 
   useEffect(() => {
     const inner = innerRef.current;
@@ -190,6 +278,8 @@ export function FlipScene({
     const handleTransitionEnd = (event: TransitionEvent) => {
       if (event.propertyName !== "transform") return;
       setIsAnimating(false);
+      setHeightLock(null);
+      syncFlipHeight();
     };
 
     inner.addEventListener("transitionstart", handleTransitionStart);
@@ -201,7 +291,7 @@ export function FlipScene({
       inner.removeEventListener("transitionend", handleTransitionEnd);
       inner.removeEventListener("transitioncancel", handleTransitionEnd);
     };
-  }, []);
+  }, [syncFlipHeight]);
 
   useEffect(() => {
     const inner = innerRef.current;
@@ -222,9 +312,14 @@ export function FlipScene({
     "study-flip-scene",
     clickable ? "study-flip-scene-interactive" : "",
     compact ? "study-flip-scene-compact" : "",
+    isAnimating ? "is-flipping-scene" : "",
   ]
     .filter(Boolean)
     .join(" ");
+
+  const stackHeight = heightLock ?? flipHeight;
+  const innerStyle: CSSProperties | undefined =
+    stackHeight != null ? { "--flip-height": `${stackHeight}px` } : undefined;
 
   return (
     <div
@@ -234,6 +329,7 @@ export function FlipScene({
     >
       <div
         ref={innerRef}
+        style={innerStyle}
         className={[
           "study-flip-inner",
           revealed ? "is-flipped" : "",

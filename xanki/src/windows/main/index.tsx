@@ -57,11 +57,22 @@ function resolveTab(payload: string): AppTab | null {
 
 function CloudSettingsSection() {
   const cloudAccount = useCloudAccount();
+  const [accountEmail, setAccountEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    void cloud
+      .me()
+      .then((me) => setAccountEmail(me.email))
+      .catch(() => setAccountEmail(null));
+  }, [cloudAccount.status]);
 
   return (
     <>
       <p className="eyebrow">Cloud</p>
       <h2>{copy.account.title}</h2>
+      {accountEmail && (
+        <p className="settings-note">{copy.account.loggedInAs(accountEmail)}</p>
+      )}
       <p className="settings-note">{cloudAccount.status}</p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button type="button" className="ghost-button" onClick={() => void cloudAccount.upgrade()}>

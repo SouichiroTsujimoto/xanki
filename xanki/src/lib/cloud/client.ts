@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { CLOUD_UNAUTHORIZED, createCloudClient } from "@xanki/shared";
+import { CLOUD_UNAUTHORIZED, createCloudClient, markSessionExpired } from "@xanki/shared";
 
 export const CLOUD_URL = import.meta.env.VITE_CLOUD_URL ?? "http://localhost:8787";
 
@@ -16,6 +16,7 @@ async function notifyUnauthorized(): Promise<void> {
   handlingUnauthorized = true;
   try {
     await invoke("cloud_clear_session");
+    markSessionExpired();
     window.dispatchEvent(new Event(SESSION_CLEARED_EVENT));
   } finally {
     setTimeout(() => {

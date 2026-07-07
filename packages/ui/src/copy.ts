@@ -130,8 +130,13 @@ export const copy = {
     emailPlaceholder: "email@example.com",
     sendCode: "コードを送信",
     codePlaceholder: "6桁コード",
+    codeSentTo: (email: string) => `${email} に確認コードを送信しました`,
+    resendCode: "コードを再送",
+    resendCooldown: (seconds: number) => `${seconds} 秒後に再送できます`,
+    changeEmail: "メールアドレスを変更",
     devOtpHint: "開発時: wrangler ログの [dev OTP] を入力",
     submit: "ログイン",
+    sessionExpired: "セッションの有効期限が切れました。再度ログインしてください。",
     brandDescription: "クラウドでデッキを同期し、どこからでも学習できます。",
   },
   settings: {
@@ -161,6 +166,7 @@ export const copy = {
   },
   account: {
     title: "アカウント",
+    loggedInAs: (email: string) => `ログイン中: ${email}`,
   },
   writeMode: {
     emptyTitle: "書く問題がありません",

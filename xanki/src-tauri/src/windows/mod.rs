@@ -255,10 +255,6 @@ pub fn open_home_window(app: &AppHandle) -> AppResult<()> {
     Ok(())
 }
 
-pub fn open_library_window(app: &AppHandle) -> AppResult<()> {
-    open_home_window(app)
-}
-
 pub fn update_tray_menu(app: &AppHandle, due_count: i64) -> AppResult<()> {
     use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 

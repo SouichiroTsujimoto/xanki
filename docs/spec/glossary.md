@@ -124,6 +124,8 @@
 | 概念 | UI 表示（正） | 参照 |
 |------|--------------|------|
 | ログイン | **ログイン** | [cloud.md](./cloud.md) |
+| メール OTP | **メール OTP でログイン** / **コードを送信** | [cloud.md](./cloud.md) |
+| 確認コード | **6桁コード** / **コードを再送** | [cloud.md](./cloud.md) |
 | アカウント | **アカウント** | [cloud.md](./cloud.md) |
 | プラン | **プラン** | [cloud.md](./cloud.md) |
 | Pro / Free | **Pro** / **Free**（英字） | [cloud.md](./cloud.md) |

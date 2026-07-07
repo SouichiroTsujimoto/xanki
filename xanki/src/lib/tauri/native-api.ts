@@ -1,3 +1,4 @@
+import { parseImageMasksJson, parseTextMasksJson } from "@xanki/shared";
 import { invoke } from "@tauri-apps/api/core";
 import type {
   EditorInitPayload,
@@ -25,11 +26,11 @@ export const nativeApi = {
 };
 
 export function parseTextMasks(raw: string): TextMask[] {
-  return JSON.parse(raw) as TextMask[];
+  return parseTextMasksJson(raw);
 }
 
 export function parseImageMasks(raw: string): ImageMask[] {
-  return JSON.parse(raw) as ImageMask[];
+  return parseImageMasksJson(raw);
 }
 
 export type { ImageRegion, OcrResult, PermissionStatus, TextMask, ImageMask, EditorInitPayload };

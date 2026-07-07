@@ -24,3 +24,4 @@ export { FadeSlide, MotionFade } from "./components/motion/fade-slide";
 export { ReducedAnimatePresence } from "./components/motion/motion-presence";
 export { AppTabLayer } from "./components/motion/app-tab-layer";
 export { useReducedMotion } from "./lib/use-reduced-motion";
+export { useEmailOtpLogin, type EmailOtpAuthPort } from "./hooks/useEmailOtpLogin";

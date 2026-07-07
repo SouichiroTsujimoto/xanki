@@ -14,7 +14,7 @@ import {
   type Deck,
   type StudySessionInfo,
 } from "@xanki/ui";
-import { cloudApi } from "./api";
+import { cloudApi, SESSION_CLEARED_EVENT } from "./api";
 import { createCloudAppApi } from "./app-api";
 import {
   scheduleWebLibraryRefresh,
@@ -178,13 +178,17 @@ function AuthenticatedApp({
             <SettingsView
               permissions={{ accessibility: true, screenRecording: true }}
               onRefresh={() => {}}
+              cloudSection={
+                <>
+                  <p className="eyebrow">Cloud</p>
+                  <h2>{copy.account.title}</h2>
+                  <p className="settings-note">{copy.account.loggedInAs(email)}</p>
+                </>
+              }
               billingSection={<BillingSection plan={plan} />}
             />
           )}
         </AppShell>
-        <p className="settings-note" style={{ padding: "0 2rem 1rem" }}>
-          {email}
-        </p>
       </AppShellProvider>
     </AppApiProvider>
   );
@@ -201,6 +205,14 @@ export function App() {
       .then((me) => setUser({ email: me.email, plan: me.plan }))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    function onSessionCleared() {
+      setUser(null);
+    }
+    window.addEventListener(SESSION_CLEARED_EVENT, onSessionCleared);
+    return () => window.removeEventListener(SESSION_CLEARED_EVENT, onSessionCleared);
   }, []);
 
   if (loading) {

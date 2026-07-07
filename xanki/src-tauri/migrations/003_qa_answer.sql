@@ -1,1 +1,0 @@
-ALTER TABLE cards ADD COLUMN answer TEXT;

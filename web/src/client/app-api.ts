@@ -1,67 +1,20 @@
-import type { ApiCard } from "@xanki/shared";
-import type { AppApi, Card, Deck, DeckExport, ImageMask, ReviewCard, StudyFilter, TextMask } from "@xanki/ui";
+import {
+  countDueCards,
+  filterStudyCards,
+  mapApiCard,
+  mapApiDeck,
+  parseImageMasksJson,
+  parseTextMasksJson,
+} from "@xanki/shared";
+import type { AppApi, Card, DeckExport, ReviewCard } from "@xanki/ui";
 import { cloudApi } from "./api";
 
-function parseTextMasks(raw: string): TextMask[] {
-  return JSON.parse(raw) as TextMask[];
+function mapDeck(raw: Parameters<typeof mapApiDeck>[0]) {
+  return mapApiDeck(raw);
 }
 
-function parseImageMasks(raw: string): ImageMask[] {
-  return JSON.parse(raw) as ImageMask[];
-}
-
-function mapDeck(deck: {
-  id: string;
-  name: string;
-  cardCount?: number;
-  createdAt?: number;
-  updatedAt?: number;
-}): Deck {
-  return {
-    id: deck.id,
-    name: deck.name,
-    cardCount: deck.cardCount ?? 0,
-    createdAt: deck.createdAt ?? Date.now(),
-    updatedAt: deck.updatedAt ?? Date.now(),
-  };
-}
-
-function mapCard(raw: ApiCard): Card {
-  return {
-    id: raw.id,
-    deckId: raw.deckId,
-    kind: raw.kind,
-    content: raw.content ?? undefined,
-    answer: raw.answer ?? undefined,
-    imageHash: raw.imageHash ?? undefined,
-    imagePath: raw.imageHash ?? undefined,
-    ocrText: raw.ocrText ?? undefined,
-    ocrData: raw.ocrData ?? undefined,
-    masks: raw.masks,
-    note: raw.note ?? undefined,
-    sourceHint: raw.sourceHint ?? undefined,
-    starred: Boolean(raw.starred),
-    createdAt: raw.createdAt,
-    updatedAt: raw.updatedAt,
-    boxNum: raw.boxNum,
-    dueAt: raw.dueAt,
-  };
-}
-
-function filterStudyCards(cards: Card[], filter: StudyFilter, deckId?: string): Card[] {
-  const now = Date.now();
-  let filtered = cards;
-  if (deckId) {
-    filtered = filtered.filter((card) => card.deckId === deckId);
-  }
-  switch (filter) {
-    case "due":
-      return filtered.filter((card) => (card.dueAt ?? 0) <= now);
-    case "starred":
-      return filtered.filter((card) => card.starred);
-    default:
-      return filtered;
-  }
+function mapCard(raw: Parameters<typeof mapApiCard>[0]): Card {
+  return mapApiCard(raw, { imagePath: raw.imageHash ?? undefined }) as Card;
 }
 
 function toReviewCards(cards: Card[]): ReviewCard[] {
@@ -113,8 +66,7 @@ export function createCloudAppApi(onRevision?: () => void): AppApi {
     },
     getDueCount: async () => {
       const cards = await cloudApi.listCards();
-      const now = Date.now();
-      return cards.filter((card) => Number(card.dueAt ?? 0) <= now).length;
+      return countDueCards(cards);
     },
     getDueCards: async (deckId) => {
       const cards = (await cloudApi.listCards(deckId)).map(mapCard);
@@ -126,8 +78,8 @@ export function createCloudAppApi(onRevision?: () => void): AppApi {
     },
     subscribeLibraryChanged: () => () => {},
     resolveImageUrl: (imagePath) => Promise.resolve(cloudApi.blobUrl(imagePath)),
-    parseTextMasks,
-    parseImageMasks,
+    parseTextMasks: parseTextMasksJson,
+    parseImageMasks: parseImageMasksJson,
     saveTextCard: async (request) => {
       const card = await cloudApi.createCard({
         deckId: request.deckId,

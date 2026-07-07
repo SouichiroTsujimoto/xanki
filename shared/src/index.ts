@@ -4,3 +4,6 @@ export * from "./scheduler.js";
 export * from "./entitlements.js";
 export * from "./api-types.js";
 export * from "./cloud-client.js";
+export * from "./cloud-mappers.js";
+export * from "./library-sync-controller.js";
+export * from "./session-notice.js";

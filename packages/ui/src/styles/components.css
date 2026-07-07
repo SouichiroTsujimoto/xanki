@@ -1213,7 +1213,7 @@ kbd {
   flex-direction: column;
   align-items: center;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
 }
 
@@ -1223,6 +1223,7 @@ kbd {
   flex: 1;
   min-height: 0;
   padding: 0.5rem 0 1rem;
+  overflow: hidden;
 }
 
 .study-session .review-stage:not(.write-mode):not(.test-mode):not(.match-mode):not(.empty) {
@@ -1251,34 +1252,56 @@ kbd {
   grid-row: 4;
   width: 100%;
   min-height: 0;
+  height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   align-self: center;
+  overflow: visible;
+}
+
+.study-session .review-stage:has(.is-flipping-scene) {
+  overflow: visible;
 }
 
 .study-session .study-flip-slot .study-flip-scene {
   width: 100%;
+  height: auto;
 }
 
 .study-session .study-flip-inner {
+  position: relative;
   width: 100%;
+  height: var(--flip-height, auto);
   min-height: 240px;
   max-height: min(58vh, 520px);
+  display: block;
+  overflow: hidden;
 }
 
-.study-session
-  .study-flip-inner:not(.is-flipped)
-  .study-flip-front
-  .review-card,
-.study-session
-  .study-flip-inner.is-flipped
-  .study-flip-back
-  .review-card {
-  min-height: 240px;
-  max-height: min(58vh, 520px);
+.study-session .study-flip-inner.is-flipping {
+  overflow: visible;
+}
+
+.study-session .study-flip-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.study-session .study-flip-face .review-card {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.study-session .study-flip-face .review-card::-webkit-scrollbar {
+  display: none;
 }
 
 .study-session
@@ -1344,6 +1367,15 @@ kbd {
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.study-session .review-stage.write-mode::-webkit-scrollbar,
+.study-session .review-stage.test-mode::-webkit-scrollbar,
+.study-session .review-stage.match-mode::-webkit-scrollbar {
+  display: none;
 }
 
 .study-session .write-mode .write-prompt,
@@ -1396,6 +1428,29 @@ kbd {
     backface-visibility: visible;
     -webkit-backface-visibility: visible;
     transform: none !important;
+  }
+
+  .study-session .study-flip-inner {
+    height: auto;
+    max-height: min(58vh, 520px);
+    overflow: visible;
+  }
+
+  .study-session .study-flip-slot,
+  .study-session .study-flip-scene {
+    height: auto;
+    max-height: min(58vh, 520px);
+  }
+
+  .study-session .study-flip-face {
+    position: static;
+    inset: auto;
+    height: auto;
+  }
+
+  .study-session .study-flip-face .review-card {
+    height: auto;
+    max-height: min(58vh, 520px);
   }
 
   .study-flip-inner:not(.is-flipped) .study-flip-back,
