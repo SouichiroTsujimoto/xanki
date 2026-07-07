@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type MouseEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { api, parseImageMasks, parseTextMasks } from "../../lib/tauri/api";
 import { ImageWithMaskOverlays } from "../ImageWithMaskOverlays";
@@ -142,6 +142,8 @@ export function FlipScene({
   front,
   back,
 }: FlipSceneProps) {
+  const innerRef = useRef<HTMLDivElement>(null);
+
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       if (!clickable || isMaskFlipTarget(event.target)) return;
@@ -149,6 +151,21 @@ export function FlipScene({
     },
     [clickable, onToggle],
   );
+
+  useEffect(() => {
+    const inner = innerRef.current;
+    if (!inner) return;
+    const frontCard = inner.querySelector(".study-flip-front .review-card");
+    const backCard = inner.querySelector(".study-flip-back .review-card");
+    if (!(frontCard instanceof HTMLElement) || !(backCard instanceof HTMLElement)) {
+      return;
+    }
+    if (revealed) {
+      backCard.scrollTop = frontCard.scrollTop;
+    } else {
+      frontCard.scrollTop = backCard.scrollTop;
+    }
+  }, [revealed]);
 
   const sceneClassName = [
     "study-flip-scene",
@@ -160,7 +177,10 @@ export function FlipScene({
 
   return (
     <div className={sceneClassName} onClick={clickable ? handleClick : undefined}>
-      <div className={`study-flip-inner ${revealed ? "is-flipped" : ""}`}>
+      <div
+        ref={innerRef}
+        className={`study-flip-inner ${revealed ? "is-flipped" : ""}`}
+      >
         <div className="study-flip-face study-flip-front">{front}</div>
         <div className="study-flip-face study-flip-back">{back}</div>
       </div>

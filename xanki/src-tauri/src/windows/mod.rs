@@ -240,11 +240,15 @@ pub fn show_main_window(app: &AppHandle) -> AppResult<()> {
     Ok(())
 }
 
-pub fn open_library_window(app: &AppHandle) -> AppResult<()> {
+pub fn open_home_window(app: &AppHandle) -> AppResult<()> {
     show_main_window(app)?;
-    app.emit("navigate", "library")
+    app.emit("navigate", "home")
         .map_err(|e| AppError::Other(e.to_string()))?;
     Ok(())
+}
+
+pub fn open_library_window(app: &AppHandle) -> AppResult<()> {
+    open_home_window(app)
 }
 
 pub fn update_tray_menu(app: &AppHandle, due_count: i64) -> AppResult<()> {
@@ -257,7 +261,7 @@ pub fn update_tray_menu(app: &AppHandle, due_count: i64) -> AppResult<()> {
     let review_label = format!("今日の復習: {due_count}件");
     let review = MenuItem::with_id(app, "review", &review_label, true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
-    let library = MenuItem::with_id(app, "library", "ライブラリを開く", true, None::<&str>)
+    let library = MenuItem::with_id(app, "library", "Home を開く", true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
     let settings = MenuItem::with_id(app, "settings", "設定", true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;

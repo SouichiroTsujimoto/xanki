@@ -16,8 +16,8 @@
 
 | ウィンドウ | 役割 |
 |-----------|------|
-| Tray | 常駐。今日の復習件数、ライブラリ/設定/終了 |
-| main | ライブラリ・学習・設定。左サイドレール。初期 1280×840 |
+| Tray | 常駐。今日の復習件数、Home/設定/終了 |
+| main | Home・学習・設定。左サイドレール（折りたたみ可）。初期 1280×840 |
 | mask-editor-{uuid} | 取込のたび生成。白背景・通常デコレーション・`alwaysOnTop` |
 
 ### マスクエディタ初期化
@@ -32,7 +32,7 @@
 |---------|------|
 | `library-changed` | カード/デッキ変更後、ライブラリ再読込 |
 | `review-count-changed` | Tray 復習件数更新 |
-| `navigate` | main ウィンドウのタブ切替（library / review / settings） |
+| `navigate` | main ウィンドウのタブ切替（`home` / `study` / `settings`。旧 `library` / `review` も互換） |
 
 ## モジュール境界（将来拡張用）
 

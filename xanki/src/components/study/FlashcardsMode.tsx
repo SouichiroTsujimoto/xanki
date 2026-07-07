@@ -1,17 +1,26 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   StudyEmpty,
   StudyFlipCard,
   StudyProgress,
   useStudyQueue,
 } from "./shared";
+import type { ReviewCard } from "../../types";
 
 interface Props {
   deckId?: string | null;
   shuffle: boolean;
+  singleCard?: ReviewCard | null;
+  onSingleExit?: () => void;
 }
 
-export function FlashcardsMode({ deckId, shuffle }: Props) {
+export function FlashcardsMode({
+  deckId,
+  shuffle,
+  singleCard = null,
+  onSingleExit,
+}: Props) {
+  const isSingle = singleCard != null;
   const { queue, index, current, progress, loadQueue, next } = useStudyQueue(
     deckId,
     "all",
@@ -19,27 +28,44 @@ export function FlashcardsMode({ deckId, shuffle }: Props) {
   );
   const [revealed, setRevealed] = useState(false);
 
+  const activeCard = isSingle ? singleCard : current;
+  const activeIndex = isSingle ? 0 : index;
+  const activeTotal = isSingle ? 1 : queue.length;
+  const activeProgress = isSingle ? 100 : progress;
+
   useEffect(() => {
     setRevealed(false);
-  }, [current]);
+  }, [activeCard]);
+
+  const handleAdvance = useCallback(() => {
+    if (isSingle) {
+      onSingleExit?.();
+      return;
+    }
+    next();
+    setRevealed(false);
+  }, [isSingle, next, onSingleExit]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (!current) return;
+      if (!activeCard) return;
       if (e.code === "Space") {
         e.preventDefault();
         setRevealed((v) => !v);
       }
       if (e.key === "ArrowRight") {
-        next();
-        setRevealed(false);
+        handleAdvance();
+      }
+      if (isSingle && e.key === "Escape") {
+        e.preventDefault();
+        onSingleExit?.();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [current, next]);
+  }, [activeCard, handleAdvance, isSingle, onSingleExit]);
 
-  if (!current) {
+  if (!activeCard) {
     return (
       <StudyEmpty
         title="カードがありません"
@@ -51,10 +77,18 @@ export function FlashcardsMode({ deckId, shuffle }: Props) {
 
   return (
     <div className="review-stage" tabIndex={0}>
-      <StudyProgress index={index} total={queue.length} progress={progress} />
-      <p className="review-hint study-hint">Space / クリック 答え · → 次へ</p>
+      <StudyProgress
+        index={activeIndex}
+        total={activeTotal}
+        progress={activeProgress}
+      />
+      <p className="review-hint study-hint">
+        {isSingle
+          ? "Space / クリック 答え · Esc または戻るで閉じる"
+          : "Space / クリック 答え · → 次へ"}
+      </p>
       <StudyFlipCard
-        card={current}
+        card={activeCard}
         revealed={revealed}
         onRevealedChange={setRevealed}
         interactive
@@ -67,15 +101,8 @@ export function FlashcardsMode({ deckId, shuffle }: Props) {
         >
           {revealed ? "隠す" : "答えを見る"}
         </button>
-        <button
-          type="button"
-          className="accent-button"
-          onClick={() => {
-            next();
-            setRevealed(false);
-          }}
-        >
-          次のカード
+        <button type="button" className="accent-button" onClick={handleAdvance}>
+          {isSingle ? "閉じる" : "次のカード"}
         </button>
       </div>
     </div>

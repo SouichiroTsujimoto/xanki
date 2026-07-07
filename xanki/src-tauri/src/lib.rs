@@ -65,7 +65,7 @@ pub fn run() {
             app.manage(app_state);
 
             let review = MenuItem::with_id(app, "review", "今日の復習: 0件", true, None::<&str>)?;
-            let library = MenuItem::with_id(app, "library", "ライブラリを開く", true, None::<&str>)?;
+            let library = MenuItem::with_id(app, "library", "Home を開く", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "設定", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "終了", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
@@ -77,10 +77,10 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "review" => {
                         let _ = windows::show_main_window(app);
-                        let _ = app.emit("navigate", "review");
+                        let _ = app.emit("navigate", "study");
                     }
                     "library" => {
-                        let _ = windows::open_library_window(app);
+                        let _ = windows::open_home_window(app);
                     }
                     "settings" => {
                         let _ = windows::show_main_window(app);
@@ -175,11 +175,11 @@ pub fn run() {
                     if let Some(state) = app.try_state::<AppState>() {
                         let _ = windows::refresh_tray_count(app, &state);
                     }
-                    let _ = windows::open_library_window(app);
+                    let _ = windows::open_home_window(app);
                 }
                 #[cfg(target_os = "macos")]
                 RunEvent::Reopen { .. } => {
-                    let _ = windows::open_library_window(app);
+                    let _ = windows::open_home_window(app);
                 }
                 _ => {}
             }
