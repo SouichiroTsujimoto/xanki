@@ -4,8 +4,8 @@ import type {
   CreateCardRequest,
   SubmitReviewRequest,
   UpdateCardRequest,
-} from "./api-types.js";
-import type { AccountStorageResponse } from "./sync.js";
+} from "../library/api-types.js";
+import type { AccountStorageResponse } from "../sync/sync.js";
 
 export const CLOUD_UNAUTHORIZED = "unauthorized";
 

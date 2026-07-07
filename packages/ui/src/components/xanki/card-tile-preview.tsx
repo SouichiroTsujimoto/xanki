@@ -7,7 +7,7 @@ import {
 } from "./study/shared";
 import type { Card, OcrResult } from "../../types";
 
-export function LibraryCardPreview({ card }: { card: Card }) {
+export function CardTilePreview({ card }: { card: Card }) {
   const api = useAppApi();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 

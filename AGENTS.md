@@ -25,7 +25,18 @@
 | `xanki/` | Tauri デスクトップ（シェル + 取込 + 同期） |
 | `web/` | Cloud SPA + Workers API |
 | `packages/ui/` | 共有 UI（`@xanki/ui`）— Tailwind + shadcn プリミティブ |
-| `shared/` | 型・スキーマ（`@xanki/shared`） |
+| `shared/` | 型・スキーマ（`@xanki/shared`）— BC 別サブフォルダ |
+
+### `@xanki/shared` 構成
+
+| サブフォルダ | 内容 |
+|-------------|------|
+| `masks/` | masks JSON Zod・`parse*Json` |
+| `library/` | API 型・`mapApi*`・`filterStudyCards`・`countDueCards` |
+| `study/` | `LeitnerScheduler`・`mask-answers`・`deck-session` |
+| `cloud/` | `cloud-client`・`create-app-api`・`library-sync-controller` |
+| `sync/` | レガシー sync 型（縮小予定） |
+| `entitlements.ts` | プラン上限 |
 
 **クラウド層のローカル動作確認**: [docs/dev-cloud.md](./docs/dev-cloud.md)
 

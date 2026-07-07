@@ -1,15 +1,7 @@
+import { shuffleIds } from "@xanki/shared";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
 import type { ReviewCard } from "../../../types";
-
-function shuffleIds(ids: string[]): string[] {
-  const next = [...ids];
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [next[i], next[j]] = [next[j], next[i]];
-  }
-  return next;
-}
 
 export function useDeckStudySession(
   deckId: string | null | undefined,

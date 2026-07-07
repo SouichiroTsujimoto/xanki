@@ -27,7 +27,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 |----|-----|------|
 | user_id | TEXT | |
 | id | TEXT | UUID v7 |
-| deck_id | TEXT | |
+| deck_id | TEXT | **FK**: `(user_id, deck_id)` → `decks(user_id, id)`（migration 0003） |
 | kind | TEXT | `text` \| `image` \| `qa` |
 | content | TEXT | kind=text/qa の問題文（qa）または原文（text） |
 | answer | TEXT | kind=qa の解答 |
@@ -123,8 +123,15 @@ crop 後は word 座標もクロップ画像基準。
 - Desktop: Rust が WebP 保存 → TS が blob upload → REST createCard
 - Web: クライアント WebP 化 → blob upload → REST createCard
 
+## 参照整合性
+
+- `cards(user_id, deck_id)` は `decks(user_id, id)` を参照（SQLite FK、migration `0003_cards_deck_fk.sql`）
+- `entitlements.stripe_customer_id` / `stripe_subscription_id` — Stripe 紐付け（migration `0004_entitlements_stripe.sql`）
+- アプリ層でも作成・更新時に `requireDeckOwnedByUser` で検証
+
 ## 受け入れ条件
 
 - [ ] 新規カード作成時に `review_state`（box=1）が必ず作成される
 - [ ] 削除したカード/デッキが一覧・due 件数に出ない
+- [ ] デッキ削除時、配下カードも論理削除される
 - [ ] 画像カードのローカルキャッシュと `masks` が同一座標系（クロップ後）である

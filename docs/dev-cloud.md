@@ -26,7 +26,7 @@ pnpm dev:cloud:all
 
 ## D1 スキーマ変更後のリセット
 
-破壊的 migration（`0001_cloud_data.sql` squash 等）後はローカル D1 をリセットする:
+破壊的 migration（`0001_cloud_data.sql` squash、`0003_cards_deck_fk.sql` の table rebuild、`0004_entitlements_stripe.sql` 等）後はローカル D1 をリセットする:
 
 ```bash
 rm -rf web/.wrangler/state
@@ -82,6 +82,7 @@ curl -s -X POST http://localhost:8787/api/dev/purge-user \
 | `redirect_uri_mismatch` | Google Console の redirect URI と `APP_URL` を一致させる |
 | `pnpm install` が esbuild で失敗 | ルート `.npmrc` で onlyBuiltDependencies 済み。再実行 |
 | Web が真っ白 | `pnpm --filter @xanki/web build:client` |
+| Web UI が Desktop と違う（古い UI） | `@xanki/ui` 変更後に `pnpm --filter @xanki/web build:client` を再実行し wrangler を再起動 |
 | D1 `SQLITE_BUSY` / wrangler 落ち | 8787 の wrangler をすべて停止し `pnpm dev:cloud` を 1 本だけ起動 |
 | auth / data スキーマ不整合 | `rm -rf web/.wrangler/state` → `pnpm setup:cloud` |
 | デスクトップが API に届かない | `xanki/.env.development` の `VITE_CLOUD_URL=http://localhost:8787` |

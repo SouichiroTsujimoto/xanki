@@ -1,10 +1,4 @@
 import type { ApiCard, ApiDeck } from "./api-types.js";
-import {
-  imageMasksSchema,
-  textMasksSchema,
-  type ImageMask,
-  type TextMask,
-} from "./masks.js";
 
 export type StudyFilter = "due" | "all";
 
@@ -88,22 +82,4 @@ export function countDueCards<T extends { dueAt?: number }>(
   return cards.filter((card) => Number(card.dueAt ?? 0) <= now).length;
 }
 
-export function parseTextMasksJson(raw: string): TextMask[] {
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    const result = textMasksSchema.safeParse(parsed);
-    return result.success ? result.data : [];
-  } catch {
-    return [];
-  }
-}
-
-export function parseImageMasksJson(raw: string): ImageMask[] {
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    const result = imageMasksSchema.safeParse(parsed);
-    return result.success ? result.data : [];
-  } catch {
-    return [];
-  }
-}
+export { parseImageMasksJson, parseTextMasksJson } from "../masks/parse.js";

@@ -78,7 +78,7 @@ pub fn run() {
             app.manage(app_state);
 
             let review = MenuItem::with_id(app, "review", "今日の復習: 0件", true, None::<&str>)?;
-            let library = MenuItem::with_id(app, "library", "ホームを開く", true, None::<&str>)?;
+            let library = MenuItem::with_id(app, "home", "ホームを開く", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "設定", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "終了", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
@@ -92,7 +92,7 @@ pub fn run() {
                         let _ = windows::show_main_window(app);
                         let _ = app.emit("navigate", "leitner");
                     }
-                    "library" => {
+                    "home" => {
                         let _ = windows::open_home_window(app);
                     }
                     "settings" => {

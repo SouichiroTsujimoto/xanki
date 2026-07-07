@@ -31,7 +31,7 @@
 
 | イベント | 用途 |
 |---------|------|
-| `library-changed` | カード/デッキ変更後、ライブラリ再読込 |
+| `data-changed` | カード/デッキ変更後、一覧 refetch（旧 `library-changed`） |
 | `review-count-changed` | Tray 復習件数更新 |
 | `navigate` | main ウィンドウのタブ切替（`home` / `study` / `settings`。旧 `library` / `review` も互換） |
 | SSE `revision` | 他端末 / Web からの変更通知 → REST refetch |
@@ -45,7 +45,7 @@
 | `CaptureProvider` | Rust `screencapture -i -x` |
 | `OcrProvider` | Swift サイドカー |
 | `Scheduler` | `LeitnerScheduler`（shared） |
-| `MaskSuggester` | `CloudMaskSuggester`（Pro + ログイン必須） |
+| `MaskSuggester` | 現行: `NoOpMaskSuggester`（未実装）。将来: `CloudMaskSuggester`（Pro + ログイン必須） |
 
 ## クラウド層
 

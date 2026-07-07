@@ -7,7 +7,7 @@ import type {
   OcrResult,
   PermissionStatus,
   TextMask,
-} from "../../types";
+} from "@xanki/ui";
 
 export const nativeApi = {
   resolveImageUrl: (imagePath: string) => invoke<string>("resolve_image_url", { imagePath }),

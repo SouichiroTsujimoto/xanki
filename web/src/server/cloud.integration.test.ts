@@ -104,4 +104,31 @@ describe("cloud API smoke", () => {
     const body = await res.json();
     expect(body.error).toBe("deck_not_found");
   });
+
+  it("deleteDeck cascades logical delete to cards", async () => {
+    const { token } = await createTestUserSession(env);
+    const auth = { Authorization: `Bearer ${token}` };
+
+    const deck = await json("/api/decks", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ name: "Temp Deck" }),
+    });
+
+    await json("/api/cards", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({
+        deckId: deck.id,
+        kind: "text",
+        content: "cascade test",
+        masks: JSON.stringify([{ type: "range", start: 0, end: 1 }]),
+      }),
+    });
+
+    await json(`/api/decks/${deck.id}`, { method: "DELETE", headers: auth });
+
+    const cards = await json("/api/cards", { headers: auth });
+    expect(cards.every((c: { deckId: string }) => c.deckId !== deck.id)).toBe(true);
+  });
 });

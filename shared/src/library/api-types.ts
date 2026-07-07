@@ -1,4 +1,4 @@
-import type { CardKind } from "./sync.js";
+import type { CardKind } from "../sync/sync.js";
 
 export interface ApiDeck {
   id: string;

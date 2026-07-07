@@ -304,7 +304,7 @@ pub fn update_tray_menu(app: &AppHandle, due_count: i64) -> AppResult<()> {
     let review_label = format!("今日の復習: {due_count}件");
     let review = MenuItem::with_id(app, "review", &review_label, true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
-    let library = MenuItem::with_id(app, "library", "ホームを開く", true, None::<&str>)
+    let library = MenuItem::with_id(app, "home", "ホームを開く", true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;
     let settings = MenuItem::with_id(app, "settings", "設定", true, None::<&str>)
         .map_err(|e| AppError::Other(e.to_string()))?;

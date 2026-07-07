@@ -7,7 +7,7 @@ import {
 } from "motion/react";
 import { useAppApi } from "../../../context/app-api-context";
 import { cardKindLabel, copy } from "../../../copy";
-import { LibraryCardPreview } from "../library-card-preview";
+import { CardTilePreview } from "../card-tile-preview";
 import { springSnappy, transitionForReduced } from "../../../lib/motion-presets";
 import { useReducedMotion } from "../../../lib/use-reduced-motion";
 import type { Card } from "../../../types";
@@ -19,7 +19,7 @@ const DRAG_CLICK_THRESHOLD_PX = 6;
 
 interface Props {
   deckId: string | null;
-  libraryRevision?: number;
+  collectionRevision?: number;
   onSelectCard: (card: Card) => void;
 }
 
@@ -61,7 +61,7 @@ function coverflowMotion(offset: number, reduced: boolean) {
 
 export function StudyCardCoverflow({
   deckId,
-  libraryRevision = 0,
+  collectionRevision = 0,
   onSelectCard,
 }: Props) {
   const reduced = useReducedMotion();
@@ -110,7 +110,7 @@ export function StudyCardCoverflow({
 
   useEffect(() => {
     void loadCards();
-  }, [loadCards, libraryRevision]);
+  }, [loadCards, collectionRevision]);
 
   useEffect(() => {
     if (!api.subscribeLibraryChanged) return;
@@ -250,7 +250,7 @@ export function StudyCardCoverflow({
     return null;
   }
 
-  if (!loading && cards.length === 0) {
+  if (cards.length === 0) {
     return null;
   }
 
@@ -301,7 +301,7 @@ export function StudyCardCoverflow({
                 }
               >
                 <div className="study-coverflow-slide-body">
-                  <LibraryCardPreview card={card} />
+                  <CardTilePreview card={card} />
                 </div>
               </motion.button>
             );

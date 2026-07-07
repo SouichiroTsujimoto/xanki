@@ -90,25 +90,3 @@ pub fn finalize_image(app_data_dir: &Path, relative_path: &str) -> AppResult<Sto
         size: webp_bytes.len() as u64,
     })
 }
-
-pub fn backfill_image_hashes(conn: &rusqlite::Connection, app_data_dir: &Path) -> AppResult<()> {
-    let mut stmt = conn.prepare(
-        "SELECT id, image_path FROM cards
-         WHERE kind = 'image' AND deleted_at IS NULL
-           AND image_path IS NOT NULL
-           AND (image_hash IS NULL OR image_hash = '')",
-    )?;
-    let rows: Vec<(String, String)> = stmt
-        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
-        .collect::<Result<_, _>>()?;
-
-    for (card_id, image_path) in rows {
-        if let Ok(stored) = finalize_image(app_data_dir, &image_path) {
-            conn.execute(
-                "UPDATE cards SET image_path = ?1, image_hash = ?2, updated_at = ?3 WHERE id = ?4",
-                rusqlite::params![stored.relative_path, stored.hash, chrono::Utc::now().timestamp_millis(), card_id],
-            )?;
-        }
-    }
-    Ok(())
-}

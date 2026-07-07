@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Deck } from "../types";
+import type { Deck } from "@xanki/ui";
 
 interface AppStore {
   dueCount: number;

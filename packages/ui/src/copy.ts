@@ -8,7 +8,7 @@ export const copy = {
     leitner: "Leitner学習",
     settings: "設定",
     homeHint: "デッキ",
-    deckStudyHint: "仕上げ",
+    deckStudyHint: "フラッシュカードで学習",
     leitnerHint: "今日の due",
     settingsHint: "設定",
   },
@@ -110,8 +110,12 @@ export const copy = {
     sectionEyebrow: "カード",
     addSection: "カードの追加",
     addHint: "ホームでデッキを選んでからカードを追加してください。",
+    composerHint: "テキストを入力し、マスクしたい部分を選択して + マスク",
+    composerPlaceholder: "暗記したいテキストを入力...",
+    composerSave: "カードを追加",
+    composerSaving: "追加中...",
     emptyTitle: "カードがまだありません",
-    emptyCopy: "上のボタンから最初のカードを追加してください。",
+    emptyCopy: "上の入力欄から最初のカードを追加してください。",
     textCapture: "テキスト取込",
     screenshotCapture: "スクショ取込",
     kindText: "テキスト",
@@ -138,6 +142,7 @@ export const copy = {
     createImage: "暗記カード作成 ✦",
     editImage: "スクショ編集 ✦",
     qaToggle: "一問一答形式にする",
+    qaExit: "問題文と解答を連結してマスク編集に戻す",
     questionLabel: "問題文",
     answerLabel: "解答",
     answerPlaceholder: "解答を入力...",
@@ -225,8 +230,6 @@ export const copy = {
 export const studyModeList = (
   Object.entries(copy.studyModes) as [StudyMode, (typeof copy.studyModes)[StudyMode]][]
 ).map(([id, mode]) => ({ id, ...mode }));
-
-export type DeckStudyMode = Exclude<StudyMode, "learn">;
 
 export const deckStudyModeList = studyModeList.filter(
   (mode): mode is (typeof studyModeList)[number] & { id: DeckStudyMode } =>

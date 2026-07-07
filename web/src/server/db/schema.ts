@@ -98,5 +98,7 @@ export const entitlements = sqliteTable("entitlements", {
   aiCreditsMonth: integer("ai_credits_month").notNull(),
   aiCreditsRemaining: integer("ai_credits_remaining").notNull().default(0),
   validUntil: integer("valid_until"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   updatedAt: integer("updated_at").notNull(),
 });

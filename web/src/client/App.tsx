@@ -18,6 +18,7 @@ import {
 import { authClient } from "./auth-client";
 import { cloudApi, SESSION_CLEARED_EVENT } from "./api";
 import { createCloudAppApi } from "./app-api";
+import { countDueCards } from "@xanki/shared";
 import {
   scheduleWebLibraryRefresh,
   setLibraryRefreshHandler,
@@ -49,7 +50,9 @@ function AuthenticatedApp({
   const [studySessionActive, setStudySessionActive] = useState(false);
   const [deckStudySession, setDeckStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
   const [leitnerSession, setLeitnerSession] = useState<StudySessionInfo>(EMPTY_SESSION);
-  const [libraryRevision, setLibraryRevision] = useState(0);
+  const [collectionRevision, setCollectionRevision] = useState(0);
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
 
   const refreshDecks = useCallback(async () => {
     const items = await cloudApi.listDecks();
@@ -63,19 +66,20 @@ function AuthenticatedApp({
     setSelectedDeckId((current) => {
       if (items.length === 0) return null;
       if (current && items.some((deck) => deck.id === current)) return current;
+      const lastUsed = localStorage.getItem("xanki:lastUsedDeckId");
+      if (lastUsed && items.some((deck) => deck.id === lastUsed)) return lastUsed;
       return items[0]?.id ?? null;
     });
   }, []);
 
   const refreshDueCount = useCallback(async () => {
     const cards = await cloudApi.listCards();
-    const now = Date.now();
-    setDueCount(cards.filter((c) => Number(c.dueAt ?? 0) <= now).length);
+    setDueCount(countDueCards(cards));
   }, []);
 
   const refreshLibrary = useCallback(async () => {
     await Promise.all([refreshDecks(), refreshDueCount()]);
-    setLibraryRevision((value) => value + 1);
+    setCollectionRevision((value) => value + 1);
   }, [refreshDecks, refreshDueCount]);
 
   const refreshLibraryRef = useRef(refreshLibrary);
@@ -109,8 +113,18 @@ function AuthenticatedApp({
     }
   }, []);
 
+  useEffect(() => {
+    if (!selectedDeckId) return;
+    localStorage.setItem("xanki:lastUsedDeckId", selectedDeckId);
+  }, [selectedDeckId]);
+
   const handleTabChange = useCallback((nextTab: AppTab) => {
+    const previousTab = tabRef.current;
+    if (nextTab === previousTab) return;
     setTab(nextTab);
+    if (nextTab === "deckStudy" && previousTab !== "deckStudy") {
+      void refreshLibraryRef.current();
+    }
     if (nextTab !== "deckStudy") {
       setDeckStudySession(EMPTY_SESSION);
     }
@@ -165,7 +179,7 @@ function AuthenticatedApp({
             <DeckStudyView
               deckId={selectedDeckId}
               searchQuery={searchQuery}
-              libraryRevision={libraryRevision}
+              collectionRevision={collectionRevision}
               onSessionChange={setDeckStudySession}
             />
           </AppTabLayer>
@@ -173,7 +187,7 @@ function AuthenticatedApp({
             <LeitnerStudyView
               decks={decks}
               dueCount={dueCount}
-              libraryRevision={libraryRevision}
+              collectionRevision={collectionRevision}
               onSessionChange={setLeitnerSession}
             />
           </AppTabLayer>

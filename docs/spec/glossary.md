@@ -58,9 +58,10 @@
 | デッキ一覧（画面） | `HomeView`, `listDecks` | ホームタブ内 | Home 画面 | [library.md](./library.md) |
 | カード | `Card`, `/api/cards` | **カード** | — | [library.md](./library.md) |
 | カード一覧 | `CardCollection`, `library-main` | 見出し **カード** | Collection, **ライブラリ**（タブ名意味） | [library.md](./library.md) |
-| カード追加バー | `CollectionAddBar` | **カードの追加** | — | [library.md](./library.md) |
+| カード追加 | `TextMaskComposerEmbedded` / `CollectionAddBar` | **カードの追加**（インライン） | — | [library.md](./library.md) |
 | Coverflow | `StudyCardCoverflow` | **Coverflow**（固有名） | — | [deck-study.md](./deck-study.md) |
-| 変更通知 refetch | `libraryRevision`, `library-sync` | （UI 非表示） | library-changed | [architecture.md](./architecture.md) |
+| 変更通知 refetch | `collectionRevision`, `collection-sync` | （UI 非表示） | `libraryRevision`, `library-changed` | [architecture.md](./architecture.md) |
+| カードタイル | `CardTilePreview` | （プレビュー） | `LibraryCardPreview` | [library.md](./library.md) |
 | 検索 | `searchQuery` | placeholder **カードを検索...** | — | [ui.md](./ui.md) |
 | 復習待ちバナー | `dueCount` | **N 件が復習待ち** | due（コード） | [leitner-study.md](./leitner-study.md) |
 
@@ -137,10 +138,13 @@
 
 ## I. 旧称・非推奨（使用禁止）
 
-| 旧称 | 正しい概念 | 残存場所（内部名のみ） |
-|------|-----------|----------------------|
-| **ライブラリ**（タブ・画面名） | 学習タブ内カード一覧 / 会話上の総称 | `library.md` ファイル名, `libraryRevision`, `LibraryCardPreview` |
-| **library** (`navigate`) | `home` タブ | `resolveTab`, Tray menu id |
+| 旧称 | 正しい概念 | 正しい内部名 |
+|------|-----------|-------------|
+| **ライブラリ**（タブ・画面名） | 学習タブ内カード一覧 / 会話上の総称 | `collectionRevision`, `CardTilePreview`（`library.md` はファイル名として残す） |
+| **`libraryRevision`** | データ変更で UI refetch を促す revision カウンタ | **`collectionRevision`** |
+| **`library-changed`** | Tauri イベント名 | **`data-changed`**（`xanki:data-changed`） |
+| **`LibraryCardPreview`** | カードタイルプレビュー | **`CardTilePreview`** |
+| **library** (`navigate`) | `home` タブ | Tray menu id **`home`** |
 | **review** (`navigate`) | **Leitner学習**タブ | Tray menu id `review` |
 | **study** (`navigate`) | **デッキ学習**タブ | 後方互換 |
 | **学習**（旧タブ名） | **デッキ学習** / **Leitner学習** | — |

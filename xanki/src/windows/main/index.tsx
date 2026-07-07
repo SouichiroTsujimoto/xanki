@@ -14,6 +14,7 @@ import {
   OnboardingView,
   SettingsView,
   type AppTab,
+  type PermissionStatus,
   type StudySessionInfo,
 } from "@xanki/ui";
 import { isCloudUnauthorized } from "@xanki/shared";
@@ -32,7 +33,6 @@ import {
 } from "../../lib/cloud/useCloudAccount";
 import { nativeApi } from "../../lib/tauri/native-api";
 import { useAppStore } from "../../stores/appStore";
-import type { PermissionStatus } from "../../types";
 import { LoginPage } from "./LoginPage";
 
 const EMPTY_SESSION: StudySessionInfo = {
@@ -107,7 +107,7 @@ export function MainApp() {
   tabRef.current = tab;
   const [deckStudySession, setDeckStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
   const [leitnerSession, setLeitnerSession] = useState<StudySessionInfo>(EMPTY_SESSION);
-  const [libraryRevision, setLibraryRevision] = useState(0);
+  const [collectionRevision, setCollectionRevision] = useState(0);
   const [permissions, setPermissions] = useState<PermissionStatus>({
     accessibility: false,
     screenRecording: false,
@@ -143,7 +143,7 @@ export function MainApp() {
       const now = Date.now();
       const count = allCards.filter((card) => Number(card.dueAt ?? 0) <= now).length;
       setDueCount(count);
-      setLibraryRevision((value) => value + 1);
+      setCollectionRevision((value) => value + 1);
       await invoke("update_tray_due_count", { count });
     } catch (e) {
       if (isCloudUnauthorized(e)) {
@@ -173,8 +173,10 @@ export function MainApp() {
 
   const handleTabChange = useCallback(
     (nextTab: AppTab) => {
+      const previousTab = tabRef.current;
+      if (nextTab === previousTab) return;
       setTab(nextTab);
-      if (nextTab === "deckStudy") {
+      if (nextTab === "deckStudy" && previousTab !== "deckStudy") {
         void flushLibraryRefresh();
       }
       if (nextTab !== "deckStudy") {
@@ -249,7 +251,7 @@ export function MainApp() {
 
   useEffect(() => {
     if (!auth.loggedIn) return;
-    const unlistenLibrary = listen("xanki:library-changed", () => {
+    const unlistenLibrary = listen("xanki:data-changed", () => {
       void flushLibraryRefresh();
     });
     const unlistenNavigate = listen<string>("navigate", (event) => {
@@ -323,7 +325,7 @@ export function MainApp() {
             <DeckStudyView
               deckId={selectedDeckId}
               searchQuery={searchQuery}
-              libraryRevision={libraryRevision}
+              collectionRevision={collectionRevision}
               onSessionChange={setDeckStudySession}
             />
           </AppTabLayer>
@@ -331,7 +333,7 @@ export function MainApp() {
             <LeitnerStudyView
               decks={decks}
               dueCount={dueCount}
-              libraryRevision={libraryRevision}
+              collectionRevision={collectionRevision}
               onSessionChange={setLeitnerSession}
             />
           </AppTabLayer>

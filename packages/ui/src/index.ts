@@ -7,7 +7,7 @@ export * from "./components/xanki/confirm-delete-dialog";
 export * from "./components/xanki/home-view";
 export * from "./components/xanki/card-collection";
 export * from "./components/xanki/collection-add-bar";
-export * from "./components/xanki/library-card-preview";
+export * from "./components/xanki/card-tile-preview";
 export * from "./components/xanki/settings-view";
 export * from "./components/xanki/onboarding-view";
 export * from "./components/xanki/login-view";

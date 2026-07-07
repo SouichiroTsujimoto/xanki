@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useAppApi } from "../../context/app-api-context";
 import { cardKindLabel, copy } from "../../copy";
@@ -11,20 +11,20 @@ import {
 import { useReducedMotion } from "../../lib/use-reduced-motion";
 import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
-import { LibraryCardPreview } from "./library-card-preview";
+import { CardTilePreview } from "./card-tile-preview";
 import type { Card } from "../../types";
 
 interface Props {
   deckId: string | null;
   searchQuery: string;
-  libraryRevision?: number;
+  collectionRevision?: number;
   onPreviewCard: (card: Card) => void;
 }
 
 export function CardCollection({
   deckId,
   searchQuery,
-  libraryRevision = 0,
+  collectionRevision = 0,
   onPreviewCard,
 }: Props) {
   const reduced = useReducedMotion();
@@ -35,6 +35,7 @@ export function CardCollection({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const hadCardsRef = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -45,15 +46,18 @@ export function CardCollection({
     async (options?: { silent?: boolean }) => {
       if (!deckId) {
         setCards([]);
+        hadCardsRef.current = false;
         setLoading(false);
         return;
       }
 
-      if (!options?.silent) {
+      if (!options?.silent && hadCardsRef.current) {
         setLoading(true);
       }
       try {
-        setCards(await api.listCards(deckId, debouncedQuery || undefined));
+        const next = await api.listCards(deckId, debouncedQuery || undefined);
+        setCards(next);
+        hadCardsRef.current = next.length > 0;
       } finally {
         if (!options?.silent) {
           setLoading(false);
@@ -64,8 +68,12 @@ export function CardCollection({
   );
 
   useEffect(() => {
+    hadCardsRef.current = false;
+  }, [deckId]);
+
+  useEffect(() => {
     void loadCards();
-  }, [loadCards, libraryRevision]);
+  }, [loadCards, collectionRevision]);
 
   useEffect(() => {
     if (!api.subscribeLibraryChanged) return;
@@ -161,7 +169,7 @@ export function CardCollection({
                   tabIndex={0}
                   aria-label={copy.cards.previewAria(cardKindLabel(card.kind))}
                 >
-                  <LibraryCardPreview card={card} />
+                  <CardTilePreview card={card} />
                   {card.note && <p className="card-note">{card.note}</p>}
                 </div>
                 <div className="card-actions">

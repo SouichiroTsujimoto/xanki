@@ -79,6 +79,7 @@ export function AppShell({
   const drawerTransition = transitionForReduced(reduced, springDrawer);
 
   const handleTabChange = (nextTab: AppTab) => {
+    if (nextTab === tab) return;
     onTabChange(nextTab);
     if (isNarrow) {
       onSidebarOpenChange(false);

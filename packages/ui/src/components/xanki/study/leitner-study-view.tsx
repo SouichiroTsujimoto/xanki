@@ -9,7 +9,7 @@ import type { StudySessionInfo } from "./deck-study-view";
 interface Props {
   decks: Deck[];
   dueCount: number;
-  libraryRevision?: number;
+  collectionRevision?: number;
   onSessionChange: (session: StudySessionInfo) => void;
 }
 
@@ -21,7 +21,7 @@ interface DeckDueRow {
 export function LeitnerStudyView({
   decks,
   dueCount,
-  libraryRevision = 0,
+  collectionRevision = 0,
   onSessionChange,
 }: Props) {
   const api = useAppApi();
@@ -80,7 +80,7 @@ export function LeitnerStudyView({
     return () => {
       cancelled = true;
     };
-  }, [api, decks, dueCount, libraryRevision]);
+  }, [api, decks, dueCount, collectionRevision]);
 
   useEffect(() => {
     if (phase === "hub") {

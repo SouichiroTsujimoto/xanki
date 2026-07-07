@@ -1,38 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Deck {
-    pub id: String,
-    pub name: String,
-    pub created_at: i64,
-    pub updated_at: i64,
-    pub card_count: i64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Card {
-    pub id: String,
-    pub deck_id: String,
-    pub kind: String,
-    pub content: Option<String>,
-    pub answer: Option<String>,
-    pub image_path: Option<String>,
-    pub image_hash: Option<String>,
-    pub ocr_text: Option<String>,
-    pub ocr_data: Option<String>,
-    pub masks: String,
-    pub note: Option<String>,
-    pub source_hint: Option<String>,
-    pub created_at: i64,
-    pub updated_at: i64,
-    pub box_num: Option<i32>,
-    pub due_at: Option<i64>,
-    pub starred: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum TextMask {
     #[serde(rename = "range")]
@@ -79,27 +47,6 @@ pub struct OcrResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SaveTextCardRequest {
-    pub deck_id: String,
-    pub content: String,
-    pub masks: Vec<TextMask>,
-    pub note: Option<String>,
-    pub source_hint: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SaveQaCardRequest {
-    pub deck_id: String,
-    pub content: String,
-    pub answer: String,
-    pub masks: Vec<TextMask>,
-    pub note: Option<String>,
-    pub source_hint: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ImageRegion {
     pub crop_x: f64,
     pub crop_y: f64,
@@ -118,13 +65,6 @@ pub struct SaveImageCardsRequest {
     pub ocr_data: Option<String>,
     pub regions: Vec<ImageRegion>,
     pub source_hint: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ReviewCard {
-    pub card: Card,
-    pub image_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -155,51 +95,4 @@ pub struct EditorInitPayload {
     pub note: Option<String>,
     pub ocr_text: Option<String>,
     pub ocr_data: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateTextCardRequest {
-    pub card_id: String,
-    pub deck_id: String,
-    pub content: String,
-    pub masks: Vec<TextMask>,
-    pub note: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateQaCardRequest {
-    pub card_id: String,
-    pub deck_id: String,
-    pub content: String,
-    pub answer: String,
-    pub masks: Vec<TextMask>,
-    pub note: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateImageCardRequest {
-    pub card_id: String,
-    pub deck_id: String,
-    pub masks: Vec<ImageMask>,
-    pub note: Option<String>,
-    pub ocr_text: Option<String>,
-    pub ocr_data: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeckExport {
-    pub deck: Deck,
-    pub cards: Vec<Card>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum StudyFilter {
-    Due,
-    All,
-    Starred,
 }

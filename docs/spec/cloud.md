@@ -222,6 +222,10 @@ CREATE TABLE entitlements ( ... );
 | AI 機能 | なし(402) | 月次 100 クレジット(暫定) |
 
 - webhook → `entitlements` 更新。**ゲート判定はサーバー側**(blob commit 時の容量、AI 呼び出し時のクレジット)
+- `POST /api/billing/webhook` — Stripe 署名検証（`STRIPE_WEBHOOK_SECRET`）必須
+- 処理イベント: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`
+- `valid_until` は subscription の `current_period_end`（checkout 完了時は Stripe API で subscription を取得）
+- `entitlements` に `stripe_customer_id`, `stripe_subscription_id`（migration 0004）
 - 容量超過: blob commit / 画像カード作成を 402
 
 ## 9. AI (C5)
@@ -247,18 +251,20 @@ POST /api/ai/ask           { card_context, question }                → SSE ス
 
 ## 11. 受け入れ条件
 
-- [ ] Web / Desktop 同一アカウントで、片方で作ったカードがもう片方で SSE 経由で表示される
-- [ ] Web UI でテキストカード作成 → Desktop に反映
-- [ ] Desktop で画像カード → Web で一覧表示
-- [ ] 未 Pro で AI → 402
-- [ ] R2 URL 直接アクセス → 403
-- [ ] 全端末削除 + 30 日 GC → R2 オブジェクト削除
-- [ ] バイナリ / SPA に LLM API キーなし
+- [ ] Web / Desktop 同一アカウントで、片方で作ったカードがもう片方で SSE 経由で表示される（手動 E2E）
+- [ ] Web UI でテキストカード作成 → Desktop に反映（手動 E2E）
+- [ ] Desktop で画像カード → Web で一覧表示（手動 E2E）
+- [x] 未 Pro で AI → 402（`pnpm smoke:cloud` + promote-pro 後成功）
+- [ ] R2 URL 直接アクセス → 403（手動 / 本番）
+- [ ] 全端末削除 + 30 日 GC → R2 オブジェクト削除（cron 手動確認）
+- [x] バイナリ / SPA に LLM API キーなし（Workers env のみ）
+- [x] Stripe webhook 署名検証 + lifecycle イベント → entitlements 更新（`billing.integration.test.ts`）
+- [x] デッキ削除時カード論理削除（`cloud.integration.test.ts`）
 
 ## 12. 未決事項
 
-- 決済: Stripe Checkout + webhook（MoR は後続）
-- 価格(Pro 月額)と AI クレジット単位
+- MoR（Merchant of Record）— Stripe Checkout + webhook が MVP 決済経路
+- **Pro 月額: 暫定未公開**（Stripe Price ID は `STRIPE_PRICE_PRO` で設定）。AI クレジットは Pro 月 100（`PLAN_LIMITS.pro.aiCreditsMonth`）
 - Web OCR
 - 未ログイン / オフライン CRUD の再導入タイミング
 - 正式名称・ドメイン

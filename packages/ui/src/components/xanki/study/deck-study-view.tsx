@@ -22,7 +22,7 @@ export interface StudySessionInfo {
 interface Props {
   deckId?: string | null;
   searchQuery: string;
-  libraryRevision?: number;
+  collectionRevision?: number;
   onSessionChange: (session: StudySessionInfo) => void;
 }
 
@@ -31,7 +31,7 @@ const MODES = deckStudyModeList;
 export function DeckStudyView({
   deckId,
   searchQuery,
-  libraryRevision = 0,
+  collectionRevision = 0,
   onSessionChange,
 }: Props) {
   const reduced = useReducedMotion();
@@ -101,7 +101,7 @@ export function DeckStudyView({
         <div className="study-hub">
           <StudyCardCoverflow
             deckId={deckId ?? null}
-            libraryRevision={libraryRevision}
+            collectionRevision={collectionRevision}
             onSelectCard={startCardPreview}
           />
 
@@ -145,7 +145,7 @@ export function DeckStudyView({
           <CardCollection
             deckId={deckId ?? null}
             searchQuery={searchQuery}
-            libraryRevision={libraryRevision}
+            collectionRevision={collectionRevision}
             onPreviewCard={startCardPreview}
           />
         </div>
