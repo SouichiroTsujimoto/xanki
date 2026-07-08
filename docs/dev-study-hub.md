@@ -1,6 +1,6 @@
 # 学習ハブ — 実装メモ
 
-**デッキ学習ハブ**（Coverflow + 4 手段 + カード一覧）と **Leitner学習ハブ**（due ヒーロー・一覧）。  
+**デッキ学習ハブ**（Coverflow + 4 手段 + カード一覧）と **スマート学習ハブ**（復習予定ヒーロー・一覧）。  
 セッション中のフリップは [dev-study-layout.md](./dev-study-layout.md)。  
 仕様: [deck-study.md](./spec/deck-study.md), [leitner-study.md](./spec/leitner-study.md)。索引: [dev-ui.md](./dev-ui.md)。
 
@@ -9,7 +9,7 @@
 | 種別 | パス |
 |------|------|
 | デッキ学習 | [`deck-study-view.tsx`](../packages/ui/src/components/xanki/study/deck-study-view.tsx), [`flashcards-mode.tsx`](../packages/ui/src/components/xanki/study/flashcards-mode.tsx) 等 |
-| Leitner | [`leitner-study-view.tsx`](../packages/ui/src/components/xanki/study/leitner-study-view.tsx), [`learn-mode.tsx`](../packages/ui/src/components/xanki/study/learn-mode.tsx) |
+| スマート学習 | [`leitner-study-view.tsx`](../packages/ui/src/components/xanki/study/leitner-study-view.tsx), [`learn-mode.tsx`](../packages/ui/src/components/xanki/study/learn-mode.tsx) |
 | Coverflow | [`study-card-coverflow.tsx`](../packages/ui/src/components/xanki/study/study-card-coverflow.tsx), [`coverflow-motion.ts`](../packages/ui/src/lib/coverflow-motion.ts) |
 | スタイル | [`study-hub.css`](../packages/ui/src/styles/components/study-hub.css) |
 
@@ -25,7 +25,7 @@
   └── .card-collection
 ```
 
-Leitner: `.leitner-study-hub` — 同様にハブ全体 scroll、内部ヒーロー + デッキ別 due リスト。
+スマート学習: `.leitner-study-hub` — 同様にハブ全体 scroll、内部ヒーロー + デッキ別復習予定リスト。
 
 ## 不変条件
 
@@ -55,7 +55,7 @@ Leitner: `.leitner-study-hub` — 同様にハブ全体 scroll、内部ヒーロ
 - [ ] ハブ全体 scroll（バー非表示）
 - [ ] Coverflow ドラッグ・選択デッキ切替
 - [ ]  container 幅 520 / 400 未満で stage 高さ縮小
-- [ ] Leitner ハブ: due ヒーロー + 一覧
+- [ ] スマート学習ハブ: 復習予定ヒーロー + 一覧
 - [ ] モード起動 → セッション UI（[dev-study-layout](./dev-study-layout.md)）
 
 ## 変更時ガイド

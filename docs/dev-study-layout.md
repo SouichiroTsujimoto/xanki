@@ -1,6 +1,6 @@
 # 学習カードレイアウト — 実装メモ
 
-学習セッション（デッキ学習・Leitner学習）の **フリップカード周りのレイアウト** と **テキスト縦配置** の実装メモ。  
+学習セッション（デッキ学習・スマート学習）の **フリップカード周りのレイアウト** と **テキスト縦配置** の実装メモ。  
 索引: [dev-ui.md](./dev-ui.md)。ユーザー向け挙動の正本は [spec/study.md](./spec/study.md)。
 
 ## 関連ファイル
@@ -133,7 +133,7 @@
 ### 見切れ・重なり
 
 - [ ] ブラウザ / Tauri ウィンドウ高さを **大・中・小** に変えてもカード全体と `.review-actions` が見える
-- [ ] デッキ学習（フラッシュカード）と Leitner学習の **両方**
+- [ ] デッキ学習（フラッシュカード）とスマート学習の **両方**
 - [ ] フリップ中にカード shadow が切れない
 - [ ] `prefers-reduced-motion: reduce` で即時切替してもレイアウトが崩れない
 
@@ -158,7 +158,7 @@ pnpm dev:desktop    # Tauri（Cloud API は別途 dev:cloud）
 ### CSS を触るとき
 
 - `review.css` の `.study-session` ブロックと `@media (prefers-reduced-motion)` ブロックを **セットで** 確認
-- Leitner 用 `.leitner-study-session` の flex レイアウトはデッキ学習と **別経路**（slot の `overflow` 等が分岐している）
+- スマート学習用 `.leitner-study-session` の flex レイアウトはデッキ学習と **別経路**（slot の `overflow` 等が分岐している）
 
 ### 高さロジックを触るとき
 
