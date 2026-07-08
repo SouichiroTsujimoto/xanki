@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import type { StudyMetrics } from "@xanki/shared";
 import { copy } from "../../copy";
 import { useAppApi } from "../../context/app-api-context";
 import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { HomeMetricsPanel } from "./home-metrics-panel";
 import type { Deck, DeckExport } from "../../types";
 import { Button } from "../ui/button";
 
@@ -10,6 +12,7 @@ interface Props {
   decks: Deck[];
   selectedDeckId: string | null;
   dueCount: number;
+  collectionRevision?: number;
   onSelectDeck: (id: string | null) => void;
   onGoToDeckStudy: () => void;
   onGoToLeitner?: () => void;
@@ -19,11 +22,14 @@ export function HomeView({
   decks,
   selectedDeckId,
   dueCount,
+  collectionRevision = 0,
   onSelectDeck,
   onGoToDeckStudy,
   onGoToLeitner,
 }: Props) {
   const api = useAppApi();
+  const [metrics, setMetrics] = useState<StudyMetrics | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
   const [newDeckName, setNewDeckName] = useState("");
   const [editingDeckId, setEditingDeckId] = useState<string | null>(null);
   const [editingDeckName, setEditingDeckName] = useState("");
@@ -35,6 +41,26 @@ export function HomeView({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const selectedDeck = decks.find((deck) => deck.id === selectedDeckId) ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMetrics() {
+      setMetricsLoading(true);
+      try {
+        const next = await api.getStudyMetrics(selectedDeckId ?? undefined);
+        if (!cancelled) setMetrics(next);
+      } catch (error) {
+        console.error("metrics load failed", error);
+        if (!cancelled) setMetrics(null);
+      } finally {
+        if (!cancelled) setMetricsLoading(false);
+      }
+    }
+    void loadMetrics();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, selectedDeckId, collectionRevision]);
 
   useEffect(() => {
     if (!pendingDelete) return;
@@ -150,6 +176,12 @@ export function HomeView({
           </p>
         </section>
       )}
+
+      <HomeMetricsPanel
+        metrics={metrics}
+        loading={metricsLoading}
+        deckName={selectedDeck?.name ?? null}
+      />
 
       <section className="home-create-bar" aria-label="デッキの追加">
         <form

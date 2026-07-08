@@ -9,6 +9,9 @@ import {
   entitlements,
   reviewLogs,
   reviewState,
+  studyDailyStats,
+  studyEvents,
+  studySessions,
   userRevisions,
 } from "../db/schema";
 import type { Env } from "../env";
@@ -24,6 +27,9 @@ export async function purgeUserData(
   r2?: R2Bucket,
 ): Promise<void> {
   await db.delete(reviewLogs).where(eq(reviewLogs.userId, userId));
+  await db.delete(studyEvents).where(eq(studyEvents.userId, userId));
+  await db.delete(studySessions).where(eq(studySessions.userId, userId));
+  await db.delete(studyDailyStats).where(eq(studyDailyStats.userId, userId));
   await db.delete(reviewState).where(eq(reviewState.userId, userId));
   await db.delete(cards).where(eq(cards.userId, userId));
   await db.delete(decks).where(eq(decks.userId, userId));

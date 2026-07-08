@@ -8,6 +8,7 @@
 | 種別 | パス |
 |------|------|
 | コンポーネント | [`packages/ui/src/components/xanki/home-view.tsx`](../packages/ui/src/components/xanki/home-view.tsx) |
+| メトリクス UI | [`packages/ui/src/components/xanki/home-metrics-panel.tsx`](../packages/ui/src/components/xanki/home-metrics-panel.tsx) |
 | スタイル | [`packages/ui/src/styles/components/home.css`](../packages/ui/src/styles/components/home.css) |
 | デッキ一覧 UI | [`packages/ui/src/components/xanki/card-collection.tsx`](../packages/ui/src/components/xanki/card-collection.tsx)（ホームでも使用） |
 
@@ -17,6 +18,8 @@
 .app-main
   └── .home-view              ← flex:1, overflow-y:auto, max-width 960px
         ├── .home-spotlight
+        ├── .home-metrics     ← 学習サマリー + デッキ詳細
+        ├── .home-create-bar
         ├── .home-deck-section  ← デッキグリッド / 操作
         └── …
 ```

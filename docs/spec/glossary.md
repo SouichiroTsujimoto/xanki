@@ -130,6 +130,9 @@
 | 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **再度 / 難しい / 良好 / 簡単**（1–4 キー） | |
 | Leitner 完了 | `LearnMode` empty | **今日の Leitner 学習は完了です** | |
 | Leitner 箱 | `LeitnerScheduler` | **Box**（Leitner 学習。デッキ学習一覧では非表示） | spec・開発用 |
+| 習熟度 | `masteryPercent` | **習熟度**（Box 加重平均 %） | [study-metrics.md](./study-metrics.md) |
+| 連続日数 | `streakDays` | **N 日**（ホーム） | [study-metrics.md](./study-metrics.md) |
+| 今日の学習 | `todayStudyCount` | **N 回**（Leitner + デッキ学習） | [study-metrics.md](./study-metrics.md) |
 
 ---
 

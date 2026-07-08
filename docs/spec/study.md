@@ -6,6 +6,7 @@
 |---------|------|------|------|
 | デッキ学習 | `AppTab.deckStudy` | [deck-study.md](./deck-study.md) | Quizlet 型・仕上げ（セッションキューが減る） |
 | Leitner学習 | `AppTab.leitner` | [leitner-study.md](./leitner-study.md) | Anki 型・定着（due + 4 段階評価） |
+| 学習メトリクス | ホーム | [study-metrics.md](./study-metrics.md) | イベント記録・習熟度・モチベーション指標 |
 
 ## 共通
 

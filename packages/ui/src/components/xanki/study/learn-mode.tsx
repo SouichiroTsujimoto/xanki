@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { buildStudyCardContext } from "@xanki/shared";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
+import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
 import type { ReviewGrade } from "../../../types";
 import {
   StudyEmpty,
@@ -26,6 +27,8 @@ const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
 
 export function LearnMode({ deckId, shuffle = false }: Props) {
   const api = useAppApi();
+  const recorder = useStudySessionRecorder();
+  const sessionStartedRef = useRef(false);
   const { queue, index, current, progress, loadQueue, next } = useStudyQueue(
     deckId,
     "due",
@@ -33,6 +36,21 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
   );
   const [revealed, setRevealed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+
+  useEffect(() => {
+    if (queue.length === 0) {
+      sessionStartedRef.current = false;
+      return;
+    }
+    if (sessionStartedRef.current) return;
+    sessionStartedRef.current = true;
+    void recorder.beginLeitnerSession(deckId, queue.length);
+  }, [deckId, queue.length, recorder]);
+
+  useEffect(() => {
+    if (current || queue.length === 0) return;
+    void recorder.completeSession();
+  }, [current, queue.length, recorder]);
 
   useEffect(() => {
     setRevealed(false);
@@ -43,6 +61,7 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
     async (result: ReviewGrade) => {
       if (!current) return;
       await api.submitReview(current.card.id, result);
+      recorder.noteCardCompleted();
       setRevealed(false);
       if (index + 1 < queue.length) {
         next();
@@ -50,7 +69,7 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
         await loadQueue();
       }
     },
-    [current, index, loadQueue, next, queue.length, api],
+    [current, index, loadQueue, next, queue.length, api, recorder],
   );
 
   useEffect(() => {

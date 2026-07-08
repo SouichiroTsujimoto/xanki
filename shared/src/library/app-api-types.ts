@@ -1,13 +1,25 @@
-import type { ApiCard, ApiDeck, AiQaGenerateResponse } from "./api-types.js";
+import type {
+  AiQaGenerateResponse,
+  ApiCard,
+  ApiDeck,
+  CompleteStudySessionRequest,
+  RecordStudyEventsRequest,
+  StartStudySessionRequest,
+  StudyEventType,
+  StudyMetrics,
+  StudySessionMode,
+  StudyTrack,
+} from "./api-types.js";
 import type { ImageMask, OcrData, TextMask } from "../masks/masks.js";
 import type { StudyFilter } from "./cloud-mappers.js";
+import type { ReviewGrade } from "../study/scheduler.js";
 
 export type { StudyFilter } from "./cloud-mappers.js";
+export type { StudyEventType, StudyMetrics, StudySessionMode, StudyTrack } from "./api-types.js";
 export type { ImageMask, OcrData, OcrWord, TextMask } from "../masks/masks.js";
 
 export type StudyMode = "flashcards" | "learn" | "write" | "test" | "match";
 export type DeckStudyMode = Exclude<StudyMode, "learn">;
-import type { ReviewGrade } from "../study/scheduler.js";
 
 export type Card = ApiCard & {
   imagePath?: string | null;
@@ -77,6 +89,13 @@ export interface AppApi {
   deleteCard(cardId: string): Promise<void>;
   openCardEditor(cardId: string): Promise<void>;
   submitReview(cardId: string, result: ReviewGrade): Promise<void>;
+  getStudyMetrics(deckId?: string, tzOffsetMinutes?: number): Promise<StudyMetrics>;
+  startStudySession(request: StartStudySessionRequest): Promise<{ sessionId: string }>;
+  recordStudyEvents(sessionId: string, payload: RecordStudyEventsRequest): Promise<void>;
+  completeStudySession(
+    sessionId: string,
+    payload: CompleteStudySessionRequest,
+  ): Promise<void>;
   getDueCount(): Promise<number>;
   getDueCards(deckId?: string, limit?: number): Promise<ReviewCard[]>;
   getStudyCards(filter: StudyFilter, deckId?: string, limit?: number): Promise<ReviewCard[]>;

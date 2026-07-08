@@ -1,6 +1,7 @@
 import { copy } from "../../../copy";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
+import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
 import {
   extractMaskAnswers,
   pickDistractors,
@@ -22,6 +23,8 @@ interface TestQuestion {
 
 export function TestMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
+  const recorder = useStudySessionRecorder();
+  const completeSentRef = useRef(false);
   const [remaining, setRemaining] = useState<TestQuestion[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [index, setIndex] = useState(0);
@@ -29,6 +32,13 @@ export function TestMode({ deckId, shuffle }: Props) {
 
   useEffect(() => {
     async function load() {
+      if (!deckId) {
+        setRemaining([]);
+        setTotalCount(0);
+        return;
+      }
+      completeSentRef.current = false;
+      recorder.resetSession();
       const cards = await api.listCards(deckId ?? undefined);
       const answers = extractMaskAnswers(cards);
       const built = answers.map((answer) => {
@@ -41,15 +51,28 @@ export function TestMode({ deckId, shuffle }: Props) {
       setTotalCount(ordered.length);
       setIndex(0);
       setSelected(null);
+      if (ordered.length > 0) {
+        await recorder.beginDeckSession({
+          deckId,
+          mode: "test",
+          cardsTotal: ordered.length,
+        });
+      }
     }
     void load();
-  }, [deckId, shuffle, api]);
+  }, [deckId, shuffle, api, recorder]);
 
   const current = remaining[index];
   const remainingCount = Math.max(remaining.length - index, 0);
   const progress =
     totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
   const isComplete = totalCount > 0 && index >= remaining.length;
+
+  useEffect(() => {
+    if (!isComplete || completeSentRef.current) return;
+    completeSentRef.current = true;
+    void recorder.completeSession();
+  }, [isComplete, recorder]);
 
   const feedback = useMemo(() => {
     if (!selected || !current) return null;
@@ -62,13 +85,15 @@ export function TestMode({ deckId, shuffle }: Props) {
   }
 
   const markKnown = useCallback(() => {
-    if (!current) return;
+    if (!current || !deckId) return;
+    void recorder.recordDeckKnown(current.answer.cardId, deckId);
     setRemaining((prev) => prev.filter((_, i) => i !== index));
     setSelected(null);
-  }, [current, index]);
+  }, [current, deckId, index, recorder]);
 
   const markStill = useCallback(() => {
-    if (!current) return;
+    if (!current || !deckId) return;
+    void recorder.recordDeckStill(current.answer.cardId, deckId);
     setRemaining((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];
@@ -77,7 +102,7 @@ export function TestMode({ deckId, shuffle }: Props) {
       return next;
     });
     setSelected(null);
-  }, [current, index]);
+  }, [current, deckId, index, recorder]);
 
   if (remaining.length === 0 && totalCount === 0) {
     return (
