@@ -1,0 +1,615 @@
+.review-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 1rem 0 2rem;
+  outline: none;
+}
+
+.study-flip-scene {
+  width: 100%;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+}
+
+.review-stage.empty {
+  min-height: 50vh;
+  justify-content: center;
+}
+
+.review-progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.review-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+
+.study-flip-slot {
+  width: 100%;
+  container: flip-card / inline-size;
+}
+
+.review-meta {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  color: var(--color-muted-foreground);
+}
+
+.review-hint {
+  font-size: 0.75rem;
+}
+
+.study-flip-scene-interactive {
+  cursor: pointer;
+}
+
+.study-flip-inner {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  display: grid;
+  grid-template-areas: "stack";
+  transform-style: preserve-3d;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.study-flip-inner.is-flipped {
+  transform: rotateY(180deg) translate3d(0, 0, 0);
+}
+
+.study-flip-inner.is-flipping {
+  pointer-events: none;
+}
+
+.study-flip-face {
+  grid-area: stack;
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.study-flip-front {
+  transform: rotateY(0deg);
+}
+
+.study-flip-back {
+  transform: rotateY(180deg);
+}
+
+.study-flip-inner:not(.is-flipped) .study-flip-back {
+  pointer-events: none;
+}
+
+.study-flip-inner.is-flipped .study-flip-front {
+  pointer-events: none;
+}
+
+.study-flip-scene:has(.is-flipping) .study-flip-face .review-card {
+  box-shadow: var(--shadow-md);
+}
+
+.study-flip-face .review-card {
+  min-height: 320px;
+  height: auto;
+}
+
+.study-session-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.study-session .review-stage {
+  width: 100%;
+  max-width: 880px;
+  flex: 1;
+  min-height: 0;
+  padding: 0.5rem 0 1rem;
+  overflow: hidden;
+}
+
+.study-session .review-stage:not(.write-mode):not(.test-mode):not(.match-mode):not(.empty) {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  overflow: visible;
+}
+
+.study-session .review-stage > .review-progress {
+  grid-row: 1;
+  width: 100%;
+}
+
+.study-session .review-stage > .review-meta {
+  grid-row: 2;
+  width: 100%;
+}
+
+.study-session .review-stage > .review-hint {
+  grid-row: 3;
+  width: 100%;
+  text-align: center;
+}
+
+.study-session:has(.is-flipping-scene),
+.study-session:has(.is-flipping-scene) .study-session-body {
+  overflow: visible;
+}
+
+.study-session .review-stage > .study-flip-slot,
+.study-session .review-stage > .study-flip-scene {
+  grid-row: 4;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  overflow: hidden;
+  box-sizing: border-box;
+  /* border / outline / shadow の描画余白（親 overflow で見切れないように） */
+  padding-block: 20px;
+  padding-inline: 4px;
+}
+
+.study-session:has(.is-flipping-scene) .review-stage > .study-flip-slot,
+.study-session:has(.is-flipping-scene) .review-stage > .study-flip-scene {
+  overflow: visible;
+}
+
+.study-session .study-flip-slot .study-flip-scene {
+  width: 100%;
+  height: auto;
+}
+
+.study-session .study-flip-inner {
+  position: relative;
+  width: 100%;
+  height: var(--flip-height, auto);
+  min-height: var(--study-flip-min-h);
+  max-height: min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h));
+  display: block;
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.study-session.leitner-study-session .study-flip-inner {
+  max-height: min(50vh, 460px);
+}
+
+.study-session.leitner-study-session .study-flip-face .review-card {
+  padding: 1.25rem 1.35rem;
+}
+
+.study-session .study-flip-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.study-session .study-flip-front {
+  transform: rotateY(0deg);
+}
+
+.study-session .study-flip-back {
+  transform: rotateY(180deg);
+}
+
+/* overflow:hidden は preserve-3d を壊すため、静止時は visibility で非表示面を隠す */
+.study-session .study-flip-inner:not(.is-flipping):not(.is-flipped) .study-flip-back {
+  visibility: hidden;
+}
+
+.study-session .study-flip-inner:not(.is-flipping).is-flipped .study-flip-front {
+  visibility: hidden;
+}
+
+.study-session .study-flip-face .review-card {
+  width: min(calc(100% - 4px), calc(min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h)) * 4 / 3));
+  max-width: min(880px, calc(min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h)) * 4 / 3));
+  margin-inline: auto;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* マスク border (2px) がスクロール端で見切れない余白 */
+  padding: 1.35rem 1.5rem;
+  scroll-padding: 4px;
+}
+
+.study-session .study-flip-face .review-card::-webkit-scrollbar {
+  display: none;
+}
+
+.study-session
+  .study-flip-inner:not(.is-flipped)
+  .study-flip-back
+  .review-card,
+.study-session
+  .study-flip-inner.is-flipped
+  .study-flip-front
+  .review-card {
+  overflow: hidden;
+}
+
+.study-session .review-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+.study-session .review-card:has(.study-text-body) {
+  justify-content: center;
+  align-items: stretch;
+  text-align: left;
+}
+
+.study-session .study-text-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.study-session .study-text-body pre {
+  width: 100%;
+  text-align: left;
+}
+
+.study-session .study-text-body.qa-card .qa-answer-block {
+  width: 100%;
+  text-align: left;
+}
+
+.study-session .image-card,
+.study-session .image-overlay-root {
+  margin-inline: auto;
+}
+
+.study-session .review-stage > .review-actions {
+  grid-row: 5;
+  width: 100%;
+  flex-shrink: 0;
+  margin-top: 0;
+  padding-top: 0.75rem;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* Leitner: 4 段階ボタンを常に下端に固定し、カードと重ならない */
+.study-session.leitner-study-session .review-stage.leitner-review-stage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0.25rem;
+}
+
+.study-session.leitner-study-session .leitner-review-stage > .review-progress,
+.study-session.leitner-study-session .leitner-review-stage > .review-meta,
+.study-session.leitner-study-session .leitner-review-stage > .review-hint {
+  flex-shrink: 0;
+}
+
+.study-session.leitner-study-session .leitner-review-stage > .study-flip-slot {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+  grid-row: auto;
+  overflow: hidden;
+  padding-block: 12px;
+}
+
+.study-session.leitner-study-session:has(.is-flipping-scene)
+  .leitner-review-stage
+  > .study-flip-slot {
+  overflow: visible;
+}
+
+.study-session.leitner-study-session .leitner-review-stage > .leitner-grade-actions {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 0.85rem;
+  padding-bottom: 0.15rem;
+  background: linear-gradient(
+    to top,
+    var(--color-background) 72%,
+    color-mix(in srgb, var(--color-background) 88%, transparent)
+  );
+  grid-row: auto;
+}
+
+.study-session .review-stage.empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.study-session .review-stage.write-mode,
+.study-session .review-stage.test-mode,
+.study-session .review-stage.match-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.study-session .review-stage.write-mode::-webkit-scrollbar,
+.study-session .review-stage.test-mode::-webkit-scrollbar,
+.study-session .review-stage.match-mode::-webkit-scrollbar {
+  display: none;
+}
+
+.study-session .write-mode .write-prompt,
+.study-session .test-mode .write-prompt,
+.study-session .write-mode .write-input-row,
+.study-session .test-mode .test-choices,
+.study-session .test-mode .test-footer,
+.study-session .match-mode .match-grid {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.study-session .write-mode .write-prompt,
+.study-session .test-mode .write-prompt {
+  margin-top: auto;
+}
+
+.study-session .write-mode .write-input-row {
+  margin-bottom: auto;
+}
+
+.study-session .test-mode:not(:has(.test-footer)) .test-choices {
+  margin-bottom: auto;
+}
+
+.study-session .test-mode:has(.test-footer) .test-footer {
+  margin-bottom: auto;
+}
+
+.study-session .match-mode .match-grid {
+  margin-block: auto;
+  flex: 1;
+  align-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .study-flip-scene {
+    perspective: none;
+  }
+
+  .study-flip-inner,
+  .study-flip-inner.is-flipped {
+    transform: none;
+    transition: none;
+    min-height: 0;
+  }
+
+  .study-flip-face,
+  .study-flip-front,
+  .study-flip-back {
+    position: static;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    transform: none;
+  }
+
+  .study-session .study-flip-inner {
+    height: auto;
+    max-height: min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h));
+    overflow: visible;
+  }
+
+  .study-session .study-flip-slot,
+  .study-session .study-flip-scene {
+    height: auto;
+    max-height: min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h));
+  }
+
+  .study-session .study-flip-face {
+    position: static;
+    inset: auto;
+    height: auto;
+  }
+
+  .study-session .study-flip-face .review-card {
+    height: auto;
+    max-height: min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h));
+  }
+
+  .study-flip-inner:not(.is-flipped) .study-flip-back,
+  .study-flip-inner.is-flipped .study-flip-front {
+    visibility: hidden;
+  }
+
+  .study-flip-front {
+    display: block;
+  }
+
+  .study-flip-back {
+    display: none;
+  }
+
+  .study-flip-inner.is-flipped .study-flip-front {
+    display: none;
+  }
+
+  .study-flip-inner.is-flipped .study-flip-back {
+    display: block;
+  }
+}
+
+.review-card {
+  width: 100%;
+  min-height: 320px;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  transition: border-color 0.16s ease;
+}
+
+.review-card.concealed {
+  border-color: var(--color-border-strong);
+}
+
+.review-card.revealed {
+  border-color: var(--color-accent-outline);
+  box-shadow: var(--shadow-md);
+}
+
+.study-text-body pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.study-text-body .masked,
+.flashcard-preview .masked {
+  display: inline-block;
+  vertical-align: baseline;
+  padding: 3px 0.16em;
+  background: var(--color-accent);
+  border: 2px solid var(--color-accent-outline);
+  border-radius: var(--radius-sm);
+  color: transparent;
+  user-select: none;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  line-height: 1.35;
+}
+
+.study-text-body .masked.mask-peeked,
+.study-text-body .masked.mask-revealed,
+.flashcard-preview .masked.mask-peeked,
+.flashcard-preview .masked.mask-revealed,
+.review-card.revealed .study-text-body .masked {
+  background: transparent;
+  border-style: dashed;
+  color: inherit;
+}
+
+.study-text-body .masked.mask-interactive {
+  cursor: pointer;
+}
+
+.image-card {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.image-overlay-root {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  max-width: 100%;
+}
+
+.image-overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.image-overlay-layer .mask-block.editable,
+.image-overlay-layer .ocr-word {
+  pointer-events: auto;
+}
+
+.image-card img {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.mask-block {
+  position: absolute;
+  box-sizing: border-box;
+  background: var(--mask-fill, var(--color-accent));
+  border: 2px solid var(--mask-border, var(--color-accent-outline));
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.mask-block.mask-peeked,
+.mask-block.mask-revealed,
+.review-card.revealed .mask-block {
+  background: transparent;
+  border-style: dashed;
+}
+
+.mask-block.mask-interactive {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.review-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.review-actions .ghost-button,
+.review-actions .accent-button {
+  min-width: 160px;
+}
+
+.review-complete {
+  text-align: center;
+  padding: 2rem;
+}
+
+.review-complete h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+.review-complete p {
+  color: var(--color-muted-foreground);
+  margin: 0 0 1.25rem;
+}
+

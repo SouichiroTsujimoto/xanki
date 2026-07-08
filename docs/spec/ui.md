@@ -6,8 +6,29 @@
 |--------|------|
 | 意味・原則・トークン名 | 本 spec |
 | **値（色・半径・影）** | [`packages/ui/src/styles/tokens.css`](../../packages/ui/src/styles/tokens.css) |
-| コンポーネントスタイル | [`packages/ui/src/styles/globals.css`](../../packages/ui/src/styles/globals.css) + Tailwind |
+| コンポーネントスタイル | [`packages/ui/src/styles/globals.css`](../../packages/ui/src/styles/globals.css)（`base.css` + `components/*.css`） |
 | 共有 UI コンポーネント | [`packages/ui`](../../packages/ui/)（`@xanki/ui`） |
+
+## Browser Support
+
+- **主ターゲット**: Tauri デスクトップ（macOS WebKit / Safari 17.4+）
+- Baseline Widely available は fallback なし
+- Baseline Newly Available は feature detect + 20 行以内の軽量 fallback（polyfill 禁止）
+
+## CSS 構成
+
+`globals.css` が `@import` で以下を読み込む:
+
+- `tokens.css` — デザイントークン（spacing、study flip、Leitner アクセント等）
+- `base.css` — フォームリセット、`.sr-only`、`.eyebrow`、`:user-invalid` / `:autofill`
+- `components/*.css` — ドメイン別（buttons、app-shell、review、study-hub、dialogs 等）
+
+## UI プリミティブ
+
+- **Button / Input / Label** — `@xanki/ui` の `components/ui/*`。Button はセマンティック CSS クラス（`.accent-button` 等）を variant 経由で適用
+- **NativeDialog** — ネイティブ `<dialog>` + CSS `@starting-style`。Safari で CSS top-layer アニメが不足する場合は Motion fallback
+- **CloudAccountSection / BillingSection** — 設定 Cloud ブロックの共有 presentational コンポーネント
+- **BootstrapLoading / EditorLoading** — 起動・エディタ読み込み UI
 
 Web / デスクトップは **同一 `@xanki/ui` コンポーネント** を使用する。プラットフォーム差分（Tauri 取込・Web 認証等）は `AppApi` 注入と slot props で吸収する。
 
@@ -96,7 +117,8 @@ Tray **今日の復習: N件** → **Leitner学習**タブ（`navigate: "leitner
 ## ダイアログ方針
 
 - **`window.confirm` / `window.alert` を使わない**
-- 破壊的操作（削除）はアプリ内モーダル（Motion で開閉アニメーション）
+- 破壊的操作（削除）・AI パネル等は **NativeDialog**（`<dialog>` ベース。`closedby="any"` で light dismiss）
+- Motion は drawer spring 等、spec 明示箇所と NativeDialog の Safari fallback のみ
 - エラーはモーダル内メッセージまたは console + ユーザー向け短文
 
 ## ショートカット一覧

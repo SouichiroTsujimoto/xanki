@@ -8,6 +8,7 @@ import {
   useDeckStudySession,
 } from "./shared";
 import { StudyAiPanel } from "./study-ai-panel";
+import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
@@ -121,37 +122,37 @@ export function FlashcardsMode({
         />
       </div>
       <div className="review-actions">
-        <button
+        <Button
           type="button"
-          className="ghost-button"
+          variant="ghost"
           onClick={() => setAiOpen(true)}
         >
           {copy.ai.studyAskButton}
-        </button>
+        </Button>
         {isSingle ? (
           <>
-            <button type="button" className="ghost-button" onClick={() => setRevealed((v) => !v)}>
+            <Button type="button" variant="ghost" onClick={() => setRevealed((v) => !v)}>
               {revealed ? "隠す" : "答えを見る"}
-            </button>
-            <button type="button" className="accent-button" onClick={() => onSingleExit?.()}>
+            </Button>
+            <Button type="button" variant="accent" onClick={() => onSingleExit?.()}>
               閉じる
-            </button>
+            </Button>
           </>
         ) : revealed ? (
           <>
-            <button type="button" className="ghost-button" onClick={handleStill}>
+            <Button type="button" variant="ghost" onClick={handleStill}>
               <kbd>1</kbd>
               {copy.deckStudy.still}
-            </button>
-            <button type="button" className="accent-button" onClick={handleKnown}>
+            </Button>
+            <Button type="button" variant="accent" onClick={handleKnown}>
               <kbd>2</kbd>
               {copy.deckStudy.known}
-            </button>
+            </Button>
           </>
         ) : (
-          <button type="button" className="ghost-button" onClick={() => setRevealed(true)}>
+          <Button type="button" variant="ghost" onClick={() => setRevealed(true)}>
             答えを見る
-          </button>
+          </Button>
         )}
       </div>
       <StudyAiPanel

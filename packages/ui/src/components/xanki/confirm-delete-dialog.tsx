@@ -1,13 +1,8 @@
-import { motion } from "motion/react";
-import {
-  dialogBackdropVariants,
-  dialogPanelVariants,
-  transitionForReduced,
-  tweenFast,
-} from "../../lib/motion-presets";
-import { useReducedMotion } from "../../lib/use-reduced-motion";
+import { NativeDialog } from "../ui/native-dialog";
+import { Button } from "../ui/button";
 
 interface Props {
+  open?: boolean;
   title: string;
   message: string;
   error?: string | null;
@@ -17,6 +12,7 @@ interface Props {
 }
 
 export function ConfirmDeleteDialog({
+  open = true,
   title,
   message,
   error,
@@ -24,56 +20,31 @@ export function ConfirmDeleteDialog({
   onCancel,
   onConfirm,
 }: Props) {
-  const reduced = useReducedMotion();
-  const transition = transitionForReduced(reduced, tweenFast);
-
   return (
-    <motion.div
-      className="confirm-backdrop"
-      role="presentation"
-      variants={dialogBackdropVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={transition}
-      onClick={() => {
+    <NativeDialog
+      open={open}
+      onClose={() => {
         if (!deleting) onCancel();
       }}
+      titleId="confirm-delete-title"
+      closedBy={deleting ? "none" : "any"}
     >
-      <motion.div
-        className="confirm-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-delete-title"
-        variants={dialogPanelVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={transition}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h3 id="confirm-delete-title">{title}</h3>
-        <p>{message}</p>
-        {error && <p className="confirm-dialog-error">{error}</p>}
-        <div className="confirm-dialog-actions">
-          <button
-            type="button"
-            className="ghost-button"
-            disabled={deleting}
-            onClick={onCancel}
-          >
-            キャンセル
-          </button>
-          <button
-            type="button"
-            className="accent-button danger-button"
-            disabled={deleting}
-            onClick={onConfirm}
-          >
-            {deleting ? "削除中..." : "削除する"}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
+      <h3 id="confirm-delete-title">{title}</h3>
+      <p>{message}</p>
+      {error && <p className="confirm-dialog-error">{error}</p>}
+      <div className="confirm-dialog-actions">
+        <Button type="button" variant="ghost" disabled={deleting} onClick={onCancel}>
+          キャンセル
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          disabled={deleting}
+          onClick={onConfirm}
+        >
+          {deleting ? "削除中..." : "削除する"}
+        </Button>
+      </div>
+    </NativeDialog>
   );
 }

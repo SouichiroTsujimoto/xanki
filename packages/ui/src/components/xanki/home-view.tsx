@@ -4,6 +4,7 @@ import { useAppApi } from "../../context/app-api-context";
 import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 import type { Deck, DeckExport } from "../../types";
+import { Button } from "../ui/button";
 
 interface Props {
   decks: Deck[];
@@ -130,13 +131,13 @@ export function HomeView({
             )}
           </div>
           <div className="home-spotlight-actions">
-            <button type="button" className="accent-button" onClick={onGoToDeckStudy}>
+            <Button type="button" variant="accent" onClick={onGoToDeckStudy}>
               {copy.deckStudy.hubTitle}
-            </button>
+            </Button>
             {dueCount > 0 && onGoToLeitner && (
-              <button type="button" className="ghost-button" onClick={onGoToLeitner}>
+              <Button type="button" variant="ghost" onClick={onGoToLeitner}>
                 {copy.leitnerStudy.goFromHome}
-              </button>
+              </Button>
             )}
           </div>
         </section>
@@ -163,13 +164,13 @@ export function HomeView({
             onChange={(e) => setNewDeckName(e.target.value)}
             placeholder={copy.home.newDeckPlaceholder}
           />
-          <button type="submit" className="accent-button">
+          <Button type="submit" variant="accent">
             追加
-          </button>
+          </Button>
         </form>
-        <button type="button" className="text-button" onClick={() => void handleImportDeck()}>
+        <Button type="button" variant="text" onClick={() => void handleImportDeck()}>
           インポート
-        </button>
+        </Button>
       </section>
 
       <section className="home-decks-section" aria-label={copy.home.decksSection}>
@@ -211,9 +212,9 @@ export function HomeView({
                       onChange={(e) => setEditingDeckName(e.target.value)}
                       autoFocus
                     />
-                    <button type="submit" className="text-button">
+                    <Button type="submit" variant="text">
                       OK
-                    </button>
+                    </Button>
                   </form>
                 ) : (
                   <>
@@ -227,9 +228,9 @@ export function HomeView({
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                       >
-                        <button
+                        <Button
                           type="button"
-                          className="icon-button"
+                          variant="icon"
                           aria-label="名前変更"
                           onClick={() => {
                             setEditingDeckId(deck.id);
@@ -237,26 +238,26 @@ export function HomeView({
                           }}
                         >
                           ✎
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="icon-button"
+                          variant="icon"
                           aria-label="エクスポート"
                           onClick={() => void handleExportDeck(deck.id)}
                         >
                           ↓
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="icon-button"
+                          variant="icon"
                           aria-label="削除"
                           onClick={() => void handleDeleteDeck(deck.id)}
                         >
                           ×
-                        </button>
+                        </Button>
                       </div>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       className="ghost-button home-deck-study-link"
                       onClick={(e) => {
@@ -266,7 +267,7 @@ export function HomeView({
                       }}
                     >
                       {copy.home.goToDeckStudy}
-                    </button>
+                    </Button>
                   </>
                 )}
               </article>

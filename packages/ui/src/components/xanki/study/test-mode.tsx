@@ -8,6 +8,7 @@ import {
 } from "../../../lib/maskAnswers";
 import type { MaskAnswer } from "../../../types";
 import { DeckStudySessionProgress, StudyEmpty } from "./shared";
+import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
@@ -132,7 +133,7 @@ export function TestMode({ deckId, shuffle }: Props) {
 
       <div className="test-choices">
         {current?.choices.map((choice) => (
-          <button
+          <Button
             key={choice}
             type="button"
             className={`test-choice ${
@@ -148,7 +149,7 @@ export function TestMode({ deckId, shuffle }: Props) {
             onClick={() => choose(choice)}
           >
             {choice}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -158,14 +159,14 @@ export function TestMode({ deckId, shuffle }: Props) {
             {feedback === "ok" ? "正解!" : `正解: ${current?.answer.answer}`}
           </p>
           <div className="review-actions">
-            <button type="button" className="ghost-button" onClick={markStill}>
+            <Button type="button" variant="ghost" onClick={markStill}>
               <kbd>1</kbd>
               {copy.deckStudy.still}
-            </button>
-            <button type="button" className="accent-button" onClick={markKnown}>
+            </Button>
+            <Button type="button" variant="accent" onClick={markKnown}>
               <kbd>2</kbd>
               {copy.deckStudy.known}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -1,0 +1,107 @@
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 960px;
+  padding: 0.25rem 0 0;
+  box-sizing: border-box;
+}
+
+.settings-card {
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.settings-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shortcut-row {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.shortcut-row kbd {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent-outline-muted);
+}
+
+.shortcut-row strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.shortcut-row p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted-foreground);
+}
+
+.permission-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.permission-card:last-of-type {
+  border-bottom: none;
+}
+
+.permission-copy strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.permission-copy p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted-foreground);
+}
+
+.status-pill {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.status-pill.ok {
+  background: rgba(206, 255, 26, 0.35);
+  color: var(--color-black);
+}
+
+.status-pill.ng {
+  background: rgba(185, 28, 28, 0.1);
+  color: var(--color-destructive);
+}
+
+.settings-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted-foreground);
+}
+
+.settings-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+

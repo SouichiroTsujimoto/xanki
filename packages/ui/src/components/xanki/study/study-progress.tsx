@@ -5,6 +5,7 @@ import { useAppApi } from "../../../context/app-api-context";
 import { springSnappy, transitionForReduced } from "../../../lib/motion-presets";
 import { useReducedMotion } from "../../../lib/use-reduced-motion";
 import type { ReviewCard } from "../../../types";
+import { Button } from "../../ui/button";
 export function StudyProgress({
   index,
   total,
@@ -83,9 +84,9 @@ export function StudyEmpty({
         <h2>{title}</h2>
         <p>{bodyCopy}</p>
         {onReload && (
-          <button type="button" className="accent-button" onClick={onReload}>
+          <Button type="button" variant="accent" onClick={onReload}>
             {reloadLabel}
-          </button>
+          </Button>
         )}
       </div>
     </div>

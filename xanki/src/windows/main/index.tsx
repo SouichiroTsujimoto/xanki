@@ -7,15 +7,16 @@ import {
   AppShell,
   AppShellProvider,
   AppTabLayer,
-  copy,
+  BootstrapLoading,
+  CloudAccountSection,
   DeckStudyView,
   HomeView,
   LeitnerStudyView,
   OnboardingView,
   SettingsView,
+  useMainAppState,
   type AppTab,
   type PermissionStatus,
-  type StudySessionInfo,
 } from "@xanki/ui";
 import { isCloudUnauthorized } from "@xanki/shared";
 import { createCloudAppApi } from "../../lib/cloud/app-api";
@@ -34,12 +35,6 @@ import {
 import { nativeApi } from "../../lib/tauri/native-api";
 import { useAppStore } from "../../stores/appStore";
 import { LoginPage } from "./LoginPage";
-
-const EMPTY_SESSION: StudySessionInfo = {
-  active: false,
-  modeLabel: null,
-  exit: () => {},
-};
 
 function resolveTab(payload: string): AppTab | null {
   switch (payload) {
@@ -63,23 +58,13 @@ function CloudSettingsSection() {
   const cloudAccount = useCloudAccount();
 
   return (
-    <>
-      <p className="eyebrow">Cloud</p>
-      <h2>{copy.account.title}</h2>
-      {cloudAccount.accountEmail && (
-        <p className="settings-note">{copy.account.loggedInAs(cloudAccount.accountEmail)}</p>
-      )}
-      <p className="settings-note">{cloudAccount.status}</p>
-      <div className="settings-inline-actions">
-        <button type="button" className="ghost-button" onClick={() => void cloudAccount.upgrade()}>
-          {copy.billing.upgradePro}
-        </button>
-        <button type="button" className="text-button" onClick={() => void cloudAccount.logout()}>
-          ログアウト
-        </button>
-      </div>
-      {cloudAccount.error && <p className="settings-note">{cloudAccount.error}</p>}
-    </>
+    <CloudAccountSection
+      email={cloudAccount.accountEmail}
+      statusNote={cloudAccount.status}
+      error={cloudAccount.error}
+      onUpgrade={() => void cloudAccount.upgrade()}
+      onLogout={() => void cloudAccount.logout()}
+    />
   );
 }
 
@@ -102,15 +87,25 @@ export function MainApp() {
     setOnboardingComplete,
   } = useAppStore();
 
-  const [tab, setTab] = useState<AppTab>("home");
-  const tabRef = useRef(tab);
-  tabRef.current = tab;
-  const [deckStudySession, setDeckStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
-  const [leitnerSession, setLeitnerSession] = useState<StudySessionInfo>(EMPTY_SESSION);
-  const [collectionRevision, setCollectionRevision] = useState(0);
   const [permissions, setPermissions] = useState<PermissionStatus>({
     accessibility: false,
     screenRecording: false,
+  });
+
+  const {
+    tab,
+    handleTabChange,
+    deckStudySession,
+    setDeckStudySession,
+    leitnerSession,
+    setLeitnerSession,
+    collectionRevision,
+    bumpCollectionRevision,
+  } = useMainAppState({
+    setStudySessionActive,
+    onEnterDeckStudyTab: () => {
+      void flushLibraryRefresh();
+    },
   });
 
   useEffect(() => {
@@ -143,14 +138,14 @@ export function MainApp() {
       const now = Date.now();
       const count = allCards.filter((card) => Number(card.dueAt ?? 0) <= now).length;
       setDueCount(count);
-      setCollectionRevision((value) => value + 1);
+      bumpCollectionRevision();
       await invoke("update_tray_due_count", { count });
     } catch (e) {
       if (isCloudUnauthorized(e)) {
         await auth.syncFromSession();
       }
     }
-  }, [auth.syncFromSession, setDecks, setDueCount, setSelectedDeckId]);
+  }, [auth.syncFromSession, bumpCollectionRevision, setDecks, setDueCount, setSelectedDeckId]);
 
   const refreshLibraryRef = useRef(refreshLibrary);
   refreshLibraryRef.current = refreshLibrary;
@@ -170,31 +165,6 @@ export function MainApp() {
   const refreshPermissions = useCallback(async () => {
     setPermissions(await nativeApi.checkPermissions());
   }, []);
-
-  const handleTabChange = useCallback(
-    (nextTab: AppTab) => {
-      const previousTab = tabRef.current;
-      if (nextTab === previousTab) return;
-      setTab(nextTab);
-      if (nextTab === "deckStudy" && previousTab !== "deckStudy") {
-        void flushLibraryRefresh();
-      }
-      if (nextTab !== "deckStudy") {
-        setDeckStudySession(EMPTY_SESSION);
-      }
-      if (nextTab !== "leitner") {
-        setLeitnerSession(EMPTY_SESSION);
-      }
-      if (nextTab !== "deckStudy" && nextTab !== "leitner") {
-        setStudySessionActive(false);
-      }
-    },
-    [setStudySessionActive],
-  );
-
-  useEffect(() => {
-    setStudySessionActive(deckStudySession.active || leitnerSession.active);
-  }, [deckStudySession.active, leitnerSession.active, setStudySessionActive]);
 
   useEffect(() => {
     void getCurrentWindow().setTheme("light");
@@ -270,7 +240,7 @@ export function MainApp() {
   }, [auth.loggedIn, handleTabChange, setDueCount]);
 
   if (!auth.ready) {
-    return <div className="empty-panel">読み込み中…</div>;
+    return <BootstrapLoading />;
   }
 
   if (!auth.loggedIn) {

@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useMemo, useState } from "react";
-import { AppApiProvider } from "@xanki/ui";
+import { AppApiProvider, EditorLoading } from "@xanki/ui";
 import { createCloudAppApi } from "./lib/cloud/app-api";
 import { useAuthGate } from "./lib/cloud/useCloudAccount";
 import { MainApp } from "./windows/main";
@@ -14,14 +14,14 @@ function EditorRoute() {
   const appApi = useMemo(() => createCloudAppApi(), []);
 
   if (!auth.ready) {
-    return <div className="editor-shell editor-loading-state">読み込み中…</div>;
+    return <EditorLoading />;
   }
 
   if (!auth.loggedIn) {
     return (
-      <div className="editor-shell editor-loading-state">
+      <EditorLoading message="">
         <LoginPage onLoggedIn={() => void auth.syncFromSession()} />
-      </div>
+      </EditorLoading>
     );
   }
 

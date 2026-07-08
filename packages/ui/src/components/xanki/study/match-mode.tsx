@@ -4,6 +4,7 @@ import { useAppApi } from "../../../context/app-api-context";
 import { extractMaskAnswers, shuffleArray } from "../../../lib/maskAnswers";
 import type { MaskAnswer } from "../../../types";
 import { DeckStudySessionProgress, StudyEmpty } from "./shared";
+import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
@@ -192,7 +193,7 @@ export function MatchMode({ deckId, shuffle }: Props) {
       </p>
       <div className="match-grid">
         {tiles.map((tile) => (
-          <button
+          <Button
             key={tile.id}
             type="button"
             className={`match-tile ${tile.side} ${
@@ -204,19 +205,19 @@ export function MatchMode({ deckId, shuffle }: Props) {
             disabled={matched.has(tile.id) || roundComplete}
           >
             {tile.text}
-          </button>
+          </Button>
         ))}
       </div>
       {roundComplete && (
         <div className="review-actions">
-          <button type="button" className="ghost-button" onClick={markStill}>
+          <Button type="button" variant="ghost" onClick={markStill}>
             <kbd>1</kbd>
             {copy.deckStudy.still}
-          </button>
-          <button type="button" className="accent-button" onClick={markKnown}>
+          </Button>
+          <Button type="button" variant="accent" onClick={markKnown}>
             <kbd>2</kbd>
             {copy.deckStudy.known}
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -17,7 +17,9 @@
 
 ### 3D フリップ
 
-- 表示中の面の高さを計測してロック → フリップ完了後に裏面へ再計測
+- 表示中の面の高さを計測してロック → フリップ完了後に裏面へ再計測（[`use-flip-height`](../../packages/ui/src/hooks/use-flip-height.ts) + [`flip-metrics`](../../packages/ui/src/lib/flip-metrics.ts)）
+- 高さ制約トークン: `--study-flip-min-h`（240px）、`--study-flip-max-h`（520px）、`--study-flip-max-vh`（0.58）
+- `.study-flip-slot` は `container: flip-card / inline-size`（コンポーネント幅ベースの sizing）
 - フリップ中 `overflow: visible`（`.study-flip-inner` に `overflow: hidden` 不可）
 - 静止時の非表示面は `visibility: hidden`
 - カード枠・影: `.study-flip-slot` padding + フリップ中の祖先 `overflow: visible`

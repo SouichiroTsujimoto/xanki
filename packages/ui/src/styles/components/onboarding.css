@@ -1,0 +1,95 @@
+.onboarding-frame {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  min-height: 100vh;
+}
+
+.onboarding-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem;
+  background: var(--color-card);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-foreground);
+}
+
+.onboarding-brand h1 {
+  margin: 1rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.onboarding-brand > p {
+  margin: 0 0 2rem;
+  color: var(--color-muted-foreground);
+  max-width: 28ch;
+}
+
+.onboarding-shortcuts {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.onboarding-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem;
+  background: var(--color-background);
+}
+
+.step-indicator {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+.onboarding-card {
+  padding: 1.75rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.onboarding-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+}
+
+.onboarding-card > p {
+  margin: 0 0 1.25rem;
+  color: var(--color-muted-foreground);
+  line-height: 1.65;
+}
+
+.onboarding-card .accent-button {
+  margin-bottom: 0.65rem;
+}
+
+.setup-status {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-muted-foreground);
+}
+
+.setup-status.ok {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+body:has(.editor-shell) {
+  background-color: var(--color-card);
+  background-image: none;
+}
+

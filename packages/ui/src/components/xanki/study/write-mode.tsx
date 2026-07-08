@@ -9,6 +9,7 @@ import {
 } from "../../../lib/maskAnswers";
 import type { MaskAnswer } from "../../../types";
 import { DeckStudySessionProgress, StudyEmpty } from "./shared";
+import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
@@ -138,19 +139,19 @@ export function WriteMode({ deckId, shuffle }: Props) {
           autoFocus
         />
         {feedback === "idle" ? (
-          <button type="button" className="accent-button" onClick={checkAnswer}>
+          <Button type="button" variant="accent" onClick={checkAnswer}>
             確認
-          </button>
+          </Button>
         ) : (
           <>
-            <button type="button" className="ghost-button" onClick={markStill}>
+            <Button type="button" variant="ghost" onClick={markStill}>
               <kbd>1</kbd>
               {copy.deckStudy.still}
-            </button>
-            <button type="button" className="accent-button" onClick={markKnown}>
+            </Button>
+            <Button type="button" variant="accent" onClick={markKnown}>
               <kbd>2</kbd>
               {copy.deckStudy.known}
-            </button>
+            </Button>
           </>
         )}
       </div>

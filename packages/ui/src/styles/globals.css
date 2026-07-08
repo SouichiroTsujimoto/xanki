@@ -1,6 +1,18 @@
 @import "tailwindcss";
 @import "./tokens.css";
-@import "./components.css";
+@import "./base.css";
+@import "./components/buttons.css";
+@import "./components/app-shell.css";
+@import "./components/home.css";
+@import "./components/library.css";
+@import "./components/library-extras.css";
+@import "./components/review.css";
+@import "./components/settings.css";
+@import "./components/onboarding.css";
+@import "./components/mask-editor.css";
+@import "./components/study-hub.css";
+@import "./components/dialogs.css";
+@import "./components/responsive.css";
 
 @layer base {
   *,
@@ -58,28 +70,5 @@
     font-family: var(--font-sans);
     letter-spacing: -0.02em;
     line-height: 1.15;
-  }
-}
-
-@layer utilities {
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .eyebrow {
-    margin: 0 0 0.35rem;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-muted-foreground);
   }
 }

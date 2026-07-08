@@ -9,6 +9,7 @@ import {
 import { useReducedMotion } from "../../lib/use-reduced-motion";
 import type { Deck } from "../../types";
 import xankiLogo from "../../assets/xanki-logo.png";
+import { Button } from "../ui/button";
 
 const NARROW_BREAKPOINT = "(max-width: 900px)";
 
@@ -133,7 +134,7 @@ export function AppShell({
 
       <nav className="rail-nav" data-tauri-drag-region="false">
         {NAV.map((item) => (
-          <button
+          <Button
             key={item.id}
             type="button"
             className={`rail-link ${tab === item.id ? "active" : ""}`}
@@ -145,7 +146,7 @@ export function AppShell({
             {item.id === "leitner" && dueCount > 0 && (
               <span className="rail-badge">{dueCount}</span>
             )}
-          </button>
+          </Button>
         ))}
       </nav>
 
@@ -197,7 +198,7 @@ export function AppShell({
 
       <div className="app-main">
         <header className="app-topbar" data-tauri-drag-region>
-          <button
+          <Button
             type="button"
             className="sidebar-toggle"
             data-tauri-drag-region="false"
@@ -205,7 +206,7 @@ export function AppShell({
             onClick={() => onSidebarOpenChange(!sidebarOpen)}
           >
             <span aria-hidden>☰</span>
-          </button>
+          </Button>
 
           <div className="topbar-copy">
             <p className="eyebrow">{topbarEyebrow}</p>
@@ -214,24 +215,24 @@ export function AppShell({
 
           <div className="topbar-actions" data-tauri-drag-region="false">
             {tab === "deckStudy" && deckStudySessionActive && (
-              <button
+              <Button
                 type="button"
                 className="ghost-button study-back-button"
                 data-tauri-drag-region="false"
                 onClick={onDeckStudySessionExit}
               >
                 {copy.deckStudy.back}
-              </button>
+              </Button>
             )}
             {tab === "leitner" && leitnerSessionActive && (
-              <button
+              <Button
                 type="button"
                 className="ghost-button study-back-button"
                 data-tauri-drag-region="false"
                 onClick={onLeitnerSessionExit}
               >
                 {copy.leitnerStudy.back}
-              </button>
+              </Button>
             )}
             {tab === "deckStudy" && !deckStudySessionActive && (
               <label className="search-field" data-tauri-drag-region="false">

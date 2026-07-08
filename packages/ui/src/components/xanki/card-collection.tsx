@@ -13,6 +13,7 @@ import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 import { CardTilePreview } from "./card-tile-preview";
 import type { Card } from "../../types";
+import { Button } from "../ui/button";
 
 interface Props {
   deckId: string | null;
@@ -173,23 +174,23 @@ export function CardCollection({
                   {card.note && <p className="card-note">{card.note}</p>}
                 </div>
                 <div className="card-actions">
-                  <button
+                  <Button
                     type="button"
-                    className="text-button"
+                    variant="text"
                     onClick={(event) => {
                       event.stopPropagation();
                       void api.openCardEditor(card.id);
                     }}
                   >
                     編集
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="text-button danger"
+                    variant="text" className="danger"
                     onClick={(event) => handleDeleteCard(card.id, event)}
                   >
                     削除
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             ))}

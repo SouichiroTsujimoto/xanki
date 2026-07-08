@@ -5,15 +5,17 @@ import {
   AppShell,
   AppShellProvider,
   AppTabLayer,
+  BillingSection,
+  BootstrapLoading,
+  CloudAccountSection,
   copy,
   HomeView,
   DeckStudyView,
   LeitnerStudyView,
   SettingsView,
   Toaster,
-  type AppTab,
+  useMainAppState,
   type Deck,
-  type StudySessionInfo,
 } from "@xanki/ui";
 import { authClient } from "./auth-client";
 import { cloudApi, SESSION_CLEARED_EVENT } from "./api";
@@ -26,12 +28,6 @@ import {
 } from "./library-sync";
 import { LoginPage } from "./pages/LoginPage";
 
-const EMPTY_SESSION: StudySessionInfo = {
-  active: false,
-  modeLabel: null,
-  exit: () => {},
-};
-
 function AuthenticatedApp({
   email,
   plan,
@@ -41,18 +37,12 @@ function AuthenticatedApp({
   plan: string;
   onLogout: () => void;
 }) {
-  const [tab, setTab] = useState<AppTab>("home");
   const [decks, setDecks] = useState<Deck[]>([]);
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [dueCount, setDueCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [studySessionActive, setStudySessionActive] = useState(false);
-  const [deckStudySession, setDeckStudySession] = useState<StudySessionInfo>(EMPTY_SESSION);
-  const [leitnerSession, setLeitnerSession] = useState<StudySessionInfo>(EMPTY_SESSION);
-  const [collectionRevision, setCollectionRevision] = useState(0);
-  const tabRef = useRef(tab);
-  tabRef.current = tab;
 
   const refreshDecks = useCallback(async () => {
     const items = await cloudApi.listDecks();
@@ -77,10 +67,26 @@ function AuthenticatedApp({
     setDueCount(countDueCards(cards));
   }, []);
 
+  const {
+    tab,
+    handleTabChange,
+    deckStudySession,
+    setDeckStudySession,
+    leitnerSession,
+    setLeitnerSession,
+    collectionRevision,
+    bumpCollectionRevision,
+  } = useMainAppState({
+    setStudySessionActive,
+    onEnterDeckStudyTab: () => {
+      void refreshLibraryRef.current();
+    },
+  });
+
   const refreshLibrary = useCallback(async () => {
     await Promise.all([refreshDecks(), refreshDueCount()]);
-    setCollectionRevision((value) => value + 1);
-  }, [refreshDecks, refreshDueCount]);
+    bumpCollectionRevision();
+  }, [bumpCollectionRevision, refreshDecks, refreshDueCount]);
 
   const refreshLibraryRef = useRef(refreshLibrary);
   refreshLibraryRef.current = refreshLibrary;
@@ -117,28 +123,6 @@ function AuthenticatedApp({
     if (!selectedDeckId) return;
     localStorage.setItem("xanki:lastUsedDeckId", selectedDeckId);
   }, [selectedDeckId]);
-
-  const handleTabChange = useCallback((nextTab: AppTab) => {
-    const previousTab = tabRef.current;
-    if (nextTab === previousTab) return;
-    setTab(nextTab);
-    if (nextTab === "deckStudy" && previousTab !== "deckStudy") {
-      void refreshLibraryRef.current();
-    }
-    if (nextTab !== "deckStudy") {
-      setDeckStudySession(EMPTY_SESSION);
-    }
-    if (nextTab !== "leitner") {
-      setLeitnerSession(EMPTY_SESSION);
-    }
-    if (nextTab !== "deckStudy" && nextTab !== "leitner") {
-      setStudySessionActive(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setStudySessionActive(deckStudySession.active || leitnerSession.active);
-  }, [deckStudySession.active, leitnerSession.active]);
 
   return (
     <AppApiProvider api={appApi}>
@@ -196,43 +180,21 @@ function AuthenticatedApp({
               permissions={{ accessibility: true, screenRecording: true }}
               onRefresh={() => {}}
               cloudSection={
-                <>
-                  <p className="eyebrow">Cloud</p>
-                  <h2>{copy.account.title}</h2>
-                  <p className="settings-note">{copy.account.loggedInAs(email)}</p>
-                  <div className="settings-inline-actions">
-                    {plan !== "pro" && (
-                      <button
-                        type="button"
-                        className="ghost-button"
-                        onClick={() => {
-                          void cloudApi.checkout().then(({ url }) => {
-                            window.location.href = url;
-                          });
-                        }}
-                      >
-                        {copy.billing.upgradePro}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="text-button"
-                      onClick={() => {
-                        void authClient.signOut().finally(onLogout);
-                      }}
-                    >
-                      ログアウト
-                    </button>
-                  </div>
-                </>
+                <CloudAccountSection
+                  email={email}
+                  showUpgrade={plan !== "pro"}
+                  onUpgrade={() => {
+                    void cloudApi.checkout().then(({ url }) => {
+                      window.location.href = url;
+                    });
+                  }}
+                  onLogout={() => {
+                    void authClient.signOut().finally(onLogout);
+                  }}
+                />
               }
               billingSection={
-                <>
-                  <p className="eyebrow">{copy.billing.eyebrow}</p>
-                  <h2>{copy.billing.title}</h2>
-                  <p className="settings-note">{copy.billing.currentPlan(plan)}</p>
-                  <p className="settings-note">{copy.billing.webOcrNote}</p>
-                </>
+                <BillingSection plan={plan} extraNote={copy.billing.webOcrNote} />
               }
             />
           )}
@@ -263,13 +225,7 @@ export function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="app-bootstrap">
-        <div className="empty-panel">
-          <p className="empty-title">読み込み中…</p>
-        </div>
-      </div>
-    );
+    return <BootstrapLoading />;
   }
 
   if (!user) {

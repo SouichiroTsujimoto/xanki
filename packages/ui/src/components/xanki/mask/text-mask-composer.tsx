@@ -16,6 +16,7 @@ import {
 } from "../../../lib/textSelection";
 import type { Deck, TextMask } from "../../../types";
 import { AiQaGeneratePanel } from "./ai-qa-generate-panel";
+import { Button } from "../../ui/button";
 
 export interface TextMaskDraftOptions {
   deckId: string;
@@ -279,7 +280,7 @@ export function TextMaskQaModeToggle({ draft, disabled = false }: QaModeTogglePr
 
   if (qaMode) {
     return (
-      <button
+      <Button
         type="button"
         className="qa-toolbar-button"
         data-tauri-drag-region="false"
@@ -287,12 +288,12 @@ export function TextMaskQaModeToggle({ draft, disabled = false }: QaModeTogglePr
         title={copy.editor.qaExit}
       >
         {copy.editor.maskMode}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
       type="button"
       className="qa-toolbar-button"
       data-tauri-drag-region="false"
@@ -301,7 +302,7 @@ export function TextMaskQaModeToggle({ draft, disabled = false }: QaModeTogglePr
       title={copy.editor.qaToggle}
     >
       Q
-    </button>
+    </Button>
   );
 }
 
@@ -354,7 +355,7 @@ export function TextMaskQuestionField({
         </div>
       </div>
       {selection && popupPos && !disabled && (
-        <button
+        <Button
           type="button"
           className="selection-popup accent-button"
           style={{ left: popupPos.x, top: popupPos.y }}
@@ -362,7 +363,7 @@ export function TextMaskQuestionField({
           onClick={addMask}
         >
           {copy.editor.addMask}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -423,7 +424,7 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
           <span className="meta-chip">
             {qaMode ? copy.cards.kindQa : copy.editor.maskCount(masks.length)}
           </span>
-          <button
+          <Button
             type="button"
             className="qa-toolbar-button"
             data-tauri-drag-region="false"
@@ -431,7 +432,7 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
             onClick={() => setAiOpen(true)}
           >
             {copy.ai.generateButton}
-          </button>
+          </Button>
           <TextMaskQaModeToggle draft={draft} disabled={disabled} />
         </div>
       </div>
@@ -485,22 +486,22 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
           />
         </label>
         <div className="deck-study-composer-actions">
-          <button
+          <Button
             type="button"
-            className="ghost-button"
+            variant="ghost"
             disabled={disabled}
             onClick={resetDraft}
           >
             {copy.common.cancel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="accent-button"
+            variant="accent"
             disabled={disabled || !canSave || saving}
             onClick={() => void handleSave()}
           >
             {saving ? copy.cards.composerSaving : copy.cards.composerSave}
-          </button>
+          </Button>
         </div>
       </div>
       <AiQaGeneratePanel

@@ -10,53 +10,19 @@ import { cardKindLabel, copy } from "../../../copy";
 import { CardTilePreview } from "../card-tile-preview";
 import { springSnappy, transitionForReduced } from "../../../lib/motion-presets";
 import { useReducedMotion } from "../../../lib/use-reduced-motion";
+import {
+  clampCoverflowIndex,
+  COVERFLOW_DRAG_CLICK_THRESHOLD_PX,
+  COVERFLOW_DRAG_INDEX_PER_PX,
+  COVERFLOW_VISIBLE_RANGE,
+  coverflowMotion,
+} from "../../../lib/coverflow-motion";
 import type { Card } from "../../../types";
-
-const VISIBLE_RANGE = 3;
-const SLIDE_WIDTH = 272;
-const DRAG_INDEX_PER_PX = 1 / (SLIDE_WIDTH * 0.62);
-const DRAG_CLICK_THRESHOLD_PX = 6;
 
 interface Props {
   deckId: string | null;
   collectionRevision?: number;
   onSelectCard: (card: Card) => void;
-}
-
-function clampIndex(value: number, max: number): number {
-  if (max <= 0) return 0;
-  return Math.min(max, Math.max(0, value));
-}
-
-function coverflowMotion(offset: number, reduced: boolean) {
-  const abs = Math.abs(offset);
-  if (abs > VISIBLE_RANGE) {
-    return {
-      x: offset * SLIDE_WIDTH * 0.35,
-      rotateY: 0,
-      scale: 0.7,
-      opacity: 0,
-      zIndex: 0,
-    };
-  }
-
-  if (reduced) {
-    return {
-      x: offset * SLIDE_WIDTH * 0.55,
-      rotateY: 0,
-      scale: offset === 0 ? 1 : 0.88,
-      opacity: Math.abs(offset) < 0.5 ? 1 : Math.max(0.2, 1 - abs * 0.45),
-      zIndex: 10 - Math.round(abs),
-    };
-  }
-
-  return {
-    x: offset * SLIDE_WIDTH * 0.62,
-    rotateY: offset * -42,
-    scale: Math.max(0.72, 1 - abs * 0.11),
-    opacity: Math.max(0.25, 1 - abs * 0.22),
-    zIndex: 10 - Math.round(abs),
-  };
 }
 
 export function StudyCardCoverflow({
@@ -102,7 +68,7 @@ export function StudyCardCoverflow({
       setCards(next);
       hadCardsRef.current = next.length > 0;
       const maxIndex = Math.max(0, next.length - 1);
-      scrollPosition.set(clampIndex(scrollPosition.get(), maxIndex));
+      scrollPosition.set(clampCoverflowIndex(scrollPosition.get(), maxIndex));
     } finally {
       setLoading(false);
     }
@@ -128,7 +94,7 @@ export function StudyCardCoverflow({
 
   const snapTo = useCallback(
     (target: number) => {
-      const clamped = clampIndex(target, Math.max(0, cards.length - 1));
+      const clamped = clampCoverflowIndex(target, Math.max(0, cards.length - 1));
       snapAnimRef.current?.stop();
       snapAnimRef.current = animate(
         scrollPosition,
@@ -173,12 +139,12 @@ export function StudyCardCoverflow({
       if (cards.length <= 1) return;
 
       const deltaX = event.clientX - dragRef.current.startX;
-      if (Math.abs(deltaX) > DRAG_CLICK_THRESHOLD_PX) {
+      if (Math.abs(deltaX) > COVERFLOW_DRAG_CLICK_THRESHOLD_PX) {
         dragRef.current.moved = true;
       }
 
-      const next = clampIndex(
-        dragRef.current.startPosition - deltaX * DRAG_INDEX_PER_PX,
+      const next = clampCoverflowIndex(
+        dragRef.current.startPosition - deltaX * COVERFLOW_DRAG_INDEX_PER_PX,
         cards.length - 1,
       );
       scrollPosition.set(next);
@@ -268,7 +234,7 @@ export function StudyCardCoverflow({
         <div className="study-coverflow-track">
           {cards.map((card, index) => {
             const offset = index - renderPosition;
-            if (Math.abs(offset) > VISIBLE_RANGE + 0.5) return null;
+            if (Math.abs(offset) > COVERFLOW_VISIBLE_RANGE + 0.5) return null;
 
             const motionValues = coverflowMotion(offset, reduced);
             const isCenter = Math.abs(offset) < 0.45;

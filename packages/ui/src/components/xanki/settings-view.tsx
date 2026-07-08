@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useAppApi } from "../../context/app-api-context";
 import { copy, studyModeList } from "../../copy";
 import type { PermissionStatus } from "../../types";
+import { Button } from "../ui/button";
 
 interface Props {
   permissions: PermissionStatus;
@@ -67,13 +68,13 @@ export function SettingsView({
               {permissions.accessibility ? copy.settings.granted : copy.settings.denied}
             </span>
             {!permissions.accessibility && (
-              <button
+              <Button
                 type="button"
-                className="ghost-button"
+                variant="ghost"
                 onClick={() => void api.openAccessibilitySettings()}
               >
                 {copy.settings.openSettings}
-              </button>
+              </Button>
             )}
           </div>
 
@@ -86,19 +87,19 @@ export function SettingsView({
               {permissions.screenRecording ? copy.settings.granted : copy.settings.denied}
             </span>
             {!permissions.screenRecording && (
-              <button
+              <Button
                 type="button"
-                className="ghost-button"
+                variant="ghost"
                 onClick={() => void api.openScreenRecordingSettings()}
               >
                 {copy.settings.openSettings}
-              </button>
+              </Button>
             )}
           </div>
 
-          <button type="button" className="text-button" onClick={onRefresh}>
+          <Button type="button" variant="text" onClick={onRefresh}>
             {copy.settings.refreshPermissions}
-          </button>
+          </Button>
         </section>
 
         <section className="settings-card settings-card-wide">

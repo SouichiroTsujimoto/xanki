@@ -47,8 +47,21 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
     "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
 
+  --spacing-xs: 0.35rem;
+  --spacing-sm: 0.55rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.5rem;
   --spacing-rail: 220px;
   --spacing-grid: 65px;
+
+  --study-flip-min-h: 240px;
+  --study-flip-max-h: 520px;
+  --study-flip-max-vh: 0.58;
+
+  --color-leitner-accent: #7c5cff;
+  --color-leitner-accent-soft: rgb(124 92 255 / 0.12);
+  --color-leitner-highlight: rgb(56 189 248);
 
   --color-grid-line: rgb(0 0 0 / 0.055);
 

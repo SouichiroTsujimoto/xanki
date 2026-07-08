@@ -1,0 +1,44 @@
+.deck-row-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.deck-row-actions {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.deck-rename {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
+}
+
+.deck-rename input {
+  flex: 1;
+  min-width: 0;
+}
+
+.deck-import {
+  margin-top: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.card-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--color-muted-foreground);
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+

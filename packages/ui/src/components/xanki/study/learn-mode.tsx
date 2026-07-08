@@ -10,6 +10,7 @@ import {
   useStudyQueue,
 } from "./shared";
 import { StudyAiPanel } from "./study-ai-panel";
+import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
@@ -92,15 +93,15 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
         />
       </div>
       <div className="review-actions leitner-grade-actions">
-        <button
+        <Button
           type="button"
           className="ghost-button study-ai-trigger"
           onClick={() => setAiOpen(true)}
         >
           {copy.ai.studyAskButton}
-        </button>
+        </Button>
         {GRADES.map((grade, gradeIndex) => (
-          <button
+          <Button
             key={grade.result}
             type="button"
             className={grade.className}
@@ -108,7 +109,7 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
           >
             <kbd>{gradeIndex + 1}</kbd>
             {grade.label}
-          </button>
+          </Button>
         ))}
       </div>
       <StudyAiPanel

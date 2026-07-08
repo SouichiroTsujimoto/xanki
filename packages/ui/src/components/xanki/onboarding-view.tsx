@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useAppApi } from "../../context/app-api-context";
 import type { PermissionStatus } from "../../types";
+import { Button } from "../ui/button";
 
 interface Props {
   permissions: PermissionStatus;
@@ -72,13 +73,13 @@ export function OnboardingView({
           <h2>{current.title}</h2>
           <p>{current.body}</p>
           {current.action && (
-            <button type="button" className="accent-button" onClick={() => void current.action?.()}>
+            <Button type="button" variant="accent" onClick={() => void current.action?.()}>
               システム設定を開く
-            </button>
+            </Button>
           )}
-          <button type="button" className="text-button" onClick={onRefreshPermissions}>
+          <Button type="button" variant="text" onClick={onRefreshPermissions}>
             権限を再確認
-          </button>
+          </Button>
           <p className={`setup-status ${done ? "ok" : ""}`}>
             {done ? "準備OK" : "権限の付与をお願いします（スキップ可）"}
           </p>
@@ -86,18 +87,18 @@ export function OnboardingView({
 
         <div className="onboarding-actions">
           {step > 0 && (
-            <button type="button" className="ghost-button" onClick={() => setStep((s) => s - 1)}>
+            <Button type="button" variant="ghost" onClick={() => setStep((s) => s - 1)}>
               戻る
-            </button>
+            </Button>
           )}
           {step < steps.length - 1 ? (
-            <button type="button" className="accent-button" onClick={() => setStep((s) => s + 1)}>
+            <Button type="button" variant="accent" onClick={() => setStep((s) => s + 1)}>
               次へ
-            </button>
+            </Button>
           ) : (
-            <button type="button" className="accent-button" onClick={onComplete}>
+            <Button type="button" variant="accent" onClick={onComplete}>
               はじめる
-            </button>
+            </Button>
           )}
         </div>
       </section>

@@ -51,6 +51,16 @@ pnpm dev:desktop          # Desktop のみ（Cloud は別途 dev:cloud）
 
 コマンド体系の詳細: [`README.md`](./README.md)
 
+## Browser Support
+
+**Browser Support:** Tauri デスクトップ（macOS WebKit / Safari 17.4+）を主ターゲットとする。Baseline Widely available の機能は fallback なしで採用する。Baseline Newly Available は feature detect し、20 行以内・外部依存なしの軽量 fallback のみ許可する。polyfill は使わない。
+
+UI 変更後の手動スモーク:
+
+- `pnpm dev:cloud` — ログイン、ホーム、デッキ学習 Coverflow、フリップ、削除ダイアログ
+- `pnpm dev:desktop` — 同上 + 900px 以下サイドバードロワー
+- `prefers-reduced-motion: reduce` — フリップ即時切替、ドロワー即時
+
 ## ルール
 
 1. 挙動を変えたら **同じ変更で spec を更新**する

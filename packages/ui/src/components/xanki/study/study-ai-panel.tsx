@@ -1,14 +1,8 @@
-import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { copy } from "../../../copy";
 import { useStudyAiAsk } from "../../../hooks/use-study-ai-ask";
-import {
-  dialogBackdropVariants,
-  dialogPanelVariants,
-  transitionForReduced,
-  tweenFast,
-} from "../../../lib/motion-presets";
-import { useReducedMotion } from "../../../lib/use-reduced-motion";
+import { Button } from "../../ui/button";
+import { NativeDialog } from "../../ui/native-dialog";
 
 const PRESET_QUESTIONS = [
   copy.ai.studyPresetDetail,
@@ -39,8 +33,6 @@ function formatAiError(code: string): string {
 }
 
 export function StudyAiPanel({ open, cardContext, onClose }: Props) {
-  const reduced = useReducedMotion();
-  const transition = transitionForReduced(reduced, tweenFast);
   const { ask, cancel, reset, streaming, answer, error } = useStudyAiAsk();
   const [question, setQuestion] = useState("");
 
@@ -65,99 +57,71 @@ export function StudyAiPanel({ open, cardContext, onClose }: Props) {
   }, [cancel, onClose]);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="confirm-backdrop study-ai-backdrop"
-          role="presentation"
-          variants={dialogBackdropVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={transition}
-          onClick={() => {
-            if (!streaming) handleClose();
-          }}
-        >
-          <motion.div
-            className="confirm-dialog study-ai-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="study-ai-title"
-            variants={dialogPanelVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={transition}
-            onClick={(event) => event.stopPropagation()}
+    <NativeDialog
+      open={open}
+      onClose={handleClose}
+      titleId="study-ai-title"
+      panelClassName="study-ai-panel"
+      closedBy={streaming ? "none" : "any"}
+    >
+      <h3 id="study-ai-title">{copy.ai.studyTitle}</h3>
+      <p>{copy.ai.studyHint}</p>
+
+      <div className="study-ai-presets">
+        {PRESET_QUESTIONS.map((preset) => (
+          <Button
+            key={preset}
+            type="button"
+            variant="ghost"
+            className="study-ai-preset"
+            disabled={streaming}
+            onClick={() => {
+              setQuestion(preset);
+              submit(preset);
+            }}
           >
-            <h3 id="study-ai-title">{copy.ai.studyTitle}</h3>
-            <p>{copy.ai.studyHint}</p>
+            {preset}
+          </Button>
+        ))}
+      </div>
 
-            <div className="study-ai-presets">
-              {PRESET_QUESTIONS.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  className="ghost-button study-ai-preset"
-                  disabled={streaming}
-                  onClick={() => {
-                    setQuestion(preset);
-                    submit(preset);
-                  }}
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
+      <label className="study-ai-question-field">
+        <span className="study-ai-label">{copy.ai.studyQuestionLabel}</span>
+        <textarea
+          className="study-ai-question-input"
+          value={question}
+          disabled={streaming}
+          placeholder={copy.ai.studyQuestionPlaceholder}
+          rows={2}
+          onChange={(event) => setQuestion(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              submit(question);
+            }
+          }}
+        />
+      </label>
 
-            <label className="study-ai-question-field">
-              <span className="study-ai-label">{copy.ai.studyQuestionLabel}</span>
-              <textarea
-                className="study-ai-question-input"
-                value={question}
-                disabled={streaming}
-                placeholder={copy.ai.studyQuestionPlaceholder}
-                rows={2}
-                onChange={(event) => setQuestion(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    submit(question);
-                  }
-                }}
-              />
-            </label>
+      <div className="study-ai-answer" aria-live="polite">
+        {streaming && !answer && <p className="study-ai-answer-loading">{copy.ai.studyLoading}</p>}
+        {answer && <p className="study-ai-answer-text">{answer}</p>}
+        {error && <p className="confirm-dialog-error">{formatAiError(error)}</p>}
+      </div>
 
-            <div className="study-ai-answer" aria-live="polite">
-              {streaming && !answer && <p className="study-ai-answer-loading">{copy.ai.studyLoading}</p>}
-              {answer && <p className="study-ai-answer-text">{answer}</p>}
-              {error && (
-                <p className="confirm-dialog-error">{formatAiError(error)}</p>
-              )}
-            </div>
-
-            <div className="confirm-dialog-actions study-ai-actions">
-              <button
-                type="button"
-                className="ghost-button"
-                disabled={streaming}
-                onClick={handleClose}
-              >
-                {copy.common.cancel}
-              </button>
-              <button
-                type="button"
-                className="accent-button"
-                disabled={streaming || !question.trim()}
-                onClick={() => submit(question)}
-              >
-                {streaming ? copy.ai.studySending : copy.ai.studySend}
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      <div className="confirm-dialog-actions study-ai-actions">
+        <Button type="button" variant="ghost" disabled={streaming} onClick={handleClose}>
+          {copy.common.cancel}
+        </Button>
+        <Button
+          type="button"
+          variant="accent"
+          disabled={streaming || !question.trim()}
+          onClick={() => submit(question)}
+        >
+          {streaming ? copy.ai.studySending : copy.ai.studySend}
+        </Button>
+      </div>
+    </NativeDialog>
   );
 }

@@ -16,6 +16,7 @@ import {
   type MaskColorId,
 } from "../../../lib/maskColors";
 import type { Deck, ImageMask, ImageRegion, OcrResult, OcrWord, RectMask } from "../../../types";
+import { Button } from "../../ui/button";
 
 interface Props {
   imagePath: string;
@@ -311,23 +312,23 @@ export function ImageMaskEditor({
 
         <div className="image-editor-header-row image-editor-tools-row" data-tauri-drag-region="false">
           <div className="image-zoom-controls">
-            <button
+            <Button
               type="button"
               aria-label={copy.editor.zoomOut}
               disabled={zoom <= MIN_ZOOM}
               onClick={() => adjustZoom(-ZOOM_STEP)}
             >
               −
-            </button>
+            </Button>
             <span>{Math.round(zoom * 100)}%</span>
-            <button
+            <Button
               type="button"
               aria-label={copy.editor.zoomIn}
               disabled={zoom >= MAX_ZOOM}
               onClick={() => adjustZoom(ZOOM_STEP)}
             >
               +
-            </button>
+            </Button>
           </div>
 
           <div className="image-editor-tools-group">
@@ -335,7 +336,7 @@ export function ImageMaskEditor({
               <span className="mask-color-label">カラー</span>
               <div className="mask-color-swatches" role="group" aria-label={copy.editor.maskColor}>
                 {MASK_COLORS.map((color) => (
-                  <button
+                  <Button
                     key={color.id}
                     type="button"
                     className={`mask-color-swatch ${maskColorId === color.id ? "active" : ""}`}
@@ -349,14 +350,14 @@ export function ImageMaskEditor({
             </div>
 
             <div className="step-switch image-editor-mode-switch">
-              <button
+              <Button
                 type="button"
                 className={mode === "mask" ? "active" : ""}
                 onClick={() => setMode("mask")}
               >
                 {copy.editor.maskMode}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 className={mode === "ocr" ? "active" : ""}
                 disabled={ocrLoading}
@@ -369,7 +370,7 @@ export function ImageMaskEditor({
                 }}
               >
                 {ocrLoading ? "OCR..." : "文字"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -431,7 +432,7 @@ export function ImageMaskEditor({
                       );
                       const isSelected = selectedOcrIds.has(word.id);
                       return (
-                        <button
+                        <Button
                           key={word.id}
                           type="button"
                           className={`ocr-word ${isSelected ? "selected" : ""}`}
@@ -445,7 +446,7 @@ export function ImageMaskEditor({
                           onClick={() => toggleOcrWord(word)}
                         >
                           {word.text}
-                        </button>
+                        </Button>
                       );
                     })}
                 </div>
@@ -458,21 +459,21 @@ export function ImageMaskEditor({
       <footer className="editor-footer">
         <span className="editor-hint">Enter 保存 · Esc キャンセル</span>
         <div className="editor-footer-actions">
-          <button
+          <Button
             type="button"
-            className="ghost-button"
+            variant="ghost"
             onClick={() => onClose()}
           >
             キャンセル
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="accent-button"
+            variant="accent"
             disabled={!canSave || saving}
             onClick={() => void handleSave()}
           >
             {saving ? "保存中..." : cardId ? `更新 ${masks.length} 件` : `保存 ${masks.length} 件`}
-          </button>
+          </Button>
         </div>
       </footer>
     </div>

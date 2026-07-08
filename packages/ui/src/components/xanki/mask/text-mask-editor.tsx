@@ -7,6 +7,7 @@ import {
   useTextMaskEditorShortcuts,
 } from "./text-mask-composer";
 import type { TextMask } from "../../../types";
+import { Button } from "../../ui/button";
 
 interface Props {
   initialContent: string;
@@ -138,23 +139,23 @@ export function TextMaskEditor({
       </div>
 
       <footer className="editor-footer" data-tauri-drag-region="false">
-        <button
+        <Button
           type="button"
-          className="ghost-button"
+          variant="ghost"
           data-tauri-drag-region="false"
           onClick={() => onClose()}
         >
           キャンセル
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="accent-button"
+          variant="accent"
           data-tauri-drag-region="false"
           disabled={!canSave || saving}
           onClick={() => void handleSave()}
         >
           {saving ? "保存中..." : cardId ? "更新" : "保存"}
-        </button>
+        </Button>
       </footer>
     </div>
   );

@@ -1,4 +1,5 @@
 import { copy } from "../../copy";
+import { Button } from "../ui/button";
 
 export interface LoginViewProps {
   busy?: boolean;
@@ -30,14 +31,14 @@ export function LoginView({
           <h2>{copy.login.title}</h2>
           {initialNotice && <p className="settings-note">{initialNotice}</p>}
           <div style={{ display: "grid", gap: 12, maxWidth: 420 }}>
-            <button
+            <Button
               type="button"
-              className="accent-button"
+              variant="accent"
               disabled={busy}
               onClick={() => void onGoogleSignIn()}
             >
               {copy.login.googleButton}
-            </button>
+            </Button>
             {error && <p className="confirm-dialog-error">{error}</p>}
           </div>
         </div>
