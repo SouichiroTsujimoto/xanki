@@ -13,14 +13,16 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void | Promise<voi
 
   useEffect(() => {
     if (!busy) return;
-    const id = window.setInterval(() => {
+    const poll = () => {
       void getSession().then((session) => {
         if (session.token) {
           setBusy(false);
           void onLoggedIn();
         }
       });
-    }, 1000);
+    };
+    poll();
+    const id = window.setInterval(poll, 1000);
     return () => window.clearInterval(id);
   }, [busy, onLoggedIn]);
 

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { isCloudUnauthorized } from "@xanki/shared";
 import {
+  AUTH_COMPLETE_EVENT,
   cloud,
   getSession,
   logout,
@@ -83,10 +84,8 @@ export function useAuthGate() {
       await cloud.me();
       setLoggedIn(true);
       return true;
-    } catch (error) {
-      if (!isCloudUnauthorized(error)) {
-        await logout().catch(() => {});
-      }
+    } catch {
+      // ネットワーク/CORS 等の一時障害で Keychain の bearer を消さない（dev:cloud 未起動等）
       setLoggedIn(false);
       return false;
     }
@@ -95,6 +94,28 @@ export function useAuthGate() {
   useEffect(() => {
     void syncFromSession().finally(() => setReady(true));
   }, [syncFromSession]);
+
+  useEffect(() => {
+    const unlistenPromise = listen(AUTH_COMPLETE_EVENT, () => {
+      void syncFromSession();
+    });
+    return () => {
+      void unlistenPromise.then((unlisten) => unlisten());
+    };
+  }, [syncFromSession]);
+
+  useEffect(() => {
+    if (loggedIn) return;
+    function resync() {
+      void syncFromSession();
+    }
+    window.addEventListener("focus", resync);
+    document.addEventListener("visibilitychange", resync);
+    return () => {
+      window.removeEventListener("focus", resync);
+      document.removeEventListener("visibilitychange", resync);
+    };
+  }, [loggedIn, syncFromSession]);
 
   useEffect(() => {
     function onSessionCleared() {

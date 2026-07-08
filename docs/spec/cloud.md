@@ -79,12 +79,12 @@
   - `POST /api/auth/sign-out` — ログアウト
 - xanki 固有（better-auth 外）:
   - `GET /api/me` — ログインユーザー + entitlement
-  - `GET /auth/desktop-sign-in?return=http://127.0.0.1:<port>/callback` — Desktop OAuth 開始（loopback 受け口を指定。`tauri dev` でも動作）
+  - `GET /auth/desktop-sign-in?return=http://localhost:<port>/callback` — Desktop OAuth 開始（loopback 受け口を指定。`tauri dev` でも動作）
   - `GET /auth/desktop-callback` — Desktop OAuth 完了後、Cookie セッションから bearer を loopback または深リンクへ渡す
   - `POST /api/dev/promote-pro` — ローカル dev のみ（Stripe なし Pro 試用）
 - **セッション**: 有効期限 **365 日**（`updateAge: 24h` で延長）。日常利用では再ログインを避ける
 - Web: Cookie セッション（better-auth 標準）。`authClient.signIn.social({ provider: "google" })`
-- デスクトップ: アプリが **127.0.0.1 loopback** を起動 → 外部ブラウザで `/auth/desktop-sign-in?return=...` → Google OAuth → `/auth/desktop-callback` → **`http://127.0.0.1:<port>/callback?token=...`** → **macOS Keychain** → `Authorization: Bearer`（本番 `.app` では `xanki://` 深リンクもフォールバック可）
+- デスクトップ: アプリが **localhost loopback** を起動 → 外部ブラウザで `/auth/desktop-sign-in?return=...` → Google OAuth → `/auth/desktop-callback` → **HTTP 302** で **`http://localhost:<port>/callback?token=...`** → **macOS Keychain** → `Authorization: Bearer`（本番 `.app` では `xanki://` 深リンクもフォールバック可）
 - 401 でセッション失効時はログイン画面へ戻し、`sessionStorage` 経由で **セッション切れ** メッセージを 1 回表示
 - **ログイン必須** — Web / Desktop とも未認証ではアプリ本体に入れない
 - **ログイン UI**: **Google で続ける** ボタン 1 つのみ（[`LoginView`](../../packages/ui/src/components/xanki/login-view.tsx)）

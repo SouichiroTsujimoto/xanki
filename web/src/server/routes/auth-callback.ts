@@ -42,17 +42,21 @@ authCallbackRoutes.get("/desktop-sign-in", async (c) => {
   const callbackURL = returnUrl
     ? `${new URL("/auth/desktop-callback", c.req.url).origin}/auth/desktop-callback?return=${encodeURIComponent(returnUrl)}`
     : new URL("/auth/desktop-callback", c.req.url).toString();
-  const signInUrl = new URL("/api/auth/sign-in/social", c.req.url);
-  const signInResponse = await fetch(signInUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      provider: "google",
-      callbackURL,
-    }),
-  });
+
+  const auth = createAuth(c.env);
+  let signInResponse: Response;
+  try {
+    signInResponse = await auth.api.signInSocial({
+      body: {
+        provider: "google",
+        callbackURL,
+      },
+      headers: c.req.raw.headers,
+      asResponse: true,
+    });
+  } catch {
+    return c.text("ログイン開始に失敗しました", 500);
+  }
 
   if (!signInResponse.ok) {
     return c.text("ログイン開始に失敗しました", 500);
@@ -86,8 +90,11 @@ authCallbackRoutes.get("/desktop-callback", async (c) => {
   const returnParam = c.req.query("return");
   const returnUrl =
     returnParam && isLoopbackReturnUrl(returnParam) ? returnParam : null;
-  const redirectTarget = returnUrl
-    ? `${returnUrl}?token=${encodeURIComponent(token)}`
-    : `xanki://auth/callback?token=${encodeURIComponent(token)}`;
+  if (returnUrl) {
+    // Top-level 302 — JS redirect だと Chrome の Local Network Access で
+    // localhost → 127.0.0.1 へ届かず chrome-error になることがある
+    return c.redirect(`${returnUrl}?token=${encodeURIComponent(token)}`, 302);
+  }
+  const redirectTarget = `xanki://auth/callback?token=${encodeURIComponent(token)}`;
   return c.html(DESKTOP_CALLBACK_SUCCESS_HTML(redirectTarget));
 });

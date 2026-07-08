@@ -1,12 +1,11 @@
 use crate::cloud;
 use crate::error::{AppError, AppResult};
-use crate::windows;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 static AUTH_LOOPBACK_GEN: AtomicU64 = AtomicU64::new(0);
 
@@ -64,8 +63,7 @@ fn handle_auth_callback_request(mut stream: TcpStream, app: &AppHandle) {
         Some(Ok(()))
     );
     if ok {
-        let _ = app.emit("xanki:auth-complete", ());
-        let _ = windows::show_main_window(app);
+        cloud::notify_auth_complete(app);
     }
     let body = if ok {
         LOOPBACK_SUCCESS_HTML
@@ -85,8 +83,7 @@ fn parse_token_from_http_request(request: &str) -> Option<String> {
     let path = line.split_whitespace().nth(1)?;
     let query = path.split('?').nth(1)?;
     for pair in query.split('&') {
-        let (key, value) = pair.split_once('=')?;
-        if key == "token" {
+        if let Some(value) = pair.strip_prefix("token=") {
             return Some(super::decode_form_component(value));
         }
     }

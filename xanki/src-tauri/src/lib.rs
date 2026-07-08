@@ -22,8 +22,7 @@ use tauri_plugin_deep_link::DeepLinkExt;
 fn handle_auth_deep_link(app: &tauri::AppHandle, url: &str) {
     if let Some(token) = cloud::handle_auth_callback_url(url) {
         if cloud::save_session_token(&token).is_ok() {
-            let _ = app.emit("xanki:auth-complete", ());
-            let _ = windows::show_main_window(app);
+            cloud::notify_auth_complete(app);
         }
     }
 }

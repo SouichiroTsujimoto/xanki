@@ -1,8 +1,9 @@
 mod auth_loopback;
 
 use crate::error::{AppError, AppResult};
+use crate::windows;
 use keyring::Entry;
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter, Manager};
 
 pub use auth_loopback::start_auth_loopback;
 
@@ -50,12 +51,28 @@ pub fn handle_auth_callback_url(url: &str) -> Option<String> {
     }
     let query = url.split('?').nth(1)?;
     for pair in query.split('&') {
-        let (key, value) = pair.split_once('=')?;
-        if key == "token" {
+        if let Some(value) = pair.strip_prefix("token=") {
             return Some(decode_form_component(value));
         }
     }
     None
+}
+
+/// loopback / 深リンク完了後、メイン WebView へ auth-complete を届ける。
+/// バックグラウンドスレッドからの emit は届かないことがあるため main thread 経由にする。
+pub fn notify_auth_complete(app: &AppHandle) {
+    let app = app.clone();
+    let app_for_callback = app.clone();
+    if let Err(error) = app.run_on_main_thread(move || {
+        if let Some(window) = app_for_callback.get_webview_window("main") {
+            let _ = window.emit("xanki:auth-complete", ());
+        } else {
+            let _ = app_for_callback.emit("xanki:auth-complete", ());
+        }
+        let _ = windows::show_main_window(&app_for_callback);
+    }) {
+        eprintln!("notify_auth_complete: {error}");
+    }
 }
 
 fn decode_form_component(value: &str) -> String {
@@ -88,7 +105,7 @@ fn decode_form_component(value: &str) -> String {
 
 pub fn build_google_sign_in_url(app: &AppHandle, cloud_url: &str) -> AppResult<String> {
     let port = start_auth_loopback(app)?;
-    let return_url = format!("http://127.0.0.1:{port}/callback");
+    let return_url = format!("http://localhost:{port}/callback");
     let base = cloud_url.trim_end_matches('/');
     Ok(format!(
         "{base}/auth/desktop-sign-in?return={}",

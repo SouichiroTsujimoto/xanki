@@ -29,6 +29,8 @@ async function notifyUnauthorized(): Promise<void> {
 
 export const cloud = createCloudClient({
   baseUrl: CLOUD_URL,
+  // Bearer のみ。dev では WebView(1420) と API(8787) が別オリジンのため include だと CORS で fetch 失敗する
+  credentials: "omit",
   onUnauthorized: notifyUnauthorized,
   getAuthHeaders: async (): Promise<Record<string, string>> => {
     const session = await invoke<CloudSession>("cloud_get_session");

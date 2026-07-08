@@ -68,7 +68,7 @@ pnpm setup:cloud
 
 1. **Google Cloud Console** で OAuth クライアントを作成し、`web/.dev.vars` に ID/Secret を設定
 2. Web: **Google で続ける** → Cookie セッション
-3. Desktop: **Google で続ける** → loopback 待受 → システムブラウザ → Google → `127.0.0.1` コールバック → Keychain
+3. Desktop: **Google で続ける** → loopback 待受 → システムブラウザ → Google → `localhost` コールバック（302） → Keychain
 
 ## SSE 確認
 
@@ -143,7 +143,8 @@ curl -s -X POST http://localhost:8787/api/dev/purge-user \
 | AI が動かない（OpenAI/Google） | **Top-up credits** でクレジット残高を確認（支払い方法だけでは不足） |
 | auth / data スキーマ不整合 | `rm -rf web/.wrangler/state` → `pnpm setup:cloud` |
 | デスクトップが API に届かない | `xanki/.env.development` の `VITE_CLOUD_URL=http://localhost:8787` |
-| Desktop ログイン後アプリに戻らない | `xanki://` 深リンクが macOS に登録されているか確認（アプリ再起動） |
+| Desktop ログイン後アプリに戻らない | `pnpm dev:cloud` が起動しているか。ブラウザが `chrome-error` なら loopback 302 失敗（`dev:cloud` 再起動）。`xanki://` 深リンクが macOS に登録されているか確認（アプリ再起動） |
+| Desktop: ブラウザは「ログインしました」なのにアプリがログイン画面のまま | dev では WebView(`1420`)→ API(`8787`) が別オリジン。Desktop は Cookie 不要（Bearer）のため `credentials: omit` 必須。`dev:cloud` 停止中に `/api/me` が落ちても Keychain を消さないよう `syncFromSession` はネットワーク失敗で logout しない |
 
 ## 本番向け secrets
 
