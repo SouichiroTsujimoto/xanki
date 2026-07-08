@@ -21,7 +21,7 @@ pnpm dev:cloud
 pnpm smoke:cloud
 ```
 
-**worktree:** `web/.dev.vars` の手コピーは不要。`web/.dev.vars.op`（git 管理）+ `op signin` だけで `pnpm dev:cloud` が動く。
+**worktree:** `web/.dev.vars` の手コピーは不要。`web/.dev.vars.op`（git 管理）+ `op signin` + `wrangler.toml` の `[secrets].required` で `pnpm dev:cloud` が動く（`op run` → process.env → Worker）。
 
 **1Password なし（fallback）:** `cp web/.dev.vars.example web/.dev.vars` して平文を記入。
 
@@ -172,6 +172,7 @@ curl -s -X POST http://localhost:8787/api/dev/purge-user \
 | Desktop ログイン後アプリに戻らない | `pnpm dev:cloud` が起動しているか。ブラウザが `chrome-error` なら loopback 302 失敗（`dev:cloud` 再起動）。`xanki://` 深リンクが macOS に登録されているか確認（アプリ再起動） |
 | Desktop: ブラウザは「ログインしました」なのにアプリがログイン画面のまま | dev では WebView(`1420`)→ API(`8787`) が別オリジン。Desktop は Cookie 不要（Bearer）のため `credentials: omit` 必須。`dev:cloud` 停止中に `/api/me` が落ちても Keychain を消さないよう `syncFromSession` はネットワーク失敗で logout しない |
 | `pnpm dev:cloud` が secrets エラーで即終了 | `op signin` → `pnpm check:secrets`。`web/.dev.vars.op` の `op://` が 1Password の vault/item/field と一致するか確認 |
+| Google ログイン `invalid_client` | dev サーバーが `wrangler.toml` のプレースホルダを使っている。`op signin` 後に `pnpm dev:cloud` を再起動（`[secrets].required` が `op run` の process.env を Worker に渡す） |
 | `op: command not found` | `brew install 1password-cli`。または fallback: `cp web/.dev.vars.example web/.dev.vars` |
 
 ## Secrets 管理（dev / prod）
