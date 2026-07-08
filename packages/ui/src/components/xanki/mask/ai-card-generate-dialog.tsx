@@ -304,7 +304,6 @@ export function AiCardGenerateDialog({
     setError(null);
     setSaveMessage(null);
 
-    let failed = false;
     const sourceHint = generationSourceHint ?? buildSourceHint(tab, text, images.length);
 
     try {
