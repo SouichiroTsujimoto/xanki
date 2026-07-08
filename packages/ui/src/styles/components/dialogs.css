@@ -89,7 +89,7 @@
   padding: 1.25rem 1.35rem;
   border-radius: var(--radius-lg);
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-lg);
 }
 
@@ -162,7 +162,7 @@
   width: 100%;
   min-height: 4.5rem;
   padding: 0.65rem 0.75rem;
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-background);
   font: inherit;
@@ -215,7 +215,7 @@
 
 .ai-qa-generate-result {
   padding: 0.75rem;
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-background);
 }

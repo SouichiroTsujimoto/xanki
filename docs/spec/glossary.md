@@ -96,7 +96,7 @@
 | マスク | `masks` JSON | **マスク** | [data-model.md](./data-model.md) |
 | 復習箱 | `boxNum`, `review_state.box` | **Box**（開発者向け。UI 非表示） | [study.md](./study.md) |
 | 学習フェーズ | `reviewPhase`, `review_state.phase` | （UI 非表示） | [leitner-study.md](./leitner-study.md) |
-| スマート学習の間隔 | `schedulerConfig`, `scheduler_config` | **スマート学習の間隔** | [leitner-study.md](./leitner-study.md), [library.md](./library.md) |
+| スマート学習の間隔 | `schedulerConfig`, `scheduler_config`, `user_settings` | **スマート学習の間隔**（設定タブ・全デッキ共通） | [leitner-study.md](./leitner-study.md), [library.md](./library.md) |
 | 学習ステップ | `learningSteps` | **学習ステップ**（設定 UI） | [leitner-study.md](./leitner-study.md) |
 | 再学習ステップ | `relearningSteps` | **再学習ステップ**（設定 UI） | [leitner-study.md](./leitner-study.md) |
 | 復習間隔 | `reviewIntervals` | **復習間隔（箱 2〜5）**（設定 UI） | [leitner-study.md](./leitner-study.md) |

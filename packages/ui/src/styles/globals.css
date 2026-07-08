@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css";
+@import "./focus.css";
 @import "./components/buttons.css";
 @import "./components/app-shell.css";
 @import "./components/home.css";

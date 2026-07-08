@@ -10,10 +10,11 @@ import type {
   StudySessionMode,
   StudyTrack,
   UpdateDeckRequest,
+  UpdateSchedulerConfigRequest,
 } from "./api-types.js";
 import type { ImageMask, OcrData, TextMask } from "../masks/masks.js";
 import type { StudyFilter } from "./cloud-mappers.js";
-import type { ReviewGrade } from "../study/scheduler.js";
+import type { DeckSchedulerConfig, ReviewGrade } from "../study/scheduler.js";
 
 export type { StudyFilter } from "./cloud-mappers.js";
 export type { StudyEventType, StudyMetrics, StudySessionMode, StudyTrack } from "./api-types.js";
@@ -81,6 +82,8 @@ export interface AppApi {
   listDecks(): Promise<Deck[]>;
   createDeck(name: string): Promise<Deck>;
   updateDeck(deckId: string, patch: UpdateDeckRequest): Promise<Deck>;
+  getSchedulerConfig(): Promise<DeckSchedulerConfig>;
+  updateSchedulerConfig(config: DeckSchedulerConfig): Promise<DeckSchedulerConfig>;
   deleteDeck(deckId: string): Promise<void>;
   getLastUsedDeckId(): Promise<string | null>;
   exportDeck(deckId: string): Promise<DeckExport>;

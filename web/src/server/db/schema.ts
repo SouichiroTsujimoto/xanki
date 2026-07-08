@@ -5,6 +5,12 @@ export const userRevisions = sqliteTable("user_revisions", {
   rev: integer("rev").notNull().default(0),
 });
 
+export const userSettings = sqliteTable("user_settings", {
+  userId: text("user_id").primaryKey(),
+  schedulerConfig: text("scheduler_config"),
+  updatedAt: integer("updated_at").notNull(),
+});
+
 export const decks = sqliteTable(
   "decks",
   {

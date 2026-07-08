@@ -5,6 +5,8 @@
     "build:shared": "pnpm --filter @xanki/shared build",
     "build:ui": "pnpm --filter @xanki/ui typecheck",
     "setup:cloud": "bash scripts/setup-cloud.sh",
+    "check:secrets": "bash scripts/check-dev-secrets.sh",
+    "check:design": "bash scripts/check-design-tokens.sh",
     "dev:cloud": "bash scripts/dev-cloud.sh",
     "dev:cloud:all": "bash scripts/dev-cloud.sh --desktop",
     "dev:desktop": "pnpm --filter xanki tauri dev",

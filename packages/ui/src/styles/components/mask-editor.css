@@ -154,7 +154,7 @@ html.tauri-macos .image-editor-header button {
   position: relative;
   border-radius: var(--radius-md);
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-sm);
 }
 
@@ -285,7 +285,7 @@ html.tauri-macos .image-editor-header button {
 }
 
 .qa-field-box {
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   background: var(--color-card);
   flex: 1;
@@ -307,7 +307,7 @@ html.tauri-macos .image-editor-header button {
   min-width: 2rem;
   height: 2rem;
   padding: 0 0.65rem;
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   background: var(--color-card);
   font-size: 0.82rem;
@@ -451,7 +451,7 @@ html.tauri-macos .image-editor-header button {
 .mask-color-swatch {
   width: 1.45rem;
   height: 1.45rem;
-  border: 2px solid transparent;
+  border: var(--border-width-strong) solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: border-color 0.16s ease, transform 0.16s ease;
@@ -494,7 +494,7 @@ html.tauri-macos .image-editor-header button {
 .image-zoom-controls button {
   min-width: 2rem;
   height: 2rem;
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   background: var(--color-card);
   font-size: 1rem;
@@ -531,7 +531,7 @@ html.tauri-macos .image-editor-header button {
   line-height: 0;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-md);
   background: var(--color-card);
 }
@@ -547,28 +547,28 @@ html.tauri-macos .image-editor-header button {
   cursor: pointer;
   box-sizing: border-box;
   background: var(--mask-fill, var(--color-accent));
-  border: 2px solid var(--mask-border, var(--color-accent-outline));
+  border: var(--border-width-strong) solid var(--mask-border, var(--color-accent-outline));
   border-radius: var(--radius-sm);
   z-index: 4;
 }
 
 .mask-overlay.draft.crop {
   position: absolute;
-  border: 2px dashed var(--color-accent-outline);
+  border: var(--border-width-strong) dashed var(--color-accent-outline);
   background: transparent;
   z-index: 3;
 }
 
 .mask-overlay.draft.mask {
   position: absolute;
-  border: 2px dashed var(--color-accent-outline);
+  border: var(--border-width-strong) dashed var(--color-accent-outline);
   background: rgba(206, 255, 26, 0.35);
   z-index: 3;
 }
 
 .ocr-word {
   position: absolute;
-  border: 1px solid var(--color-accent-outline-muted);
+  border: var(--border-width-default) solid var(--color-accent-outline-muted);
   background: rgba(255, 255, 255, 0.85);
   font-size: 10px;
   padding: 0;
@@ -614,7 +614,7 @@ html.tauri-macos .image-editor-header button {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
+  border: var(--border-width-strong) solid var(--color-border);
   border-top-color: var(--color-accent-outline);
   animation: spin 0.7s linear infinite;
 }

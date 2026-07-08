@@ -74,6 +74,13 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
       notify();
       return deck;
     },
+    getSchedulerConfig: async () =>
+      (await cloud.getSchedulerConfig()).schedulerConfig,
+    updateSchedulerConfig: async (config) => {
+      const saved = await cloud.updateSchedulerConfig(config);
+      notify();
+      return saved.schedulerConfig;
+    },
     deleteDeck: async (deckId) => {
       await cloud.deleteDeck(deckId);
       notify();

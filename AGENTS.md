@@ -12,6 +12,7 @@
 | DB / JSON | [data-model.md](./docs/spec/data-model.md) |
 | ライブラリ | [library.md](./docs/spec/library.md)（用語: [glossary.md](./docs/spec/glossary.md)） |
 | UI / ダイアログ | [ui.md](./docs/spec/ui.md) |
+| UI コンポーネント選択 | [ui-components.md](./docs/spec/ui-components.md) |
 | UI レイアウト（実装・索引） | [dev-ui.md](./docs/dev-ui.md) |
 | 用語・UI 文言 | [glossary.md](./docs/spec/glossary.md) |
 | クラウド層 | [cloud.md](./docs/spec/cloud.md) |
@@ -57,12 +58,16 @@
 
 ```bash
 pnpm setup:cloud          # 初回のみ
+pnpm check:secrets        # 1Password dev secrets 診断
+pnpm check:design         # border/focus トークン準拠チェック
 pnpm dev:cloud            # Web API + SPA (8787、Vite HMR)
 pnpm dev:cloud -- --skip-setup  # vite dev のみ再起動
 pnpm smoke:cloud          # API 自動テスト
 pnpm dev:cloud:all        # + Tauri デスクトップ
 pnpm dev:desktop          # Desktop のみ（Cloud は別途 dev:cloud）
 ```
+
+**Dev secrets:** 正本は [`web/.dev.vars.op`](web/.dev.vars.op)（`op://` 参照・git 管理）。`pnpm dev:cloud` は [`scripts/with-dev-secrets.sh`](scripts/with-dev-secrets.sh) 経由で `op run` する。**worktree 間で `web/.dev.vars` をコピーする案内はしない。** 詳細: [dev-cloud.md](./docs/dev-cloud.md)
 
 コマンド体系の詳細: [`README.md`](./README.md)
 
@@ -82,9 +87,10 @@ UI 変更後の手動スモーク:
 2. **画面レイアウト問題**（見切れ・重なり等）を直したら **同じ PR で** [dev-ui.md](./docs/dev-ui.md) 索引の該当 dev doc に原因・再発防止を追記する
 3. 座標系・JSON・保存フローは spec と実装を必ず一致させる
 4. `window.confirm` / `window.alert` は Tauri で使わない（[ui.md](./docs/spec/ui.md)）
-5. **UI 共通化** — Web / Tauri で同じ画面・ダイアログは [`@xanki/ui`](./packages/ui/) に実装し、各アプリは import または認証などの薄い wrapper のみ（[ui.md](./docs/spec/ui.md) §デザイン SSoT）
-6. **用語** — UI・会話では [glossary.md](./docs/spec/glossary.md) の UI 表示（正）を使う。実装は [`packages/ui/src/copy.ts`](./packages/ui/src/copy.ts)
-7. **学習セッション hooks** — `useEffect` / `useCallback` の deps にカスタム hook の**戻りオブジェクト丸ごと**を入れない。load ループ・API 連打の再発防止は [dev-study-layout.md §学習セッションのデータ読み込み](./docs/dev-study-layout.md)
+5. **UI 共通化** — Web / Tauri で同じ画面・ダイアログは [`@xanki/ui`](./packages/ui/) に実装し、各アプリは import または認証などの薄い wrapper のみ（[ui.md](./docs/spec/ui.md) §デザイン SSoT）。新規 UI 前に [ui-components.md](./docs/spec/ui-components.md) を確認
+6. **デザインシステム** — border / focus は [tokens.css](./packages/ui/src/styles/tokens.css) + [focus.css](./packages/ui/src/styles/focus.css)。UI CSS 変更後は `pnpm check:design`
+7. **用語** — UI・会話では [glossary.md](./docs/spec/glossary.md) の UI 表示（正）を使う。実装は [`packages/ui/src/copy.ts`](./packages/ui/src/copy.ts)
+8. **学習セッション hooks** — `useEffect` / `useCallback` の deps にカスタム hook の**戻りオブジェクト丸ごと**を入れない。load ループ・API 連打の再発防止は [dev-study-layout.md §学習セッションのデータ読み込み](./docs/dev-study-layout.md)
 
 ## アプリコード
 

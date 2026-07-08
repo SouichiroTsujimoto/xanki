@@ -70,7 +70,8 @@ export function createCloudAppApi(onDataChanged?: () => void): AppApi {
           (await cloud.listDecks()).find((d) => d.id === deckId) ?? { id: deckId, name: "" },
         );
         const cards = (await cloud.listCards(deckId)).map(mapCard);
-        return { deck, cards };
+        const schedulerConfig = await cloud.getSchedulerConfig().then((r) => r.schedulerConfig);
+        return { deck: { ...deck, schedulerConfig }, cards };
       },
       importDeck: async (data: DeckExport) => {
         let deckId = data.deck.id;
@@ -82,9 +83,7 @@ export function createCloudAppApi(onDataChanged?: () => void): AppApi {
           deckId = (await cloud.createDeck(data.deck.name)).id;
         }
         if (data.deck.schedulerConfig) {
-          await cloud.updateDeck(deckId, {
-            schedulerConfig: data.deck.schedulerConfig,
-          });
+          await cloud.updateSchedulerConfig(data.deck.schedulerConfig);
         }
         for (const card of data.cards) {
           await cloud.createCard({

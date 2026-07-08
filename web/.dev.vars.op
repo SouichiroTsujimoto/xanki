@@ -1,0 +1,15 @@
+# wrangler dev 用 — 1Password secret references (git 管理可、平文秘密なし)
+# 起動時: scripts/with-dev-secrets.sh → op run --env-file=.dev.vars.op
+# 各 op:// を実 vault に合わせて編集（1Password UI → Copy Secret Reference）
+# BETTER_AUTH_SECRET=op://xanki-dev/cloud/BETTER_AUTH_SECRET  # 省略可（wrangler.toml に dev 既定あり）
+GOOGLE_CLIENT_ID=op://xanki-dev/cloud/GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=op://xanki-dev/cloud/GOOGLE_CLIENT_SECRET
+# STRIPE_SECRET_KEY=op://xanki-dev/cloud/STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET=op://xanki-dev/cloud/STRIPE_WEBHOOK_SECRET
+AI_GATEWAY_TOKEN=op://xanki-dev/cloud/AI_GATEWAY_TOKEN
+CF_ACCOUNT_ID=op://xanki-dev/cloud/CF_ACCOUNT_ID
+AI_GATEWAY_ID=default
+AI_MODEL=google-ai-studio/gemini-2.5-flash
+# AI_MODEL=openai/gpt-4.1-mini                 # Unified Billing 代替
+# AI_MODEL=workers-ai/@cf/meta/llama-3.3-70b-instruct-fp8-fast  # Workers AI 課金
+# AI_MODEL=deepseek/deepseek-chat              # BYOK 必須（Unified Billing 非対応）

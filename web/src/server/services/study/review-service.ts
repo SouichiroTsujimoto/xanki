@@ -2,7 +2,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import {
   initialReviewState,
   normalizeReviewState,
-  resolveDeckSchedulerConfig,
   submitReviewGrade,
   type ReviewPhase,
 } from "@xanki/shared";
@@ -11,7 +10,7 @@ import type { Db } from "../../db/index";
 import { cards, reviewLogs, reviewState } from "../../db/schema";
 import { nowMs, randomId } from "../../utils";
 import { finishMutation } from "../library/mutation";
-import { getDeckSchedulerConfig } from "../library/deck-service";
+import { getUserSchedulerConfig } from "../library/user-settings-service";
 import { recordStudyEvent } from "./study-metrics-service";
 
 function parseReviewPhase(value: string | null | undefined): ReviewPhase {
@@ -36,8 +35,7 @@ export async function submitReview(
     .get();
   if (!card) throw new Error("card_not_found");
 
-  const deckConfig = await getDeckSchedulerConfig(db, userId, card.deckId);
-  const config = resolveDeckSchedulerConfig(deckConfig);
+  const config = await getUserSchedulerConfig(db, userId);
 
   const existing = await db
     .select()

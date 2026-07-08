@@ -282,7 +282,6 @@ export function MainApp() {
               onSelectDeck={setSelectedDeckId}
               onGoToDeckStudy={() => handleTabChange("deckStudy")}
               onGoToLeitner={() => handleTabChange("leitner")}
-              onDeckConfigSaved={() => flushLibraryRefresh().then(() => refreshLibrary())}
             />
           )}
           <AppTabLayer active={tab === "deckStudy"}>

@@ -153,7 +153,6 @@ function AuthenticatedApp({
               onSelectDeck={setSelectedDeckId}
               onGoToDeckStudy={() => handleTabChange("deckStudy")}
               onGoToLeitner={() => handleTabChange("leitner")}
-              onDeckConfigSaved={() => flushLibraryRefresh().then(() => refreshDecks())}
             />
           )}
           <AppTabLayer active={tab === "deckStudy"}>

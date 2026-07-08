@@ -1,0 +1,44 @@
+---
+description: border/focus トークン強制、glow 禁止、デザイン skill 優先順位
+alwaysApply: true
+---
+
+# デザインシステム
+
+## 正本
+
+| 種別 | 置き場 |
+|------|--------|
+| 原則・Interaction States | [`docs/spec/ui.md`](../../docs/spec/ui.md) |
+| コンポーネント選択 | [`docs/spec/ui-components.md`](../../docs/spec/ui-components.md) |
+| トークン値 | [`packages/ui/src/styles/tokens.css`](../../packages/ui/src/styles/tokens.css) |
+| focus 実装 | [`packages/ui/src/styles/focus.css`](../../packages/ui/src/styles/focus.css) |
+
+## border / focus ルール
+
+1. **border 幅** — `--border-width-default`（1px）または `--border-width-strong`（2px）のみ。`1.5px` 等の中間値禁止
+2. **focus** — `:focus-visible` + `--focus-ring-width` / `--focus-ring-offset` + `--color-ring`。定義は [`focus.css`](../../packages/ui/src/styles/focus.css) に集中
+3. **glow 禁止** — focus 用 `box-shadow: 0 0 0 Npx` を使わない（autofill inset / マスク選択ハロー等、focus 以外の用途は例外）
+4. **色の意味** — `--color-ring` = focus outline、`--color-accent-outline` = selected/active border
+5. **検証** — UI CSS 変更後は `pnpm check:design` を実行
+
+新規 interactive 要素に focus が必要なとき:
+
+- 既存セレクタ（`.accent-button` 等）に該当 → 追加不要
+- 新クラス → [`focus.css`](../../packages/ui/src/styles/focus.css) にセレクタ追加。コンポーネント CSS に `outline: Npx` 直書きしない
+
+## コンポーネント再利用
+
+1. **新規 UI 前** — [`ui-components.md`](../../docs/spec/ui-components.md) の decision tree を確認
+2. **既存に該当** — compose / extend。再実装禁止
+3. **新コンポーネント** — `@xanki/ui` に追加し、同 PR で ui-components.md 更新
+
+## デザイン skill 優先順位
+
+| 状況 | skill |
+|------|-------|
+| 既存パターン（ボタン、ダイアログ、カード一覧等） | ui-components.md のみ。frontend-design 不要 |
+| 新画面種別 | frontend-design（Chartreuse + snow + システムフォントは不変） |
+| focus / a11y / motion | modern-web-guidance を先に search |
+
+frontend-design で決めた spacing / border / focus 値は tokens + ui.md に逆流させる。

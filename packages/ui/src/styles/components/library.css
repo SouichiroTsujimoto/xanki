@@ -14,7 +14,7 @@
   padding: 1rem;
   border-radius: var(--radius-md);
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-sm);
   min-height: 0;
   overflow: hidden;
@@ -234,7 +234,7 @@
   padding: 1rem;
   border-radius: var(--radius-md);
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.16s ease, border-color 0.16s ease;
 }
@@ -258,11 +258,6 @@
 
 .flashcard-tile-clickable {
   cursor: pointer;
-}
-
-.flashcard-tile-clickable:focus-visible {
-  outline: 2px solid var(--color-accent-outline);
-  outline-offset: 2px;
 }
 
 .flashcard-tile-head {
@@ -330,7 +325,7 @@
   padding: 2.5rem;
   text-align: center;
   border-radius: var(--radius-lg);
-  border: 2px dashed var(--color-border-strong);
+  border: var(--border-width-strong) dashed var(--color-border-strong);
   background: linear-gradient(135deg, var(--color-muted), rgb(29 29 31 / 0.02));
 }
 

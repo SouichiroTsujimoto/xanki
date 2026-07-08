@@ -31,7 +31,7 @@ fi
 echo ""
 echo "==> starting vite dev (Cloudflare plugin) on http://localhost:8787"
 cd "$ROOT/web"
-pnpm exec vite dev --port 8787 &
+bash "$ROOT/scripts/with-dev-secrets.sh" pnpm exec vite dev --port 8787 &
 WEB_PID=$!
 
 cleanup() {

@@ -3,6 +3,7 @@ import { useAppApi } from "../../context/app-api-context";
 import { copy, studyModeList } from "../../copy";
 import type { PermissionStatus } from "../../types";
 import { Button } from "../ui/button";
+import { SchedulerSettings } from "./scheduler-settings";
 
 interface Props {
   permissions: PermissionStatus;
@@ -100,6 +101,12 @@ export function SettingsView({
           <Button type="button" variant="text" onClick={onRefresh}>
             {copy.settings.refreshPermissions}
           </Button>
+        </section>
+
+        <section className="settings-card settings-card-wide">
+          <p className="eyebrow">{copy.settings.schedulerEyebrow}</p>
+          <h2>{copy.settings.schedulerTitle}</h2>
+          <SchedulerSettings />
         </section>
 
         <section className="settings-card settings-card-wide">

@@ -1,0 +1,51 @@
+/* Keyboard focus — single pattern for all interactive elements. See docs/spec/ui.md §Interaction States */
+
+.focus-ring:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+[data-slot="slider-thumb"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+[data-slot="select-trigger"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-color: var(--color-accent-outline);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-color: var(--color-accent-outline);
+}
+
+.accent-button:focus-visible,
+.ghost-button:focus-visible,
+.text-button:focus-visible,
+.icon-button:focus-visible,
+.tab-close:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.home-deck-card:focus-visible,
+.flashcard-tile-clickable:focus-visible,
+.study-coverflow-slide:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.dock-item:focus-visible .dock-item-content {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.leitner-grade-btn:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-ring);
+  outline-offset: var(--focus-ring-offset);
+}

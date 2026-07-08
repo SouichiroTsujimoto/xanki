@@ -3,12 +3,12 @@ import {
   buildStudyCardContext,
   normalizeReviewState,
   previewReviewGrade,
-  resolveDeckSchedulerConfig,
 } from "@xanki/shared";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
+import { useSchedulerConfig } from "../../../hooks/use-scheduler-config";
 import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
-import type { Deck, ReviewGrade } from "../../../types";
+import type { ReviewGrade } from "../../../types";
 import { LeitnerDeckSessionComplete } from "./leitner-deck-session-complete";
 import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import {
@@ -18,12 +18,11 @@ import {
   useStudyQueue,
 } from "./shared";
 import { StudyAiPanel } from "./study-ai-panel";
-import { Dock, type DockItemData } from "../../motion/dock";
 
 interface Props {
   deckId?: string | null;
-  decks: Deck[];
   shuffle?: boolean;
+  collectionRevision?: number;
   onBackToHub?: () => void;
 }
 
@@ -41,8 +40,14 @@ type CompletionState =
   | { kind: "deck"; remainingDueCount: number }
   | { kind: "error" };
 
-export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props) {
+export function LearnMode({
+  deckId,
+  shuffle = false,
+  collectionRevision = 0,
+  onBackToHub,
+}: Props) {
   const api = useAppApi();
+  const { config: schedulerConfig } = useSchedulerConfig(collectionRevision);
   const { beginLeitnerSession, completeSession, noteCardCompleted } =
     useStudySessionRecorder();
   const sessionStartedRef = useRef(false);
@@ -89,20 +94,7 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
     void beginLeitnerSession(deckId, queue.length);
   }, [beginLeitnerSession, completeSession, deckId, queue.length]);
 
-  const deckConfigById = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof resolveDeckSchedulerConfig>>();
-    for (const deck of decks) {
-      map.set(deck.id, resolveDeckSchedulerConfig(deck.schedulerConfig));
-    }
-    return map;
-  }, [decks]);
-
-  const currentSchedulerConfig = useMemo(() => {
-    if (!current) return resolveDeckSchedulerConfig(null);
-    return (
-      deckConfigById.get(current.card.deckId) ?? resolveDeckSchedulerConfig(null)
-    );
-  }, [current, deckConfigById]);
+  const currentSchedulerConfig = schedulerConfig;
 
   const reviewState = useMemo(() => {
     if (!current) {
@@ -158,34 +150,6 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
     },
     [api, current, index, loadQueue, next, noteCardCompleted, queue.length],
   );
-
-  const gradeDockItems = useMemo((): DockItemData[] => {
-    const aiItem: DockItemData = {
-      id: "ai",
-      label: copy.ai.studyAskButton,
-      className: "study-ai-trigger",
-      onClick: () => setAiOpen(true),
-      content: copy.ai.studyAskButton,
-      baseWidth: 84,
-      baseHeight: 64,
-      magnifiedWidth: 100,
-      magnifiedHeight: 76,
-    };
-    const gradeItems: DockItemData[] = GRADES.map((grade, gradeIndex) => ({
-      id: String(grade.result),
-      label: `${grade.label} ${gradePreviews[gradeIndex]}`,
-      className: grade.className,
-      onClick: () => void submit(grade.result),
-      content: (
-        <>
-          <kbd>{gradeIndex + 1}</kbd>
-          <span className="leitner-grade-label">{grade.label}</span>
-          <span className="leitner-grade-interval">{gradePreviews[gradeIndex]}</span>
-        </>
-      ),
-    }));
-    return [aiItem, ...gradeItems];
-  }, [gradePreviews, submit]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -292,17 +256,28 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
         />
       </div>
       <div className="review-actions leitner-grade-actions">
-        <Dock
-          className="leitner-grade-dock"
-          items={gradeDockItems}
-          panelHeight={68}
-          dockHeight={120}
-          baseItemWidth={92}
-          baseItemHeight={68}
-          magnifiedWidth={112}
-          magnifiedHeight={84}
-          distance={160}
-        />
+        <div className="leitner-grade-toolbar" role="toolbar" aria-label="操作">
+          <button
+            type="button"
+            className="leitner-grade-btn study-ai-trigger"
+            onClick={() => setAiOpen(true)}
+          >
+            {copy.ai.studyAskButton}
+          </button>
+          {GRADES.map((grade, gradeIndex) => (
+            <button
+              key={grade.result}
+              type="button"
+              className={grade.className}
+              aria-label={`${grade.label} ${gradePreviews[gradeIndex]}`}
+              onClick={() => void submit(grade.result)}
+            >
+              <kbd>{gradeIndex + 1}</kbd>
+              <span className="leitner-grade-label">{grade.label}</span>
+              <span className="leitner-grade-interval">{gradePreviews[gradeIndex]}</span>
+            </button>
+          ))}
+        </div>
       </div>
       <StudyAiPanel
         open={aiOpen}

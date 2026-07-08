@@ -46,7 +46,7 @@
   height: 100%;
   padding: 0.45rem 0.3rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-strong);
   background: transparent;
   color: var(--color-foreground);
   font-size: 0.74rem;
@@ -67,11 +67,6 @@
 
 .dock-item:focus-visible {
   outline: none;
-}
-
-.dock-item:focus-visible .dock-item-content {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

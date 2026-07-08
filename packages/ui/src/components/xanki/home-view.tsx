@@ -4,7 +4,6 @@ import { copy } from "../../copy";
 import { useAppApi } from "../../context/app-api-context";
 import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
-import { DeckSchedulerSettings } from "./deck-scheduler-settings";
 import { HomeMetricsPanel } from "./home-metrics-panel";
 import type { Deck, DeckExport } from "../../types";
 import { Button } from "../ui/button";
@@ -17,7 +16,6 @@ interface Props {
   onSelectDeck: (id: string | null) => void;
   onGoToDeckStudy: () => void;
   onGoToLeitner?: () => void;
-  onDeckConfigSaved?: () => void | Promise<void>;
 }
 
 export function HomeView({
@@ -28,7 +26,6 @@ export function HomeView({
   onSelectDeck,
   onGoToDeckStudy,
   onGoToLeitner,
-  onDeckConfigSaved,
 }: Props) {
   const api = useAppApi();
   const [metrics, setMetrics] = useState<StudyMetrics | null>(null);
@@ -185,10 +182,6 @@ export function HomeView({
         loading={metricsLoading}
         deckName={selectedDeck?.name ?? null}
       />
-
-      {selectedDeck && (
-        <DeckSchedulerSettings deck={selectedDeck} onSaved={onDeckConfigSaved} />
-      )}
 
       <section className="home-create-bar" aria-label="デッキの追加">
         <form

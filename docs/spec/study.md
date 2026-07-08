@@ -53,8 +53,8 @@ UI 名 **「スマート学習」** は暫定。内部識別子 `leitner` / `Lei
 | 評価 | 正解 / 不正解（2 値） | 4 段階 | **4 段階**（もう一度 / 難しい / 正解 / 簡単） |
 | 学習フェーズ | なし（箱のみ） | learning / review / relearning | **同様**（`review_state.phase` + `step`） |
 | 間隔 | 箱ごとに一括復習（物理箱） | 学習ステップ（分）+ 復習間隔（日） | **同様**（`DeckSchedulerConfig` v2） |
-| 間隔値 | 指数増 | ease factor 等 | **デッキ設定の固定間隔**（SM-2 なし） |
-| Hard | — | 乗算 / 中間 | デッキ設定 `hardInterval`（分 / 時間 / 日） |
+| 間隔値 | 指数増 | ease factor 等 | **共通設定の固定間隔**（SM-2 なし） |
+| Hard | — | 乗算 / 中間 | 共通設定 `hardInterval`（分 / 時間 / 日） |
 
 厳密な Leitner 方式でも Anki 完全互換でもない。**Anki 型フェーズ + 4 段階評価の簡略 SRS** として記述する。詳細は [leitner-study.md](./leitner-study.md)。
 

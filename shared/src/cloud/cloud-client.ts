@@ -11,6 +11,7 @@ import type {
   SubmitReviewRequest,
   UpdateCardRequest,
   UpdateDeckRequest,
+  UpdateSchedulerConfigRequest,
 } from "../library/api-types.js";
 import type { AccountStorageResponse } from "../sync/sync.js";
 
@@ -80,6 +81,15 @@ export function createCloudClient(options: CloudClientOptions) {
       request<ApiDeck>(`/api/decks/${encodeURIComponent(deckId)}`, {
         method: "PATCH",
         body: JSON.stringify(patch),
+      }),
+
+    getSchedulerConfig: () =>
+      request<UpdateSchedulerConfigRequest>("/api/settings/scheduler"),
+
+    updateSchedulerConfig: (schedulerConfig: UpdateSchedulerConfigRequest["schedulerConfig"]) =>
+      request<UpdateSchedulerConfigRequest>("/api/settings/scheduler", {
+        method: "PATCH",
+        body: JSON.stringify({ schedulerConfig }),
       }),
 
     deleteDeck: (deckId: string) =>

@@ -29,7 +29,7 @@
 | `3` | 簡単 | **learning**: **卒業** → review 箱 2 + `easyInterval` / **review**: 箱 +2（max 5）、該当復習間隔 / **relearning**: review に復帰 + `easyInterval` |
 
 - 各採点ボタンに **次回までの間隔**（例: `今すぐ` / `10分後` / `1日後`）を表示する（Anki 風）
-- 表示値は `reviewPhase` / `reviewStep` / `boxNum` とデッキの **スマート学習の間隔** 設定から [`previewReviewGrade`](../../shared/src/study/scheduler.ts) で算出
+- 表示値は `reviewPhase` / `reviewStep` / `boxNum` と **スマート学習の間隔**（全デッキ共通）設定から [`previewReviewGrade`](../../shared/src/study/scheduler.ts) で算出
 
 - 横断セッション: `deckId` なし、`getDueCards()` 全件からランダム
 - デッキ別: `getDueCards(deckId)` + ランダム
@@ -47,9 +47,9 @@
 | `box` | **review** では 2..5（復習箱）。**learning / relearning** では 1（内部識別子） |
 | `due_at` | 次回復習 unix ms |
 
-### デッキ別間隔（`decks.scheduler_config` v2）
+### 共通間隔（`user_settings.scheduler_config` v2）
 
-ホームの **スマート学習の間隔** でデッキごとに設定:
+**設定** タブの **スマート学習の間隔** で全デッキ共通に設定:
 
 | 設定 | デフォルト | 単位 |
 |------|-----------|------|
@@ -75,7 +75,7 @@
 - [ ] デッキ別復習予定一覧からセッション開始
 - [ ] 4 段階評価で review_state（phase / step / box / due_at）更新、Tray 件数減少
 - [ ] 4 段階ボタンに次回までの間隔（`今すぐ` / `N分後` / `N日後` 等）を表示
-- [ ] ホームでデッキ別スマート学習の間隔（学習 / 再学習 / 復習 / Hard 等）を設定・保存できる
+- [ ] 設定タブで全デッキ共通のスマート学習の間隔（学習 / 再学習 / 復習 / Hard 等）を設定・保存できる
 - [ ] 設定保存直後に LearnMode のプレビューが更新される
 - [ ] 復習予定 0 で完了表示（ハブ・セッション共通の派手演出）
 - [ ] デッキ別完了で他復習予定残存時は控えめ完了 UI

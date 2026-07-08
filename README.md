@@ -32,6 +32,9 @@
 # 初回セットアップ（install / shared build / D1 migrate）
 pnpm setup:cloud
 
+# 1Password CLI（Cloud dev secrets — worktree でも web/.dev.vars.op をそのまま利用）
+brew install 1password-cli && op signin   # 初回のみ。詳細は docs/dev-cloud.md
+
 # Cloud API + Web UI（Vite HMR + workerd）
 pnpm dev:cloud
 
@@ -50,6 +53,8 @@ pnpm dev:desktop
 | コマンド | 内容 |
 |---------|------|
 | `pnpm setup:cloud` | 依存関係・D1 の初回セットアップ |
+| `pnpm check:secrets` | 1Password dev secrets の参照解決確認 |
+| `pnpm check:design` | border/focus デザイントークン準拠チェック |
 | `pnpm dev:cloud` | setup 込みで vite dev（8787、HMR） |
 | `pnpm dev:cloud -- --skip-setup` | setup 省略で vite dev のみ |
 | `pnpm dev:cloud:all` | vite dev + Tauri デスクトップ |

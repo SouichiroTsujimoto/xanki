@@ -490,7 +490,7 @@
   padding: 2rem;
   border-radius: var(--radius-lg);
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-md);
   transition: border-color 0.16s ease;
 }
@@ -519,7 +519,7 @@
   vertical-align: baseline;
   padding: 3px 0.16em;
   background: var(--color-accent);
-  border: 2px solid var(--color-accent-outline);
+  border: var(--border-width-strong) solid var(--color-accent-outline);
   border-radius: var(--radius-sm);
   color: transparent;
   user-select: none;
@@ -576,7 +576,7 @@
   position: absolute;
   box-sizing: border-box;
   background: var(--mask-fill, var(--color-accent));
-  border: 2px solid var(--mask-border, var(--color-accent-outline));
+  border: var(--border-width-strong) solid var(--mask-border, var(--color-accent-outline));
   border-radius: var(--radius-sm);
   pointer-events: none;
 }
@@ -608,7 +608,7 @@
 
 .leitner-grade-actions .leitner-grade-btn,
 .leitner-grade-actions .study-ai-trigger {
-  min-width: 0;
+  min-width: 6.5rem;
 }
 
 .review-complete {

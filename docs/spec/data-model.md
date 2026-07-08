@@ -11,6 +11,14 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | user_id | TEXT PK | better-auth user.id |
 | rev | INTEGER | SSE 通知用単調増加カウンタ |
 
+### user_settings
+
+| 列 | 型 | 説明 |
+|----|-----|------|
+| user_id | TEXT PK | better-auth user.id |
+| scheduler_config | TEXT | スマート学習間隔 JSON v2（全デッキ共通。省略時デフォルト） |
+| updated_at | INTEGER | unix ms |
+
 ### decks
 
 | 列 | 型 | 説明 |
@@ -18,7 +26,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | user_id | TEXT | |
 | id | TEXT | UUID v7 |
 | name | TEXT | デッキ名 |
-| scheduler_config | TEXT | スマート学習間隔 JSON v2（省略時デフォルト。v1 `boxIntervalDays` は parse 時マイグレート） |
+| scheduler_config | TEXT | **非推奨** — 旧デッキ別設定。初回読み取り時に `user_settings` へマイグレート |
 | created_at / updated_at | INTEGER | unix ms |
 | deleted_at | INTEGER | 論理削除 |
 
@@ -157,7 +165,9 @@ crop 後は word 座標もクロップ画像基準。
 
 ## scheduler_config JSON（v2）
 
-`decks.scheduler_config` に保存。省略時は [`defaultDeckSchedulerConfig`](../../shared/src/study/scheduler.ts) と同値。
+`user_settings.scheduler_config` に保存（全デッキ共通）。省略時は [`defaultDeckSchedulerConfig`](../../shared/src/study/scheduler.ts) と同値。
+
+`decks.scheduler_config` は **非推奨**（既存データは初回読み取り時に `user_settings` へ自動マイグレート）。
 
 ```json
 {

@@ -50,7 +50,14 @@ export interface CreateDeckRequest {
 
 export interface UpdateDeckRequest {
   name?: string;
-  schedulerConfig?: DeckSchedulerConfig;
+}
+
+export interface SchedulerConfigResponse {
+  schedulerConfig: DeckSchedulerConfig;
+}
+
+export interface UpdateSchedulerConfigRequest {
+  schedulerConfig: DeckSchedulerConfig;
 }
 
 export interface CreateCardRequest {

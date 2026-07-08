@@ -65,7 +65,8 @@ export const copy = {
     sectionLabel: "スマート学習の間隔",
     title: "スマート学習の間隔",
     description:
-      "学習ステップ（分〜時間）と復習間隔（日）をデッキごとに設定します。変更は次回採点から反映されます。",
+      "学習ステップ（分〜時間）と復習間隔（日）を全デッキ共通で設定します。変更は次回採点から反映されます。",
+    loading: "間隔設定を読み込み中…",
     learningStepsTitle: "学習ステップ",
     relearningStepsTitle: "再学習ステップ",
     reviewIntervalsTitle: "復習間隔（箱 2〜5）",
@@ -228,10 +229,12 @@ export const copy = {
     permissionsTitle: "権限",
     studyEyebrow: "学習",
     studyTitle: "学習",
+    schedulerEyebrow: "スマート学習",
+    schedulerTitle: "スマート学習の間隔",
     maskEyebrow: "マスク",
     maskTitle: "マスク表示",
     studyNote:
-      "「デッキ学習」では選択中デッキのカードをフラッシュカード等で学習できます。「スマート学習」では復習予定のカードを 4 段階評価で復習します。ホームではデッキ操作、デッキ学習タブではカードの編集・スター、デッキのエクスポート/インポートも利用できます。",
+      "「デッキ学習」では選択中デッキのカードをフラッシュカード等で学習できます。「スマート学習」では復習予定のカードを 4 段階評価で復習します。反復期間は上の「スマート学習の間隔」で全デッキ共通に設定できます。ホームではデッキ操作、デッキ学習タブではカードの編集・スター、デッキのエクスポート/インポートも利用できます。",
     maskNote:
       "復習時のマスクは Black で不透明表示されます。アクセントカラーは Chartreuse（#CEFF1A）です。",
     refreshPermissions: "権限状態を再確認",
