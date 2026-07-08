@@ -193,6 +193,7 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
   const [isDirty, setIsDirty] = useState(false);
   const prevDeckIdRef = useRef(deck.id);
   const prevConfigKeyRef = useRef(deckSchedulerConfigKey(deck));
+  const pendingSavedConfigKeyRef = useRef<string | null>(null);
   const configKey = useMemo(
     () => deckSchedulerConfigKey(deck),
     [deck.id, JSON.stringify(deck.schedulerConfig ?? null)],
@@ -201,6 +202,22 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
   useEffect(() => {
     const deckChanged = prevDeckIdRef.current !== deck.id;
     if (!deckChanged && isDirty) return;
+    if (
+      !deckChanged &&
+      pendingSavedConfigKeyRef.current !== null &&
+      configKey !== pendingSavedConfigKeyRef.current
+    ) {
+      return;
+    }
+    if (
+      !deckChanged &&
+      pendingSavedConfigKeyRef.current !== null &&
+      configKey === pendingSavedConfigKeyRef.current
+    ) {
+      pendingSavedConfigKeyRef.current = null;
+      prevConfigKeyRef.current = configKey;
+      return;
+    }
     if (!deckChanged && prevConfigKeyRef.current === configKey) return;
 
     setConfig(JSON.parse(configKey) as DeckSchedulerConfig);
@@ -212,6 +229,7 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
   }, [configKey, deck.id, isDirty]);
 
   function markDirty() {
+    pendingSavedConfigKeyRef.current = null;
     setIsDirty(true);
     setSaved(false);
     setError(null);
@@ -228,9 +246,11 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
     setSaved(false);
     try {
       await api.updateDeck(deck.id, { schedulerConfig: nextConfig });
+      const savedKey = JSON.stringify(nextConfig);
       setSaved(true);
       setIsDirty(false);
-      prevConfigKeyRef.current = JSON.stringify(nextConfig);
+      prevConfigKeyRef.current = savedKey;
+      pendingSavedConfigKeyRef.current = savedKey;
     } catch (saveError) {
       console.error("scheduler save failed", saveError);
       setError(copy.deckScheduler.saveFailed);
