@@ -35,15 +35,10 @@ export function WriteMode({ deckId, shuffle }: Props) {
         return;
       }
       completeSentRef.current = false;
-      recorder.resetSession();
+      await recorder.completeSession();
       const cards = await api.listCards(deckId ?? undefined);
       const extracted = extractMaskAnswers(cards);
       const ordered = shuffle ? shuffleArray(extracted) : extracted;
-      setRemaining(ordered);
-      setTotalCount(ordered.length);
-      setIndex(0);
-      setInput("");
-      setFeedback("idle");
       if (ordered.length > 0) {
         await recorder.beginDeckSession({
           deckId,
@@ -51,6 +46,11 @@ export function WriteMode({ deckId, shuffle }: Props) {
           cardsTotal: ordered.length,
         });
       }
+      setRemaining(ordered);
+      setTotalCount(ordered.length);
+      setIndex(0);
+      setInput("");
+      setFeedback("idle");
     }
     void load();
   }, [deckId, shuffle, api, recorder]);
@@ -118,12 +118,24 @@ export function WriteMode({ deckId, shuffle }: Props) {
         copy={copy.deckStudy.sessionCompleteCopy}
         onReload={() => {
           void (async () => {
+            if (!deckId) return;
+            completeSentRef.current = false;
+            await recorder.completeSession();
             const cards = await api.listCards(deckId ?? undefined);
             const extracted = extractMaskAnswers(cards);
             const ordered = shuffle ? shuffleArray(extracted) : extracted;
+            if (ordered.length > 0) {
+              await recorder.beginDeckSession({
+                deckId,
+                mode: "write",
+                cardsTotal: ordered.length,
+              });
+            }
             setRemaining(ordered);
             setTotalCount(ordered.length);
             setIndex(0);
+            setInput("");
+            setFeedback("idle");
           })();
         }}
         reloadLabel={copy.deckStudy.sessionRestart}

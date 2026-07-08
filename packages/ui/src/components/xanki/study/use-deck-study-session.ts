@@ -31,8 +31,8 @@ export function useDeckStudySession(
     }
 
     setReady(false);
+    await recorder.completeSession();
     completeSentRef.current = false;
-    recorder.resetSession();
     const cards = await api.getStudyCards("all", deckId);
     const map = new Map(cards.map((card) => [card.card.id, card]));
     const ids = shuffle ? shuffleIds(cards.map((c) => c.card.id)) : cards.map((c) => c.card.id);

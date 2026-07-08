@@ -38,7 +38,7 @@ export function TestMode({ deckId, shuffle }: Props) {
         return;
       }
       completeSentRef.current = false;
-      recorder.resetSession();
+      await recorder.completeSession();
       const cards = await api.listCards(deckId ?? undefined);
       const answers = extractMaskAnswers(cards);
       const built = answers.map((answer) => {
@@ -47,10 +47,6 @@ export function TestMode({ deckId, shuffle }: Props) {
         return { answer, choices };
       });
       const ordered = shuffle ? shuffleArray(built) : built;
-      setRemaining(ordered);
-      setTotalCount(ordered.length);
-      setIndex(0);
-      setSelected(null);
       if (ordered.length > 0) {
         await recorder.beginDeckSession({
           deckId,
@@ -58,6 +54,10 @@ export function TestMode({ deckId, shuffle }: Props) {
           cardsTotal: ordered.length,
         });
       }
+      setRemaining(ordered);
+      setTotalCount(ordered.length);
+      setIndex(0);
+      setSelected(null);
     }
     void load();
   }, [deckId, shuffle, api, recorder]);
@@ -122,6 +122,9 @@ export function TestMode({ deckId, shuffle }: Props) {
         copy={copy.deckStudy.sessionCompleteCopy}
         onReload={() => {
           void (async () => {
+            if (!deckId) return;
+            completeSentRef.current = false;
+            await recorder.completeSession();
             const cards = await api.listCards(deckId ?? undefined);
             const answers = extractMaskAnswers(cards);
             const built = answers.map((answer) => {
@@ -130,9 +133,17 @@ export function TestMode({ deckId, shuffle }: Props) {
               return { answer, choices };
             });
             const ordered = shuffle ? shuffleArray(built) : built;
+            if (ordered.length > 0) {
+              await recorder.beginDeckSession({
+                deckId,
+                mode: "test",
+                cardsTotal: ordered.length,
+              });
+            }
             setRemaining(ordered);
             setTotalCount(ordered.length);
             setIndex(0);
+            setSelected(null);
           })();
         }}
         reloadLabel={copy.deckStudy.sessionRestart}

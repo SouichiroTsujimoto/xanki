@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS study_daily_stats (
 CREATE INDEX IF NOT EXISTS idx_review_logs_user_reviewed
   ON review_logs (user_id, reviewed_at);
 
+-- Backfill review_logs into study_events. local_date here is UTC (approximate);
+-- GET /api/study/metrics derives activity from occurred_at + client tz_offset_minutes.
 INSERT INTO study_events (
   user_id,
   id,

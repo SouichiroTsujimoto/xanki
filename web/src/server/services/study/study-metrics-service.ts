@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import {
   computeMasteryPercent,
   computeBoxDistribution,
@@ -37,38 +37,29 @@ export async function bumpDailyStats(
   eventType: StudyEventType,
   occurredAt: number,
 ): Promise<void> {
-  const existing = await db
-    .select()
-    .from(studyDailyStats)
-    .where(and(eq(studyDailyStats.userId, userId), eq(studyDailyStats.localDate, localDate)))
-    .get();
-
   const leitnerDelta = eventType === "leitner_review" ? 1 : 0;
   const deckDelta = isDeckStudyEvent(eventType) ? 1 : 0;
+  const totalDelta = leitnerDelta + deckDelta;
 
-  if (existing) {
-    await db
-      .update(studyDailyStats)
-      .set({
-        leitnerCount: existing.leitnerCount + leitnerDelta,
-        deckStudyCount: existing.deckStudyCount + deckDelta,
-        totalCount: existing.totalCount + (leitnerDelta + deckDelta),
+  await db
+    .insert(studyDailyStats)
+    .values({
+      userId,
+      localDate,
+      leitnerCount: leitnerDelta,
+      deckStudyCount: deckDelta,
+      totalCount: totalDelta,
+      updatedAt: occurredAt,
+    })
+    .onConflictDoUpdate({
+      target: [studyDailyStats.userId, studyDailyStats.localDate],
+      set: {
+        leitnerCount: sql`${studyDailyStats.leitnerCount} + ${leitnerDelta}`,
+        deckStudyCount: sql`${studyDailyStats.deckStudyCount} + ${deckDelta}`,
+        totalCount: sql`${studyDailyStats.totalCount} + ${totalDelta}`,
         updatedAt: occurredAt,
-      })
-      .where(
-        and(eq(studyDailyStats.userId, userId), eq(studyDailyStats.localDate, localDate)),
-      );
-    return;
-  }
-
-  await db.insert(studyDailyStats).values({
-    userId,
-    localDate,
-    leitnerCount: leitnerDelta,
-    deckStudyCount: deckDelta,
-    totalCount: leitnerDelta + deckDelta,
-    updatedAt: occurredAt,
-  });
+      },
+    });
 }
 
 export async function recordStudyEvent(
@@ -183,32 +174,63 @@ export async function completeStudySession(
   await finishMutation(db, env, userId);
 }
 
+function aggregateActivityFromEvents(
+  events: Array<{ eventType: string; occurredAt: number }>,
+  tzOffsetMinutes: number,
+) {
+  const today = localDateKey(nowMs(), tzOffsetMinutes);
+  let todayStudyCount = 0;
+  let todayLeitnerCount = 0;
+  let todayDeckStudyCount = 0;
+  let totalStudyCount = 0;
+  const countsByLocalDate = new Map<string, number>();
+
+  for (const event of events) {
+    if (event.eventType === "session_complete") continue;
+    totalStudyCount += 1;
+    const localDate = localDateKey(event.occurredAt, tzOffsetMinutes);
+    countsByLocalDate.set(localDate, (countsByLocalDate.get(localDate) ?? 0) + 1);
+
+    if (localDate !== today) continue;
+    todayStudyCount += 1;
+    if (event.eventType === "leitner_review") {
+      todayLeitnerCount += 1;
+    } else if (isDeckStudyEvent(event.eventType as StudyEventType)) {
+      todayDeckStudyCount += 1;
+    }
+  }
+
+  const activeLocalDates = [...countsByLocalDate.entries()]
+    .filter(([, count]) => count > 0)
+    .map(([localDate]) => localDate);
+
+  return {
+    todayStudyCount,
+    todayLeitnerCount,
+    todayDeckStudyCount,
+    streakDays: computeStreakDays(activeLocalDates, tzOffsetMinutes),
+    totalStudyCount,
+  };
+}
+
 export async function getStudyMetrics(
   db: Db,
   userId: string,
   tzOffsetMinutes: number,
   deckId?: string,
 ) {
-  const today = localDateKey(nowMs(), tzOffsetMinutes);
-  const todayRow = await db
-    .select()
-    .from(studyDailyStats)
-    .where(and(eq(studyDailyStats.userId, userId), eq(studyDailyStats.localDate, today)))
-    .get();
-
-  const activeDays = await db
-    .select({ localDate: studyDailyStats.localDate })
-    .from(studyDailyStats)
-    .where(and(eq(studyDailyStats.userId, userId), gt(studyDailyStats.totalCount, 0)))
+  const eventRows = await db
+    .select({
+      eventType: studyEvents.eventType,
+      occurredAt: studyEvents.occurredAt,
+    })
+    .from(studyEvents)
+    .where(
+      and(eq(studyEvents.userId, userId), ne(studyEvents.eventType, "session_complete")),
+    )
     .all();
 
-  const totals = await db
-    .select({
-      totalStudyCount: sql<number>`coalesce(sum(${studyDailyStats.totalCount}), 0)`,
-    })
-    .from(studyDailyStats)
-    .where(eq(studyDailyStats.userId, userId))
-    .get();
+  const activity = aggregateActivityFromEvents(eventRows, tzOffsetMinutes);
 
   const cardRows = await db
     .select({
@@ -246,16 +268,7 @@ export async function getStudyMetrics(
       : undefined;
 
   return {
-    activity: {
-      todayStudyCount: todayRow?.totalCount ?? 0,
-      todayLeitnerCount: todayRow?.leitnerCount ?? 0,
-      todayDeckStudyCount: todayRow?.deckStudyCount ?? 0,
-      streakDays: computeStreakDays(
-        activeDays.map((row) => row.localDate),
-        tzOffsetMinutes,
-      ),
-      totalStudyCount: Number(totals?.totalStudyCount ?? 0),
-    },
+    activity,
     global: {
       masteryPercent: computeMasteryPercent(globalCards),
       boxDistribution: computeBoxDistribution(globalCards),

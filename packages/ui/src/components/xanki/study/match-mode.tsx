@@ -60,13 +60,10 @@ export function MatchMode({ deckId, shuffle }: Props) {
       return;
     }
     completeSentRef.current = false;
-    recorder.resetSession();
+    await recorder.completeSession();
     const cards = await api.listCards(deckId ?? undefined);
     const extracted = extractMaskAnswers(cards);
     const ordered = shuffle ? shuffleArray(extracted) : extracted;
-    setRemaining(ordered);
-    setTotalCount(ordered.length);
-    setRoundComplete(false);
     if (ordered.length > 0) {
       await recorder.beginDeckSession({
         deckId,
@@ -74,6 +71,9 @@ export function MatchMode({ deckId, shuffle }: Props) {
         cardsTotal: ordered.length,
       });
     }
+    setRemaining(ordered);
+    setTotalCount(ordered.length);
+    setRoundComplete(false);
   }, [api, deckId, shuffle, recorder]);
 
   useEffect(() => {
@@ -155,18 +155,26 @@ export function MatchMode({ deckId, shuffle }: Props) {
 
   const markKnown = useCallback(() => {
     if (batch.length === 0 || !deckId) return;
-    for (const answer of batch) {
-      void recorder.recordDeckKnown(answer.cardId, deckId);
-    }
+    void recorder.recordDeckEvents(
+      batch.map((answer) => ({
+        eventType: "deck_card_known" as const,
+        cardId: answer.cardId,
+        deckId,
+      })),
+    );
     setRemaining((prev) => prev.slice(batch.length));
     setRoundComplete(false);
   }, [batch, deckId, recorder]);
 
   const markStill = useCallback(() => {
     if (batch.length === 0 || !deckId) return;
-    for (const answer of batch) {
-      void recorder.recordDeckStill(answer.cardId, deckId);
-    }
+    void recorder.recordDeckEvents(
+      batch.map((answer) => ({
+        eventType: "deck_card_still" as const,
+        cardId: answer.cardId,
+        deckId,
+      })),
+    );
     setRemaining((prev) => {
       const next = [...prev];
       const chunk = next.splice(0, batch.length);

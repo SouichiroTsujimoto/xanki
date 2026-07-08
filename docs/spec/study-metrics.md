@@ -18,10 +18,10 @@
 |---------|------|
 | `study_sessions` | セッション開始・終了・手段・件数 |
 | `study_events` | カウント可能な学習イベント（append-only） |
-| `study_daily_stats` | ユーザー × ローカル日付の集計（streak / 今日の学習） |
+| `study_daily_stats` | 書き込み時の日次集計キャッシュ（atomic increment） |
 | `review_state` | Leitner スケジュール（習熟度 derived の入力） |
 
-`review_logs` は Leitner 監査用（既存）。**メトリクス集計は `study_events` / `study_daily_stats` を正本とする。**
+`review_logs` は Leitner 監査用（既存）。**activity（今日の学習・連続日数）は `GET /api/study/metrics` が `study_events.occurred_at` + クライアント `tz_offset_minutes` から算出する。** `study_daily_stats` は書き込みパスのキャッシュ。
 
 ### event_type
 
@@ -76,8 +76,8 @@ Response: `StudyMetrics`（`@xanki/shared`）
 
 | 指標 | ソース |
 |------|--------|
-| 今日の学習 | `study_daily_stats.total_count`（Leitner + デッキ学習） |
-| 連続日数 | `study_daily_stats` の連続 `local_date` |
+| 今日の学習 | `study_events` をクライアント TZ で日付集計 |
+| 連続日数 | 同上（`occurred_at` ベース） |
 | 全体習熟度 | 全カード `review_state.box` |
 | デッキ習熟度 / Box 分布 | 選択デッキのカード |
 

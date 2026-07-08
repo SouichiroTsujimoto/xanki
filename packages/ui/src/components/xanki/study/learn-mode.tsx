@@ -39,18 +39,17 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
 
   useEffect(() => {
     if (queue.length === 0) {
-      sessionStartedRef.current = false;
+      if (sessionStartedRef.current) {
+        void recorder.completeSession().finally(() => {
+          sessionStartedRef.current = false;
+        });
+      }
       return;
     }
     if (sessionStartedRef.current) return;
     sessionStartedRef.current = true;
     void recorder.beginLeitnerSession(deckId, queue.length);
   }, [deckId, queue.length, recorder]);
-
-  useEffect(() => {
-    if (current || queue.length === 0) return;
-    void recorder.completeSession();
-  }, [current, queue.length, recorder]);
 
   useEffect(() => {
     setRevealed(false);
