@@ -15,8 +15,9 @@ const DESKTOP_CALLBACK_SUCCESS_HTML = (redirectTarget: string) => `<!DOCTYPE htm
 <head><meta charset="utf-8"><title>xanki</title></head>
 <body>
   <p>ログインしました。xanki アプリに戻ります…</p>
+  <p>自動で戻らない場合は、下のリンクをタップしてください（iOS / macOS）。</p>
   <script>window.location.replace(${JSON.stringify(redirectTarget)});</script>
-  <p><a href=${JSON.stringify(redirectTarget)}>アプリが開かない場合はこちら</a></p>
+  <p><a href=${JSON.stringify(redirectTarget)}>アプリに戻る</a></p>
 </body>
 </html>`;
 

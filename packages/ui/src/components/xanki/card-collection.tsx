@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useAppApi } from "../../context/app-api-context";
+import { usePlatformCapabilities } from "../../context/platform-capabilities-context";
 import { cardKindLabel, copy } from "../../copy";
 import {
   cardTileVariants,
@@ -30,6 +31,7 @@ export function CardCollection({
 }: Props) {
   const reduced = useReducedMotion();
   const api = useAppApi();
+  const { cardEditor } = usePlatformCapabilities();
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
@@ -174,16 +176,18 @@ export function CardCollection({
                   {card.note && <p className="card-note">{card.note}</p>}
                 </div>
                 <div className="card-actions">
-                  <Button
-                    type="button"
-                    variant="text"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void api.openCardEditor(card.id);
-                    }}
-                  >
-                    編集
-                  </Button>
+                  {cardEditor && (
+                    <Button
+                      type="button"
+                      variant="text"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void api.openCardEditor(card.id);
+                      }}
+                    >
+                      編集
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     variant="text" className="danger"

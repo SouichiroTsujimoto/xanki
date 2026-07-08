@@ -19,10 +19,13 @@
 | C3 | Web UI | 学習(全モード)+ ライブラリ + 手動カード作成(テキスト入力/画像アップロード→マスク) |
 | C4 | 課金 | プラン管理・entitlement。決済プロバイダ webhook → D1 |
 | C5 | AI | Q&A 自動生成・AI 質問。**必ずサーバー経由**(API キー非配布) |
+| C6 | iOS クライアント | Capacitor + `@xanki/ui`。学習専用 MVP（ログイン・ライブラリ・全学習モード・テキスト/QA 作成） |
 
 ### 非目標(本フェーズ外)
 
-モバイルアプリ、カード共有・公開デッキ、リアルタイム共同編集、E2E 暗号化、Web / Desktop のオフライン CRUD、未ログイン利用、ショートカット取込の Web 版、通知、Windows。
+**Android**、カード共有・公開デッキ、リアルタイム共同編集、E2E 暗号化、Web / Desktop / iOS のオフライン CRUD、未ログイン利用、ショートカット取込の Web 版、通知、Windows。
+
+iOS MVP 外: 取込（Share Extension）、OCR、画像カード作成、カード編集、デッキ import/export、App Store IAP（Stripe は外部ブラウザ）。
 
 ### 設計原則
 
@@ -44,6 +47,7 @@
 ```
 /                     # リポジトリルート (pnpm workspace)
   xanki/              # Tauri デスクトップ (capture/OCR/画像 I/O + Cloud REST)
+  mobile/             # Capacitor iOS (学習専用 MVP + Cloud REST)
   web/                # Cloudflare Workers 1 プロジェクト
     src/server/       #   Hono API (認証・REST・SSE・ブロブ・課金・AI)
     src/client/       #   React SPA (Vite)。Static Assets として同 Worker から配信
@@ -85,8 +89,9 @@
 - **セッション**: 有効期限 **365 日**（`updateAge: 24h` で延長）。日常利用では再ログインを避ける
 - Web: Cookie セッション（better-auth 標準）。`authClient.signIn.social({ provider: "google" })`
 - デスクトップ: アプリが **localhost loopback** を起動 → 外部ブラウザで `/auth/desktop-sign-in?return=...` → Google OAuth → `/auth/desktop-callback` → **HTTP 302** で **`http://localhost:<port>/callback?token=...`** → **macOS Keychain** → `Authorization: Bearer`（本番 `.app` では `xanki://` 深リンクもフォールバック可）
+- **iOS (C6)**: Capacitor Browser で `/auth/desktop-sign-in`（return なし）→ OAuth → `/auth/desktop-callback` → **`xanki://auth/callback?token=...`** → Preferences 保存 → `Authorization: Bearer`。`credentials: "omit"`（CORS 回避）
 - 401 でセッション失効時はログイン画面へ戻し、`sessionStorage` 経由で **セッション切れ** メッセージを 1 回表示
-- **ログイン必須** — Web / Desktop とも未認証ではアプリ本体に入れない
+- **ログイン必須** — Web / Desktop / iOS とも未認証ではアプリ本体に入れない
 - **ログイン UI**: **Google で続ける** ボタン 1 つのみ（[`LoginView`](../../packages/ui/src/components/xanki/login-view.tsx)）
 - 環境変数: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`（本番は wrangler secret）
 - Google Cloud Console redirect URI: `{APP_URL}/api/auth/callback/google`

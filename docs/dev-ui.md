@@ -16,6 +16,7 @@
 | マスクエディタ | [dev-mask-editor.md](./dev-mask-editor.md) | [text-masks.md](./spec/text-masks.md), [image-masks.md](./spec/image-masks.md) | `mask-editor.css`, `text-mask-editor.tsx`, `image-mask-editor.tsx` |
 | ダイアログ・オーバーレイ | [dev-dialogs-overlays.md](./dev-dialogs-overlays.md) | [ui.md §ダイアログ](./spec/ui.md) | `dialogs.css`, `NativeDialog`, `study-ai-panel.tsx` |
 | 設定・認証 | [dev-settings-auth.md](./dev-settings-auth.md) | [ui.md](./spec/ui.md), [cloud.md](./spec/cloud.md) | `settings.css`, `onboarding.css`, `settings-view.tsx`, `login-view.tsx` |
+| **iOS（Capacitor）** | [dev-mobile.md](./dev-mobile.md) | [ui.md](./spec/ui.md), [cloud.md](./spec/cloud.md) | `mobile/src/index.css`, `platform-capabilities-context.tsx` |
 | クラウド API（非 UI レイアウト） | [dev-cloud.md](./dev-cloud.md) | [cloud.md](./spec/cloud.md) | `web/` |
 
 ## 各 dev ドocument の構成（テンプレート）

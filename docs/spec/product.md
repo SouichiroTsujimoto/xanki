@@ -1,7 +1,7 @@
 # プロダクト
 
 - **名称**: xanki（仮称、正式名称未定）
-- **対象**: macOS ネイティブ（Apple Silicon / macOS 14+ 想定）
+- **対象**: macOS ネイティブ（Apple Silicon / macOS 14+ 想定）、**iOS（iPhone / iPad、学習専用 MVP）**
 - **版**: v0.1（MVP 実装済み・安定化フェーズ）
 
 ## コンセプト
@@ -47,11 +47,22 @@
 | C4 | 課金（Stripe） | 実装中 |
 | C5 | AI（サーバー経由） | 実装済 |
 
-詳細: [cloud.md](./cloud.md)
+### iOS（進行中）
+
+| ID | 機能 | 状態 |
+|----|------|------|
+| M1 | Capacitor クライアント（学習専用） | 実装中 |
+| M2 | Google OAuth（Bearer + `xanki://` deep link） | 実装済 |
+| M3 | ライブラリ・全学習モード・テキスト/QA 作成 | 実装済 |
+| M4 | 取込・OCR・画像カード作成 | 未着手 |
+
+詳細: [cloud.md](./cloud.md) §C6、[dev-mobile.md](../dev-mobile.md)
 
 ## 明示的な非目標（MVP 外）
 
-AI 機能(ローカル)、未ログイン利用、オフライン CRUD、共有、Windows/Linux、モバイル、プッシュ通知、自動アップデート。
+AI 機能(ローカル)、未ログイン利用、オフライン CRUD、共有、Windows/Linux、**Android**、プッシュ通知、自動アップデート。
+
+iOS MVP 外: 取込（Share Extension）、OCR、画像カード作成、カード編集、デッキ import/export。
 
 ## 受け入れ条件
 

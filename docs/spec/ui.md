@@ -14,7 +14,7 @@
 
 ## Browser Support
 
-- **主ターゲット**: Tauri デスクトップ（macOS WebKit / Safari 17.4+）
+- **主ターゲット**: Tauri デスクトップ（macOS WebKit / Safari 17.4+）、**iOS（Capacitor WKWebView / Safari 17.4+ 相当）**
 - Baseline Widely available は fallback なし
 - Baseline Newly Available は feature detect + 20 行以内の軽量 fallback（polyfill 禁止）
 
@@ -34,7 +34,18 @@
 - **CloudAccountSection / BillingSection** — 設定 Cloud ブロックの共有 presentational コンポーネント
 - **BootstrapLoading / EditorLoading** — 起動・エディタ読み込み UI
 
-Web / デスクトップは **同一 `@xanki/ui` コンポーネント** を使用する。プラットフォーム差分（Tauri 取込・Web 認証等）は `AppApi` 注入と slot props で吸収する。
+Web / デスクトップ / iOS は **同一 `@xanki/ui` コンポーネント** を使用する。プラットフォーム差分（Tauri 取込・Web 認証・iOS 未対応機能の非表示等）は `AppApi` 注入、`PlatformCapabilities`、slot props で吸収する。
+
+### PlatformCapabilities
+
+プラットフォームごとに UI の表示可否を制御する（未実装 API を呼ばない）。
+
+| フラグ | 意味 | Web / iOS MVP | Desktop |
+|--------|------|---------------|---------|
+| `deckImportExport` | デッキ JSON import/export | false | true |
+| `cardEditor` | ライブラリからカード編集 | false | true |
+
+正本: [`platform-capabilities-context.tsx`](../../packages/ui/src/context/platform-capabilities-context.tsx)
 
 **必須**: 共通化できる UI（ログイン、学習、設定、ダイアログ等）は `@xanki/ui` に置く。`web/` と `xanki/` に同等コンポーネントを重複実装しない。認証フローなど AppApi に載らない差分は、共有 presentational コンポーネント + 各アプリの thin wrapper で分離する。
 
