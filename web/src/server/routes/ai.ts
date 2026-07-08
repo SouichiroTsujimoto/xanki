@@ -49,6 +49,23 @@ async function consumeCredit(
   return true;
 }
 
+async function refundCredit(
+  env: Env,
+  db: ReturnType<typeof import("../db/index").createDb>,
+  userId: string,
+  cost = 1,
+): Promise<void> {
+  if (isDevAiBypass(env)) return;
+
+  await db
+    .update(entitlements)
+    .set({
+      aiCreditsRemaining: sql`${entitlements.aiCreditsRemaining} + ${cost}`,
+      updatedAt: nowMs(),
+    })
+    .where(eq(entitlements.userId, userId));
+}
+
 export const aiRoutes = new Hono<{ Bindings: Env; Variables: AppVars }>();
 aiRoutes.use("*", authMiddleware);
 
@@ -153,6 +170,7 @@ aiRoutes.post("/cards-generate", async (c) => {
     });
     return c.json(result);
   } catch (error) {
+    await refundCredit(c.env, db, user.id, cost);
     if (error instanceof AiUnavailableError) {
       return c.json({ error: "ai_unavailable" }, 503);
     }

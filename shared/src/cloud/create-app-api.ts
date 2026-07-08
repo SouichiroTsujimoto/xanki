@@ -183,6 +183,27 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
       notify();
       return card;
     },
+    saveQaCards: async (request) => {
+      platform.setLastUsedDeckId?.(request.deckId);
+      const cards: Card[] = [];
+      for (const card of request.cards) {
+        cards.push(
+          mapCard(
+            await cloud.createCard({
+              deckId: request.deckId,
+              kind: "qa",
+              content: card.content,
+              answer: card.answer,
+              masks: JSON.stringify(card.masks),
+              note: card.note,
+              sourceHint: card.sourceHint,
+            }),
+          ),
+        );
+      }
+      notify();
+      return cards;
+    },
     updateTextCard: async (request) => {
       const card = mapCard(
         await cloud.updateCard(request.cardId, {

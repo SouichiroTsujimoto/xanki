@@ -42,6 +42,21 @@ function formatAiError(code: string): string {
   }
 }
 
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp)$/i;
+
+function isImageFile(file: File): boolean {
+  if (file.type.startsWith("image/")) return true;
+  return IMAGE_EXTENSIONS.test(file.name);
+}
+
+function guessImageMime(file: File): string {
+  if (file.type.startsWith("image/")) return file.type;
+  const lower = file.name.toLowerCase();
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
 function createEditableItems(items: AiQaItem[]): EditableItem[] {
   return items.map((item, index) => ({
     ...item,
@@ -187,8 +202,11 @@ export function AiCardGenerateDialog({
 
   const uploadImageFiles = useCallback(
     async (files: FileList | File[]) => {
-      const list = Array.from(files).filter((file) => file.type.startsWith("image/"));
-      if (list.length === 0) return;
+      const list = Array.from(files).filter(isImageFile);
+      if (list.length === 0) {
+        setError(copy.ai.cardsGenerateImageRejected);
+        return;
+      }
 
       const available = MAX_IMAGES - images.length;
       if (available <= 0) return;
@@ -196,24 +214,32 @@ export function AiCardGenerateDialog({
       setUploadingImages(true);
       setError(null);
 
+      const nextImages = [...images];
+      let uploadFailed = false;
+
       try {
-        const nextImages = [...images];
         for (const file of list.slice(0, available)) {
-          const buffer = await file.arrayBuffer();
-          const hash = await api.uploadImageBlob(buffer, file.type || "image/jpeg");
-          const previewUrl = URL.createObjectURL(file);
-          previewUrlsRef.current.push(previewUrl);
-          nextImages.push({
-            id: crypto.randomUUID(),
-            hash,
-            name: file.name,
-            previewUrl,
-          });
+          try {
+            const buffer = await file.arrayBuffer();
+            const hash = await api.uploadImageBlob(buffer, guessImageMime(file));
+            const previewUrl = URL.createObjectURL(file);
+            previewUrlsRef.current.push(previewUrl);
+            nextImages.push({
+              id: crypto.randomUUID(),
+              hash,
+              name: file.name,
+              previewUrl,
+            });
+          } catch (err) {
+            console.error("image upload failed", err);
+            uploadFailed = true;
+            break;
+          }
         }
         setImages(nextImages);
-      } catch (err) {
-        console.error("image upload failed", err);
-        setError(copy.ai.cardsGenerateImageError);
+        if (uploadFailed) {
+          setError(copy.ai.cardsGenerateImageError);
+        }
       } finally {
         setUploadingImages(false);
       }
@@ -278,49 +304,28 @@ export function AiCardGenerateDialog({
     setError(null);
     setSaveMessage(null);
 
-    const sourceHint = generationSourceHint ?? buildSourceHint(tab, text, images.length);
-    const savedIds: string[] = [];
     let failed = false;
+    const sourceHint = generationSourceHint ?? buildSourceHint(tab, text, images.length);
 
     try {
-      for (const item of savable) {
-        try {
-          await api.saveQaCard({
-            deckId,
-            content: item.question.trim(),
-            answer: item.answer.trim(),
-            masks: [],
-            sourceHint,
-          });
-          savedIds.push(item.id);
-        } catch (err) {
-          failed = true;
-          console.error("bulk save failed", err);
-          break;
-        }
-      }
+      const savedCards = await api.saveQaCards({
+        deckId,
+        cards: savable.map((item) => ({
+          content: item.question.trim(),
+          answer: item.answer.trim(),
+          masks: [],
+          sourceHint,
+        })),
+      });
+      const savedIds = savable.map((item) => item.id);
 
-      if (savedIds.length > 0) {
-        onSaved?.(savedIds.length);
-        setItems((prev) => prev.filter((item) => !savedIds.includes(item.id)));
-        setSelectedIds((prev) => {
-          const next = new Set(prev);
-          for (const id of savedIds) {
-            next.delete(id);
-          }
-          return next;
-        });
-      }
-
-      const remaining = savable.length - savedIds.length;
-      if (failed && savedIds.length > 0) {
-        setSaveMessage(copy.ai.cardsGeneratePartialSave(savedIds.length, remaining));
-        setError(copy.ai.errorGeneric);
-      } else if (failed) {
-        setError(copy.ai.errorGeneric);
-      } else {
-        setSaveMessage(copy.ai.cardsGenerateSaved(savedIds.length));
-      }
+      onSaved?.(savedCards.length);
+      setItems((prev) => prev.filter((item) => !savedIds.includes(item.id)));
+      setSelectedIds(new Set());
+      setSaveMessage(copy.ai.cardsGenerateSaved(savedCards.length));
+    } catch (err) {
+      console.error("bulk save failed", err);
+      setError(copy.ai.errorGeneric);
     } finally {
       setSaving(false);
     }
@@ -337,12 +342,12 @@ export function AiCardGenerateDialog({
     text,
   ]);
 
-  const canSaveSelected = items.some(
-    (item) =>
-      selectedIds.has(item.id) &&
-      item.question.trim().length > 0 &&
-      item.answer.trim().length > 0,
-  );
+  const selectedItems = items.filter((item) => selectedIds.has(item.id));
+  const canSaveSelected =
+    selectedItems.length > 0 &&
+    selectedItems.every(
+      (item) => item.question.trim().length > 0 && item.answer.trim().length > 0,
+    );
 
   const handleClose = useCallback(() => {
     if (busy) return;

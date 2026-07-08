@@ -124,6 +124,16 @@ export interface AppApi {
     note?: string;
     sourceHint?: string;
   }): Promise<Card>;
+  saveQaCards(request: {
+    deckId: string;
+    cards: Array<{
+      content: string;
+      answer: string;
+      masks: TextMask[];
+      note?: string;
+      sourceHint?: string;
+    }>;
+  }): Promise<Card[]>;
   updateTextCard(request: {
     cardId: string;
     deckId: string;
