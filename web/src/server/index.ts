@@ -8,6 +8,7 @@ import { blobRoutes } from "./routes/blobs";
 import { billingRoutes } from "./routes/billing";
 import { aiRoutes } from "./routes/ai";
 import { cardRoutes, deckRoutes, reviewRoutes } from "./routes/web-data";
+import { studyRoutes } from "./routes/study";
 import { eventRoutes } from "./routes/events";
 import { gcStaleBlobs } from "./services/blobs";
 import { UserSyncHub } from "./durable-objects/user-sync-hub";
@@ -32,6 +33,7 @@ app.route("/api/blobs", blobRoutes);
 app.route("/api/decks", deckRoutes);
 app.route("/api/cards", cardRoutes);
 app.route("/api/review", reviewRoutes);
+app.route("/api/study", studyRoutes);
 app.route("/api/billing", billingRoutes);
 app.route("/api/ai", aiRoutes);
 

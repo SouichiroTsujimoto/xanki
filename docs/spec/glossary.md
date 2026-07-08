@@ -131,6 +131,9 @@
 | 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **再度 / 難しい / 良好 / 簡単**（1–4 キー） | |
 | スマート学習完了 | `LearnMode` empty | **今日のスマート学習は完了です** | |
 | 復習箱 | `LeitnerScheduler`, `review_state.box` | **Box**（開発者向け。UI 非表示） | spec・開発用 |
+| 習熟度 | `masteryPercent` | **習熟度**（Box 加重平均 %） | [study-metrics.md](./study-metrics.md) |
+| 連続日数 | `streakDays` | **N 日**（ホーム） | [study-metrics.md](./study-metrics.md) |
+| 今日の学習 | `todayStudyCount` | **N 回**（スマート学習 + デッキ学習） | [study-metrics.md](./study-metrics.md) |
 
 ### アルゴリズム用語（開発者向け）
 

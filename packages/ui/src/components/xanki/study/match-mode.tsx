@@ -1,6 +1,7 @@
 import { copy } from "../../../copy";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
+import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
 import { extractMaskAnswers, shuffleArray } from "../../../lib/maskAnswers";
 import type { MaskAnswer } from "../../../types";
 import { DeckStudySessionProgress, StudyEmpty } from "./shared";
@@ -42,6 +43,8 @@ function buildTiles(answers: MaskAnswer[]): MatchTile[] {
 
 export function MatchMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
+  const recorder = useStudySessionRecorder();
+  const completeSentRef = useRef(false);
   const [remaining, setRemaining] = useState<MaskAnswer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [tiles, setTiles] = useState<MatchTile[]>([]);
@@ -51,13 +54,27 @@ export function MatchMode({ deckId, shuffle }: Props) {
   const [roundComplete, setRoundComplete] = useState(false);
 
   const loadSession = useCallback(async () => {
+    if (!deckId) {
+      setRemaining([]);
+      setTotalCount(0);
+      return;
+    }
+    completeSentRef.current = false;
+    await recorder.completeSession();
     const cards = await api.listCards(deckId ?? undefined);
     const extracted = extractMaskAnswers(cards);
     const ordered = shuffle ? shuffleArray(extracted) : extracted;
+    if (ordered.length > 0) {
+      await recorder.beginDeckSession({
+        deckId,
+        mode: "match",
+        cardsTotal: ordered.length,
+      });
+    }
     setRemaining(ordered);
     setTotalCount(ordered.length);
     setRoundComplete(false);
-  }, [api, deckId, shuffle]);
+  }, [api, deckId, shuffle, recorder]);
 
   useEffect(() => {
     void loadSession();
@@ -125,14 +142,38 @@ export function MatchMode({ deckId, shuffle }: Props) {
     }
   }
 
-  const markKnown = useCallback(() => {
-    if (batch.length === 0) return;
-    setRemaining((prev) => prev.slice(batch.length));
-    setRoundComplete(false);
-  }, [batch.length]);
+  const remainingCount = remaining.length;
+  const progress =
+    totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
+  const isComplete = totalCount > 0 && remainingCount === 0;
 
-  const markStill = useCallback(() => {
-    if (batch.length === 0) return;
+  const markKnown = useCallback(async () => {
+    if (batch.length === 0 || !deckId) return;
+    await recorder.recordDeckEvents(
+      batch.map((answer) => ({
+        eventType: "deck_card_known" as const,
+        cardId: answer.cardId,
+        deckId,
+      })),
+    );
+    const nextRemaining = remaining.slice(batch.length);
+    setRemaining(nextRemaining);
+    setRoundComplete(false);
+    if (nextRemaining.length === 0 && !completeSentRef.current) {
+      completeSentRef.current = true;
+      await recorder.completeSession();
+    }
+  }, [batch, deckId, recorder, remaining]);
+
+  const markStill = useCallback(async () => {
+    if (batch.length === 0 || !deckId) return;
+    await recorder.recordDeckEvents(
+      batch.map((answer) => ({
+        eventType: "deck_card_still" as const,
+        cardId: answer.cardId,
+        deckId,
+      })),
+    );
     setRemaining((prev) => {
       const next = [...prev];
       const chunk = next.splice(0, batch.length);
@@ -140,7 +181,7 @@ export function MatchMode({ deckId, shuffle }: Props) {
       return next;
     });
     setRoundComplete(false);
-  }, [batch.length]);
+  }, [batch, deckId, recorder]);
 
   useEffect(() => {
     if (!roundComplete) return;
@@ -151,11 +192,6 @@ export function MatchMode({ deckId, shuffle }: Props) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [markKnown, markStill, roundComplete]);
-
-  const remainingCount = remaining.length;
-  const progress =
-    totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
-  const isComplete = totalCount > 0 && remainingCount === 0;
 
   if (remainingCount === 0 && totalCount === 0) {
     return (

@@ -286,6 +286,7 @@ export function MainApp() {
               decks={decks}
               selectedDeckId={selectedDeckId}
               dueCount={dueCount}
+              collectionRevision={collectionRevision}
               onSelectDeck={setSelectedDeckId}
               onGoToDeckStudy={() => handleTabChange("deckStudy")}
               onGoToLeitner={() => handleTabChange("leitner")}

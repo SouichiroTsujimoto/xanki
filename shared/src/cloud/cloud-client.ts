@@ -2,7 +2,12 @@ import type {
   AiQaGenerateResponse,
   ApiCard,
   ApiDeck,
+  CompleteStudySessionRequest,
   CreateCardRequest,
+  RecordStudyEventsRequest,
+  StartStudySessionRequest,
+  StartStudySessionResponse,
+  StudyMetrics,
   SubmitReviewRequest,
   UpdateCardRequest,
 } from "../library/api-types.js";
@@ -111,6 +116,37 @@ export function createCloudClient(options: CloudClientOptions) {
         method: "POST",
         body: JSON.stringify(payload),
       }),
+
+    getStudyMetrics: (deckId?: string, tzOffsetMinutes?: number) => {
+      const params = new URLSearchParams();
+      if (deckId) params.set("deck_id", deckId);
+      if (tzOffsetMinutes !== undefined) {
+        params.set("tz_offset_minutes", String(tzOffsetMinutes));
+      }
+      const qs = params.toString();
+      return request<StudyMetrics>(`/api/study/metrics${qs ? `?${qs}` : ""}`);
+    },
+
+    startStudySession: (payload: StartStudySessionRequest) =>
+      request<StartStudySessionResponse>("/api/study/sessions", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+
+    recordStudyEvents: (sessionId: string, payload: RecordStudyEventsRequest) =>
+      request<{ ok: boolean }>(`/api/study/sessions/${encodeURIComponent(sessionId)}/events`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+
+    completeStudySession: (sessionId: string, payload: CompleteStudySessionRequest) =>
+      request<{ ok: boolean }>(
+        `/api/study/sessions/${encodeURIComponent(sessionId)}/complete`,
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+      ),
 
     getStorage: () => request<AccountStorageResponse>("/api/account/storage"),
 

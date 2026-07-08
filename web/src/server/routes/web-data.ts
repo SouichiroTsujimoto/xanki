@@ -202,8 +202,16 @@ reviewRoutes.post("/submit", async (c) => {
     .object({
       cardId: z.string(),
       result: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
+      tzOffsetMinutes: z.number().int().min(-840).max(840).optional(),
     })
     .parse(await c.req.json());
-  await submitReview(c.get("db"), c.get("user").id, body.cardId, body.result, c.env);
+  await submitReview(
+    c.get("db"),
+    c.get("user").id,
+    body.cardId,
+    body.result,
+    c.env,
+    body.tzOffsetMinutes ?? 0,
+  );
   return c.json({ ok: true });
 });

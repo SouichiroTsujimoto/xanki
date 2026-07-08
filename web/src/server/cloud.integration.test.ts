@@ -142,4 +142,69 @@ describe("cloud API smoke", () => {
     const cards = await json("/api/cards", { headers: auth });
     expect(cards.every((c: { deckId: string }) => c.deckId !== deck.id)).toBe(true);
   });
+
+  it("study metrics records leitner review and deck study events", async () => {
+    const { token } = await createTestUserSession(env);
+    const auth = { Authorization: `Bearer ${token}` };
+
+    const deck = await json("/api/decks", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ name: "Metrics Deck" }),
+    });
+
+    const card = await json("/api/cards", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({
+        deckId: deck.id,
+        kind: "text",
+        content: "metrics card",
+        masks: JSON.stringify([{ type: "range", start: 0, end: 1 }]),
+      }),
+    });
+
+    await json("/api/review/submit", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ cardId: card.id, result: 2, tzOffsetMinutes: 0 }),
+    });
+
+    const session = await json("/api/study/sessions", {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({
+        track: "deck",
+        deckId: deck.id,
+        mode: "flashcards",
+        cardsTotal: 1,
+      }),
+    });
+
+    await json(`/api/study/sessions/${session.sessionId}/events`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({
+        tzOffsetMinutes: 0,
+        events: [{ eventType: "deck_card_known", cardId: card.id, deckId: deck.id }],
+      }),
+    });
+
+    await json(`/api/study/sessions/${session.sessionId}/complete`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ cardsCompleted: 1, tzOffsetMinutes: 0 }),
+    });
+
+    const metrics = await json("/api/study/metrics?deck_id=" + deck.id + "&tz_offset_minutes=0", {
+      headers: auth,
+    });
+
+    expect(metrics.activity.todayStudyCount).toBeGreaterThanOrEqual(2);
+    expect(metrics.activity.todayLeitnerCount).toBeGreaterThanOrEqual(1);
+    expect(metrics.activity.todayDeckStudyCount).toBeGreaterThanOrEqual(1);
+    expect(metrics.global.totalCards).toBeGreaterThanOrEqual(1);
+    expect(metrics.deck?.deckId).toBe(deck.id);
+    expect(typeof metrics.deck?.masteryPercent).toBe("number");
+  });
 });

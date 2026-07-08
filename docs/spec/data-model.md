@@ -48,7 +48,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | card_id | TEXT | |
 | box | INTEGER | 復習箱 1..5（`LeitnerScheduler`） |
 | due_at | INTEGER | 次回復習 unix ms |
-| last_result | INTEGER | 0=不可 / 1=可 |
+| last_result | INTEGER | 直近評価 **0–3**（4 段階） |
 | updated_at | INTEGER | unix ms |
 
 ### review_logs
@@ -58,8 +58,47 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | user_id | TEXT | |
 | id | TEXT | UUID |
 | card_id | TEXT | |
-| result | INTEGER | 0/1 |
+| result | INTEGER | 評価 **0–3** |
 | reviewed_at | INTEGER | unix ms |
+
+### study_sessions
+
+| 列 | 型 | 説明 |
+|----|-----|------|
+| user_id | TEXT | |
+| id | TEXT | UUID |
+| track | TEXT | `deck` \| `leitner` |
+| deck_id | TEXT NULL | |
+| mode | TEXT NULL | 学習手段 |
+| started_at / ended_at | INTEGER | unix ms |
+| cards_total | INTEGER | |
+| cards_completed | INTEGER | |
+
+### study_events
+
+| 列 | 型 | 説明 |
+|----|-----|------|
+| user_id | TEXT | |
+| id | TEXT | UUID |
+| session_id | TEXT NULL | |
+| event_type | TEXT | `leitner_review` 等 |
+| deck_id / card_id | TEXT NULL | |
+| grade | INTEGER NULL | Leitner 0–3 |
+| occurred_at | INTEGER | unix ms |
+| local_date | TEXT | `YYYY-MM-DD` |
+
+### study_daily_stats
+
+| 列 | 型 | 説明 |
+|----|-----|------|
+| user_id | TEXT | |
+| local_date | TEXT | PK 一部 |
+| leitner_count | INTEGER | |
+| deck_study_count | INTEGER | |
+| total_count | INTEGER | |
+| updated_at | INTEGER | |
+
+詳細: [study-metrics.md](./study-metrics.md)
 
 ## ローカル（Desktop のみ）
 

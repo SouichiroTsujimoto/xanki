@@ -73,6 +73,62 @@ export const reviewLogs = sqliteTable(
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.id] }),
+    userReviewedIdx: index("idx_review_logs_user_reviewed").on(t.userId, t.reviewedAt),
+  }),
+);
+
+export const studySessions = sqliteTable(
+  "study_sessions",
+  {
+    userId: text("user_id").notNull(),
+    id: text("id").notNull(),
+    track: text("track").notNull(),
+    deckId: text("deck_id"),
+    mode: text("mode"),
+    startedAt: integer("started_at").notNull(),
+    endedAt: integer("ended_at"),
+    cardsTotal: integer("cards_total").notNull(),
+    cardsCompleted: integer("cards_completed").notNull().default(0),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.id] }),
+    userStartedIdx: index("idx_study_sessions_user_started").on(t.userId, t.startedAt),
+  }),
+);
+
+export const studyEvents = sqliteTable(
+  "study_events",
+  {
+    userId: text("user_id").notNull(),
+    id: text("id").notNull(),
+    sessionId: text("session_id"),
+    eventType: text("event_type").notNull(),
+    deckId: text("deck_id"),
+    cardId: text("card_id"),
+    grade: integer("grade"),
+    occurredAt: integer("occurred_at").notNull(),
+    localDate: text("local_date").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.id] }),
+    userLocalDateIdx: index("idx_study_events_user_local_date").on(t.userId, t.localDate),
+    userOccurredIdx: index("idx_study_events_user_occurred").on(t.userId, t.occurredAt),
+    userSessionIdx: index("idx_study_events_user_session").on(t.userId, t.sessionId),
+  }),
+);
+
+export const studyDailyStats = sqliteTable(
+  "study_daily_stats",
+  {
+    userId: text("user_id").notNull(),
+    localDate: text("local_date").notNull(),
+    leitnerCount: integer("leitner_count").notNull().default(0),
+    deckStudyCount: integer("deck_study_count").notNull().default(0),
+    totalCount: integer("total_count").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.localDate] }),
   }),
 );
 

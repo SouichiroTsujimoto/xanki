@@ -3,6 +3,7 @@
 選択中デッキ内で、セッションキューが **覚えた** 操作で減っていく **セッション学習** トラック。
 
 - **DB 更新なし** — `review_state` / スマート学習に影響しない
+- **study_events 記録あり** — セッション・覚えた/まだは [study-metrics.md](./study-metrics.md) に従い永続化
 - タブ: **デッキ学習**（`AppTab.deckStudy`）
 - 詳細索引: [study.md](./study.md)
 

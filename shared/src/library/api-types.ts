@@ -74,6 +74,66 @@ export interface UpdateCardRequest {
 export interface SubmitReviewRequest {
   cardId: string;
   result: 0 | 1 | 2 | 3;
+  tzOffsetMinutes?: number;
+}
+
+export type StudyTrack = "deck" | "leitner";
+
+export type StudySessionMode = "flashcards" | "write" | "test" | "match" | "learn";
+
+export type StudyEventType =
+  | "leitner_review"
+  | "deck_card_known"
+  | "deck_card_still"
+  | "session_complete";
+
+export interface StudyMetrics {
+  activity: {
+    todayStudyCount: number;
+    todayLeitnerCount: number;
+    todayDeckStudyCount: number;
+    streakDays: number;
+    totalStudyCount: number;
+  };
+  global: {
+    masteryPercent: number;
+    boxDistribution: Record<1 | 2 | 3 | 4 | 5, number>;
+    totalCards: number;
+  };
+  deck?: {
+    deckId: string;
+    masteryPercent: number;
+    boxDistribution: Record<1 | 2 | 3 | 4 | 5, number>;
+    dueCount: number;
+    cardCount: number;
+  };
+}
+
+export interface StartStudySessionRequest {
+  track: StudyTrack;
+  deckId?: string | null;
+  mode?: StudySessionMode | null;
+  cardsTotal: number;
+  tzOffsetMinutes?: number;
+}
+
+export interface StartStudySessionResponse {
+  sessionId: string;
+}
+
+export interface RecordStudyEventsRequest {
+  tzOffsetMinutes: number;
+  events: Array<{
+    eventType: StudyEventType;
+    cardId?: string | null;
+    deckId?: string | null;
+    grade?: number | null;
+  }>;
+}
+
+export interface CompleteStudySessionRequest {
+  cardsCompleted: number;
+  tzOffsetMinutes: number;
 }
 
 export interface AiQaGenerateRequest {

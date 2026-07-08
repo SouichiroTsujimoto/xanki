@@ -1,6 +1,7 @@
 import { copy } from "../../../copy";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
+import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
 import {
   answersMatch,
   extractMaskAnswers,
@@ -18,6 +19,8 @@ interface Props {
 
 export function WriteMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
+  const recorder = useStudySessionRecorder();
+  const completeSentRef = useRef(false);
   const [remaining, setRemaining] = useState<MaskAnswer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [index, setIndex] = useState(0);
@@ -26,9 +29,23 @@ export function WriteMode({ deckId, shuffle }: Props) {
 
   useEffect(() => {
     async function load() {
+      if (!deckId) {
+        setRemaining([]);
+        setTotalCount(0);
+        return;
+      }
+      completeSentRef.current = false;
+      await recorder.completeSession();
       const cards = await api.listCards(deckId ?? undefined);
       const extracted = extractMaskAnswers(cards);
       const ordered = shuffle ? shuffleArray(extracted) : extracted;
+      if (ordered.length > 0) {
+        await recorder.beginDeckSession({
+          deckId,
+          mode: "write",
+          cardsTotal: ordered.length,
+        });
+      }
       setRemaining(ordered);
       setTotalCount(ordered.length);
       setIndex(0);
@@ -36,7 +53,7 @@ export function WriteMode({ deckId, shuffle }: Props) {
       setFeedback("idle");
     }
     void load();
-  }, [deckId, shuffle, api]);
+  }, [deckId, shuffle, api, recorder]);
 
   const current = remaining[index];
   const remainingCount = Math.max(remaining.length - index, 0);
@@ -55,15 +72,22 @@ export function WriteMode({ deckId, shuffle }: Props) {
     setFeedback(ok ? "ok" : "ng");
   }
 
-  const markKnown = useCallback(() => {
-    if (!current) return;
-    setRemaining((prev) => prev.filter((_, i) => i !== index));
+  const markKnown = useCallback(async () => {
+    if (!current || !deckId) return;
+    await recorder.recordDeckKnown(current.cardId, deckId);
+    const nextRemaining = remaining.filter((_, i) => i !== index);
+    setRemaining(nextRemaining);
     setInput("");
     setFeedback("idle");
-  }, [current, index]);
+    if (index >= nextRemaining.length && !completeSentRef.current) {
+      completeSentRef.current = true;
+      await recorder.completeSession();
+    }
+  }, [current, deckId, index, recorder, remaining]);
 
-  const markStill = useCallback(() => {
-    if (!current) return;
+  const markStill = useCallback(async () => {
+    if (!current || !deckId) return;
+    await recorder.recordDeckStill(current.cardId, deckId);
     setRemaining((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];
@@ -73,7 +97,7 @@ export function WriteMode({ deckId, shuffle }: Props) {
     });
     setInput("");
     setFeedback("idle");
-  }, [current, index]);
+  }, [current, deckId, index, recorder]);
 
   if (remaining.length === 0 && totalCount === 0) {
     return (
@@ -93,12 +117,24 @@ export function WriteMode({ deckId, shuffle }: Props) {
         copy={copy.deckStudy.sessionCompleteCopy}
         onReload={() => {
           void (async () => {
+            if (!deckId) return;
+            completeSentRef.current = false;
+            await recorder.completeSession();
             const cards = await api.listCards(deckId ?? undefined);
             const extracted = extractMaskAnswers(cards);
             const ordered = shuffle ? shuffleArray(extracted) : extracted;
+            if (ordered.length > 0) {
+              await recorder.beginDeckSession({
+                deckId,
+                mode: "write",
+                cardsTotal: ordered.length,
+              });
+            }
             setRemaining(ordered);
             setTotalCount(ordered.length);
             setIndex(0);
+            setInput("");
+            setFeedback("idle");
           })();
         }}
         reloadLabel={copy.deckStudy.sessionRestart}

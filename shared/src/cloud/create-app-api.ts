@@ -7,6 +7,7 @@ import {
   parseTextMasksJson,
 } from "../library/cloud-mappers.js";
 import type { CloudClient } from "./cloud-client.js";
+import { getTzOffsetMinutes } from "../study/tz.js";
 import type {
   AppApi,
   Card,
@@ -96,8 +97,21 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
         ? async (cardId) => platform.openCardEditor!(cardId, mapCard(await cloud.getCard(cardId)))
         : unsupported("カードエディタ"),
     submitReview: async (cardId, result) => {
-      await cloud.submitReview({ cardId, result });
+      await cloud.submitReview({
+        cardId,
+        result,
+        tzOffsetMinutes: getTzOffsetMinutes(),
+      });
       notify();
+    },
+    getStudyMetrics: (deckId, tzOffsetMinutes) =>
+      cloud.getStudyMetrics(deckId, tzOffsetMinutes ?? getTzOffsetMinutes()),
+    startStudySession: (request) => cloud.startStudySession(request),
+    recordStudyEvents: async (sessionId, payload) => {
+      await cloud.recordStudyEvents(sessionId, payload);
+    },
+    completeStudySession: async (sessionId, payload) => {
+      await cloud.completeStudySession(sessionId, payload);
     },
     getDueCount: async () => countDueCards(await cloud.listCards()),
     getDueCards: async (deckId, limit) => {

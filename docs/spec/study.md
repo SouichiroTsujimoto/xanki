@@ -6,6 +6,7 @@
 |---------|------|------|------|
 | デッキ学習 | `AppTab.deckStudy` | [deck-study.md](./deck-study.md) | 選択デッキ全件 + セッションキュー（DB 非更新） |
 | スマート学習 | `AppTab.leitner` | [leitner-study.md](./leitner-study.md) | 復習予定 + 4 段階評価（`review_state` 更新） |
+| 学習メトリクス | ホーム | [study-metrics.md](./study-metrics.md) | イベント記録・習熟度・モチベーション指標 |
 
 ## 共通
 
