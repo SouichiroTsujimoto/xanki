@@ -1,4 +1,4 @@
-import type { ApiCard, ApiDeck } from "./api-types.js";
+import type { ApiCard, ApiDeck, AiQaGenerateResponse } from "./api-types.js";
 import type { ImageMask, OcrData, TextMask } from "../masks/masks.js";
 import type { StudyFilter } from "./cloud-mappers.js";
 
@@ -140,4 +140,14 @@ export interface AppApi {
     deckId: string;
     mode: "text" | "qa" | "image";
   }) => Promise<void>;
+  qaGenerate(
+    text: string,
+    kind: "qa" | "choice",
+    count?: number,
+  ): Promise<AiQaGenerateResponse>;
+  askAi(
+    cardContext: string,
+    question: string,
+    signal?: AbortSignal,
+  ): AsyncGenerator<string, void, unknown>;
 }

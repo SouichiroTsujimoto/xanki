@@ -7,8 +7,6 @@
     "setup:cloud": "bash scripts/setup-cloud.sh",
     "dev:cloud": "bash scripts/dev-cloud.sh",
     "dev:cloud:all": "bash scripts/dev-cloud.sh --desktop",
-    "dev:cloud:desktop": "cd xanki && pnpm tauri dev",
-    "dev:web": "pnpm --filter @xanki/web dev",
     "dev:desktop": "pnpm --filter xanki tauri dev",
     "build:web": "pnpm --filter @xanki/web build",
     "smoke:cloud": "pnpm --filter @xanki/web test:cloud",

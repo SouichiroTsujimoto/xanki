@@ -18,6 +18,8 @@
     "@better-auth/drizzle-adapter": "^1.6.23",
     "@xanki/shared": "workspace:*",
     "@xanki/ui": "workspace:*",
+    "ai": "^7.0.16",
+    "ai-gateway-provider": "^3.2.0",
     "better-auth": "^1.6.23",
     "drizzle-orm": "^0.39.3",
     "hono": "^4.7.4",

@@ -59,7 +59,7 @@ if [[ "$WITH_DESKTOP" == true ]]; then
   cd "$ROOT/xanki"
   VITE_CLOUD_URL=http://localhost:8787 pnpm tauri dev
 else
-  echo "Desktop: pnpm dev:cloud:desktop  （別ターミナル）"
+  echo "Desktop: pnpm dev:desktop  （別ターミナル）"
   echo "Smoke  : pnpm smoke:cloud"
   echo ""
   echo "Press Ctrl+C to stop wrangler."

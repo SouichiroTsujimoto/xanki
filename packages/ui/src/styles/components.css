@@ -3526,6 +3526,106 @@ html.tauri-macos .image-editor-header button {
   background: #991b1b;
 }
 
+.study-ai-panel {
+  width: min(100%, 520px);
+  max-height: min(80vh, 640px);
+  overflow: auto;
+}
+
+.study-ai-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.study-ai-preset {
+  font-size: 0.82rem;
+}
+
+.study-ai-question-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+}
+
+.study-ai-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+}
+
+.study-ai-question-input {
+  width: 100%;
+  min-height: 4.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.study-ai-answer {
+  margin-top: 0.85rem;
+  min-height: 2.5rem;
+}
+
+.study-ai-answer-loading {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted-foreground);
+}
+
+.study-ai-answer-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.study-ai-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--color-card);
+}
+
+.review-actions .study-ai-trigger,
+.review-actions .ghost-button:first-child {
+  margin-right: auto;
+}
+
+.ai-qa-generate-results {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ai-qa-generate-result {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.ai-qa-generate-question {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ai-qa-generate-answer {
+  margin: 0 0 0.55rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-muted-foreground);
+}
+
 .note-field input {
   min-width: 180px;
 }

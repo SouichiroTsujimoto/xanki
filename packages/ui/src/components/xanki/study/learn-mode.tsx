@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { buildStudyCardContext } from "@xanki/shared";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
 import type { ReviewGrade } from "../../../types";
@@ -8,6 +9,7 @@ import {
   StudyProgress,
   useStudyQueue,
 } from "./shared";
+import { StudyAiPanel } from "./study-ai-panel";
 
 interface Props {
   deckId?: string | null;
@@ -29,9 +31,11 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
     shuffle,
   );
   const [revealed, setRevealed] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   useEffect(() => {
     setRevealed(false);
+    setAiOpen(false);
   }, [current]);
 
   const submit = useCallback(
@@ -88,6 +92,13 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
         />
       </div>
       <div className="review-actions leitner-grade-actions">
+        <button
+          type="button"
+          className="ghost-button study-ai-trigger"
+          onClick={() => setAiOpen(true)}
+        >
+          {copy.ai.studyAskButton}
+        </button>
         {GRADES.map((grade, gradeIndex) => (
           <button
             key={grade.result}
@@ -100,6 +111,11 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
           </button>
         ))}
       </div>
+      <StudyAiPanel
+        open={aiOpen}
+        cardContext={buildStudyCardContext(current.card)}
+        onClose={() => setAiOpen(false)}
+      />
     </div>
   );
 }

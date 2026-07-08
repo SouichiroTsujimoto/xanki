@@ -108,10 +108,20 @@
 | 編集（画像） | **スクショ編集 ✦** | [image-masks.md](./image-masks.md) |
 | デッキ選択ラベル | **デッキ** | [text-masks.md](./text-masks.md) |
 | 一問一答化 | **一問一答形式にする** | [qa-cards.md](./qa-cards.md) |
+| AI で生成 | `qaGenerate`, **AI で生成** | [library.md](./library.md), [cloud.md](./cloud.md) |
 
 ---
 
-## G. Leitner・SRS
+## G. AI
+
+| 概念 | コード / API | UI 表示（正） | 参照 |
+|------|-------------|--------------|------|
+| 学習中 AI 質問 | `askAi`, `POST /api/ai/ask` | **AI に聞く** | [study.md](./study.md), [cloud.md](./cloud.md) |
+| Q&A 自動生成 | `qaGenerate`, `POST /api/ai/qa-generate` | **AI で生成** | [library.md](./library.md), [cloud.md](./cloud.md) |
+
+---
+
+## H. Leitner・SRS
 
 | 概念 | コード | UI / 説明（正） | 備考 |
 |------|--------|----------------|------|
@@ -123,7 +133,7 @@
 
 ---
 
-## H. 認証・課金
+## I. 認証・課金
 
 | 概念 | UI 表示（正） | 参照 |
 |------|--------------|------|
@@ -136,7 +146,7 @@
 
 ---
 
-## I. 旧称・非推奨（使用禁止）
+## J. 旧称・非推奨（使用禁止）
 
 | 旧称 | 正しい概念 | 正しい内部名 |
 |------|-----------|-------------|

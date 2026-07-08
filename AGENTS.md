@@ -43,9 +43,13 @@
 ```bash
 pnpm setup:cloud          # 初回のみ
 pnpm dev:cloud            # Web API + SPA (8787)
+pnpm dev:cloud -- --skip-setup  # wrangler のみ再起動
 pnpm smoke:cloud          # API 自動テスト
 pnpm dev:cloud:all        # + Tauri デスクトップ
+pnpm dev:desktop          # Desktop のみ（Cloud は別途 dev:cloud）
 ```
+
+コマンド体系の詳細: [`README.md`](./README.md)
 
 ## ルール
 

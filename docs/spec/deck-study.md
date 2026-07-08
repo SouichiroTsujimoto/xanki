@@ -40,6 +40,7 @@ v1 範囲選択は **デッキ全件のみ**。
 
 - フリップ / peek / 3D フリップ: [study.md](./study.md) §表示 および [leitner-study.md](./leitner-study.md) と同一コンポーネント
 - Space / クリック: 答え toggle
+- **AI に聞く**（フラッシュカード）: `.review-actions` に ghost ボタン → オーバーレイで質問入力 → SSE ストリーム表示（[cloud.md](./cloud.md) §9）
 
 ## 将来（Phase 2.5）
 

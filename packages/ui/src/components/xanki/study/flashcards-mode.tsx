@@ -1,11 +1,13 @@
 import { copy } from "../../../copy";
 import { useCallback, useEffect, useState } from "react";
+import { buildStudyCardContext } from "@xanki/shared";
 import {
   DeckStudySessionProgress,
   StudyEmpty,
   StudyFlipCard,
   useDeckStudySession,
 } from "./shared";
+import { StudyAiPanel } from "./study-ai-panel";
 
 interface Props {
   deckId?: string | null;
@@ -27,6 +29,7 @@ export function FlashcardsMode({
     !isSingle,
   );
   const [revealed, setRevealed] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   const activeCard = isSingle ? singleCard : current;
   const activeRemaining = isSingle ? 1 : sessionMeta.remaining;
@@ -35,6 +38,7 @@ export function FlashcardsMode({
 
   useEffect(() => {
     setRevealed(false);
+    setAiOpen(false);
   }, [activeCard]);
 
   const handleKnown = useCallback(() => {
@@ -117,6 +121,13 @@ export function FlashcardsMode({
         />
       </div>
       <div className="review-actions">
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={() => setAiOpen(true)}
+        >
+          {copy.ai.studyAskButton}
+        </button>
         {isSingle ? (
           <>
             <button type="button" className="ghost-button" onClick={() => setRevealed((v) => !v)}>
@@ -143,6 +154,11 @@ export function FlashcardsMode({
           </button>
         )}
       </div>
+      <StudyAiPanel
+        open={aiOpen}
+        cardContext={buildStudyCardContext(activeCard.card)}
+        onClose={() => setAiOpen(false)}
+      />
     </div>
   );
 }

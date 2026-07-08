@@ -15,6 +15,7 @@ import {
   getTextareaSelectionOffsets,
 } from "../../../lib/textSelection";
 import type { Deck, TextMask } from "../../../types";
+import { AiQaGeneratePanel } from "./ai-qa-generate-panel";
 
 export interface TextMaskDraftOptions {
   deckId: string;
@@ -113,11 +114,11 @@ export function useTextMaskDraft({
       } else {
         await api.saveTextCard({ deckId, content, masks, note: note || undefined });
       }
-      if (cardId) {
+      if (cardId || !onAfterSave) {
         onClose?.();
       } else {
         resetDraft();
-        onAfterSave?.();
+        onAfterSave();
       }
     } catch (error) {
       console.error("save failed", error);
@@ -221,6 +222,16 @@ export function useTextMaskDraft({
     textRef.current?.focus();
   }, [answer, content]);
 
+  const applyQaItem = useCallback((question: string, answerText: string) => {
+    contentRef.current = question;
+    setContent(question);
+    setAnswer(answerText);
+    setQaMode(true);
+    setMasks([]);
+    setSelection(null);
+    setPopupPos(null);
+  }, []);
+
   return {
     content,
     answer,
@@ -242,6 +253,7 @@ export function useTextMaskDraft({
     addMask,
     enterQaMode,
     exitQaMode,
+    applyQaItem,
     removeMask,
     textRef,
     scrollRef,
@@ -362,6 +374,7 @@ interface EmbeddedProps {
 
 export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
   const disabled = !deckId;
+  const [aiOpen, setAiOpen] = useState(false);
 
   const draft = useTextMaskDraft({
     deckId: deckId ?? "",
@@ -370,6 +383,7 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
   });
 
   const {
+    content,
     answer,
     qaMode,
     masks,
@@ -380,6 +394,7 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
     canSave,
     handleSave,
     resetDraft,
+    applyQaItem,
   } = draft;
 
   useEffect(() => {
@@ -408,6 +423,15 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
           <span className="meta-chip">
             {qaMode ? copy.cards.kindQa : copy.editor.maskCount(masks.length)}
           </span>
+          <button
+            type="button"
+            className="qa-toolbar-button"
+            data-tauri-drag-region="false"
+            disabled={disabled}
+            onClick={() => setAiOpen(true)}
+          >
+            {copy.ai.generateButton}
+          </button>
           <TextMaskQaModeToggle draft={draft} disabled={disabled} />
         </div>
       </div>
@@ -479,6 +503,12 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
           </button>
         </div>
       </div>
+      <AiQaGeneratePanel
+        open={aiOpen}
+        sourceText={content}
+        onClose={() => setAiOpen(false)}
+        onApply={(item) => applyQaItem(item.question, item.answer)}
+      />
     </section>
   );
 }

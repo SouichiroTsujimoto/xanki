@@ -13,7 +13,8 @@ export interface Env {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_PRO?: string;
-  AI_GATEWAY_URL?: string;
+  CF_ACCOUNT_ID?: string;
+  AI_GATEWAY_ID?: string;
   AI_GATEWAY_TOKEN?: string;
   AI_MODEL?: string;
   TEST_MIGRATIONS?: Array<{ name: string; queries: string[] }>;

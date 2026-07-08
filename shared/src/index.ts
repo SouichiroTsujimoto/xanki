@@ -4,6 +4,7 @@ export * from "./library/api-types.js";
 export * from "./library/cloud-mappers.js";
 export * from "./study/scheduler.js";
 export * from "./study/mask-answers.js";
+export * from "./study/card-context.js";
 export * from "./study/deck-session.js";
 export * from "./sync/sync.js";
 export * from "./entitlements.js";

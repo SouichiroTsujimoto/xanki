@@ -1,4 +1,5 @@
 import type {
+  AiQaGenerateResponse,
   ApiCard,
   ApiDeck,
   CreateCardRequest,
@@ -147,11 +148,73 @@ export function createCloudClient(options: CloudClientOptions) {
 
     checkout: () => request<{ url: string }>("/api/billing/checkout", { method: "POST" }),
 
-    qaGenerate: (text: string, kind: "qa" | "choice" = "qa", count = 3) =>
-      request<{ items: Array<{ question: string; answer: string }> }>("/api/ai/qa-generate", {
+    qaGenerate: (
+      text: string,
+      kind: "qa" | "choice" = "qa",
+      count = 3,
+    ): Promise<AiQaGenerateResponse> =>
+      request<AiQaGenerateResponse>("/api/ai/qa-generate", {
         method: "POST",
         body: JSON.stringify({ text, kind, count }),
       }),
+
+    askAi: async function* (
+      cardContext: string,
+      question: string,
+      signal?: AbortSignal,
+    ): AsyncGenerator<string, void, unknown> {
+      const res = await fetch(`${base}/api/ai/ask`, {
+        method: "POST",
+        credentials: options.credentials ?? "include",
+        headers: await resolveHeaders(options),
+        body: JSON.stringify({ cardContext, question }),
+        signal,
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          await rejectUnauthorized(options);
+        }
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? res.statusText);
+      }
+
+      if (!res.body) {
+        throw new Error("ai_stream_missing");
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          const dataLine = part.split("\n").find((line) => line.startsWith("data: "));
+          if (!dataLine) continue;
+          const payload = dataLine.slice(6).trim();
+          if (payload === "[DONE]") {
+            return;
+          }
+          try {
+            const parsed = JSON.parse(payload) as { text?: string; error?: string };
+            if (typeof parsed.error === "string") {
+              throw new Error(parsed.error);
+            }
+            if (typeof parsed.text === "string" && parsed.text.length > 0) {
+              yield parsed.text;
+            }
+          } catch {
+            // ignore malformed chunks
+          }
+        }
+      }
+    },
 
     subscribeRevisions: (
       onRevision: (rev: number) => void,

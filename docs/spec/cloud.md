@@ -232,12 +232,37 @@ CREATE TABLE entitlements ( ... );
 
 ```
 POST /api/ai/qa-generate   { text, count?, kind: 'qa' | 'choice' }   → { items: [...] }
-POST /api/ai/ask           { card_context, question }                → SSE ストリーム
+POST /api/ai/ask           { cardContext, question }                → SSE ストリーム
 ```
 
 - 実行前: 認証 → entitlement → レート制限(KV)
-- Worker → AI Gateway → LLM。API キーはクライアント非配布
+- Worker → **AI SDK** + **ai-gateway-provider** → Cloudflare AI Gateway（Unified API）→ LLM。API キーはクライアント非配布
 - 送信データは明示操作のみ
+- **dev（`APP_URL` が localhost）**: entitlement / クレジット消費をバイパス（レート制限は維持）
+- Gateway 未設定（`CF_ACCOUNT_ID` / `AI_GATEWAY_TOKEN` 欠落）時: **503** `{ error: "ai_unavailable" }`
+- Gateway トークン不正: **502** `{ error: "ai_auth_failed" }`
+- プロバイダ未設定（Unified Billing 非対応モデル + BYOK なし）: **502** `{ error: "ai_provider_unavailable" }`
+
+### 環境変数（Workers）
+
+| 変数 | 用途 |
+|------|------|
+| `CF_ACCOUNT_ID` | Cloudflare アカウント ID |
+| `AI_GATEWAY_ID` | Gateway 名（既定 `default`） |
+| `AI_GATEWAY_TOKEN` | Authenticated Gateway 用トークン（Settings → Create authentication token） |
+| `AI_MODEL` | Unified API の model 文字列。既定 `google-ai-studio/gemini-2.5-flash`（Unified Billing）。`deepseek/deepseek-chat` は BYOK 必須 |
+
+**Unified Billing 前提:** AI Gateway ダッシュボードでクレジットをチャージすること。対応プロバイダは OpenAI / Anthropic / Google AI Studio / Google Vertex AI / xAI / Groq（DeepSeek は含まない）。
+
+### SSE 形式（`/api/ai/ask`）
+
+```
+data: {"text":"delta text"}\n\n
+data: {"error":"ai_provider_unavailable"}\n\n
+data: [DONE]\n\n
+```
+
+クライアントは `CloudClient.askAi()` が `AsyncGenerator<string>` としてパースする。
 
 ## 10. 非機能要件
 

@@ -28,6 +28,12 @@
 - [qa-cards.md](./qa-cards.md), [text-masks.md](./text-masks.md), [image-masks.md](./image-masks.md)
 - マスク peek（インタラクティブ時）、flip 後 stagger reveal
 
+### AI に聞く（学習中）
+
+- **フラッシュカード**（デッキ学習）と **Leitner 出題**（`LearnMode`）の `.review-actions` に **AI に聞く** ボタン
+- 現在カードの文脈（`buildStudyCardContext`）とユーザー質問を `POST /api/ai/ask` に送信
+- 回答はオーバーレイ内に SSE ストリーム表示。Tauri では `window.alert` 禁止 → エラーはパネル内
+
 ## 旧構成からの移行
 
 | 旧 | 新 |

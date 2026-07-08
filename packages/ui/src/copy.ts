@@ -225,6 +225,34 @@ export const copy = {
     search: "検索",
     deleteDeckTitle: "デッキを削除しますか？",
   },
+  ai: {
+    studyTitle: "AI に聞く",
+    studyHint: "カードの内容について質問できます。",
+    studyQuestionLabel: "質問",
+    studyQuestionPlaceholder: "例: この用語をもっと詳しく教えて",
+    studyPresetDetail: "もっと詳しく",
+    studyPresetExample: "例を教えて",
+    studySend: "送信",
+    studySending: "送信中...",
+    studyLoading: "回答を生成中...",
+    studyAskButton: "AI に聞く",
+    generateTitle: "AI で生成",
+    generateHint: "ソーステキストから一問一答を自動生成します。",
+    generateSourceLabel: "ソーステキスト",
+    generateAction: "生成",
+    generateLoading: "生成中...",
+    generateApply: "この Q&A を使う",
+    generateButton: "AI で生成",
+    errorUnavailable:
+      "AI が利用できません。Cloudflare AI Gateway の設定を確認してください。",
+    errorAuthFailed:
+      "AI Gateway の認証に失敗しました。Settings の Create authentication token で発行したトークンを AI_GATEWAY_TOKEN に設定してください。",
+    errorProviderUnavailable:
+      "選択した AI モデルが利用できません。Unified Billing 非対応のモデル（DeepSeek 等）は Gateway にプロバイダ API キー（BYOK）を登録するか、対応モデルに変更してください。",
+    errorPaymentRequired: "AI 機能は Pro プランで利用できます。",
+    errorRateLimited: "リクエストが多すぎます。しばらく待ってから再試行してください。",
+    errorGeneric: "AI の応答を取得できませんでした。",
+  },
 } as const;
 
 export const studyModeList = (

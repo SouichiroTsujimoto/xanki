@@ -194,5 +194,7 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
     triggerTextCapture: platform.triggerTextCapture,
     triggerScreenshotCapture: platform.triggerScreenshotCapture,
     openNewCardEditor: platform.openNewCardEditor,
+    qaGenerate: (text, kind, count) => cloud.qaGenerate(text, kind, count),
+    askAi: (cardContext, question, signal) => cloud.askAi(cardContext, question, signal),
   };
 }

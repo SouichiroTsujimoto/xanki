@@ -73,12 +73,23 @@ describe("cloud API smoke", () => {
     const decks = await json("/api/decks", { headers: auth });
     expect(decks.some((d: { id: string }) => d.id === deck.id)).toBe(true);
 
-    const ai = await json("/api/ai/qa-generate", {
+    const aiRes = await SELF.fetch("http://localhost/api/ai/qa-generate", {
       method: "POST",
-      headers: auth,
+      headers: { ...auth, "Content-Type": "application/json" },
       body: JSON.stringify({ text: "photosynthesis", kind: "qa", count: 1 }),
     });
-    expect(ai.items?.length).toBeGreaterThanOrEqual(1);
+    expect(aiRes.status).toBe(503);
+    const ai = (await aiRes.json()) as { error?: string };
+    expect(ai.error).toBe("ai_unavailable");
+
+    const askRes = await SELF.fetch("http://localhost/api/ai/ask", {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ cardContext: "種別: text\n本文: sample", question: "詳しく" }),
+    });
+    expect(askRes.status).toBe(503);
+    const askBody = (await askRes.json()) as { error?: string };
+    expect(askBody.error).toBe("ai_unavailable");
   });
 
   it("rejects card create when deck_id belongs to another user", async () => {
