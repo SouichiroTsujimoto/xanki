@@ -623,21 +623,31 @@
   }
 }
 
+/* スマート学習: Dock 操作列（dev-study-layout.md） */
 .leitner-grade-actions {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
   width: 100%;
-  max-width: 880px;
+  max-width: 920px;
+  margin-inline: auto;
   isolation: isolate;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.leitner-grade-actions .ghost-button,
-.leitner-grade-actions .accent-button {
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.65rem 0.5rem;
-  font-size: 0.82rem;
+.leitner-grade-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.leitner-grade-dock .dock-item .dock-item-content {
+  background: var(--color-card);
+}
+
+.leitner-grade-dock .dock-item.study-ai-trigger .dock-item-content {
+  font-weight: 500;
+}
+
+.leitner-grade-dock kbd {
+  font-size: 0.62rem;
+  padding: 0.08rem 0.28rem;
 }
 
 .leitner-grade-label {
@@ -645,14 +655,25 @@
 }
 
 .leitner-grade-interval {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 500;
   color: var(--color-muted-foreground);
 }
 
+.leitner-grade-dock .dock-item:hover:not(:disabled) .leitner-grade-interval,
+.leitner-grade-dock .dock-item:focus-visible:not(:disabled) .leitner-grade-interval {
+  color: color-mix(in srgb, var(--color-accent-text) 68%, transparent);
+}
+
 @media (max-width: 720px) {
-  .leitner-grade-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .leitner-grade-dock .dock-panel {
+    gap: 0.3rem;
+    justify-content: flex-start;
+  }
+
+  .leitner-grade-dock .dock-item-content {
+    padding: 0.4rem 0.25rem;
+    font-size: 0.68rem;
   }
 }
 

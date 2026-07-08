@@ -199,6 +199,11 @@
   margin-right: auto;
 }
 
+.review-actions.leitner-grade-actions .study-ai-trigger,
+.review-actions.leitner-grade-actions .ghost-button:first-child {
+  margin-right: 0;
+}
+
 .ai-qa-generate-results {
   list-style: none;
   margin: 0.85rem 0 0;

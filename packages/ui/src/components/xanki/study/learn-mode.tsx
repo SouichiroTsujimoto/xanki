@@ -18,7 +18,7 @@ import {
   useStudyQueue,
 } from "./shared";
 import { StudyAiPanel } from "./study-ai-panel";
-import { Button } from "../../ui/button";
+import { Dock, type DockItemData } from "../../motion/dock";
 
 interface Props {
   deckId?: string | null;
@@ -28,10 +28,10 @@ interface Props {
 }
 
 const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
-  { result: 0, label: copy.leitnerStudy.gradeAgain, className: "ghost-button" },
-  { result: 1, label: copy.leitnerStudy.gradeHard, className: "ghost-button" },
-  { result: 2, label: copy.leitnerStudy.gradeGood, className: "accent-button" },
-  { result: 3, label: copy.leitnerStudy.gradeEasy, className: "accent-button" },
+  { result: 0, label: copy.leitnerStudy.gradeAgain, className: "leitner-grade-btn leitner-grade-again" },
+  { result: 1, label: copy.leitnerStudy.gradeHard, className: "leitner-grade-btn leitner-grade-hard" },
+  { result: 2, label: copy.leitnerStudy.gradeGood, className: "leitner-grade-btn leitner-grade-good" },
+  { result: 3, label: copy.leitnerStudy.gradeEasy, className: "leitner-grade-btn leitner-grade-easy" },
 ];
 
 type CompletionState =
@@ -159,6 +159,34 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
     [api, current, index, loadQueue, next, noteCardCompleted, queue.length],
   );
 
+  const gradeDockItems = useMemo((): DockItemData[] => {
+    const aiItem: DockItemData = {
+      id: "ai",
+      label: copy.ai.studyAskButton,
+      className: "study-ai-trigger",
+      onClick: () => setAiOpen(true),
+      content: copy.ai.studyAskButton,
+      baseWidth: 84,
+      baseHeight: 64,
+      magnifiedWidth: 100,
+      magnifiedHeight: 76,
+    };
+    const gradeItems: DockItemData[] = GRADES.map((grade, gradeIndex) => ({
+      id: String(grade.result),
+      label: `${grade.label} ${gradePreviews[gradeIndex]}`,
+      className: grade.className,
+      onClick: () => void submit(grade.result),
+      content: (
+        <>
+          <kbd>{gradeIndex + 1}</kbd>
+          <span className="leitner-grade-label">{grade.label}</span>
+          <span className="leitner-grade-interval">{gradePreviews[gradeIndex]}</span>
+        </>
+      ),
+    }));
+    return [aiItem, ...gradeItems];
+  }, [gradePreviews, submit]);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (!current) return;
@@ -264,25 +292,17 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
         />
       </div>
       <div className="review-actions leitner-grade-actions">
-        <Button
-          type="button"
-          className="ghost-button study-ai-trigger"
-          onClick={() => setAiOpen(true)}
-        >
-          {copy.ai.studyAskButton}
-        </Button>
-        {GRADES.map((grade, gradeIndex) => (
-          <Button
-            key={grade.result}
-            type="button"
-            className={grade.className}
-            onClick={() => void submit(grade.result)}
-          >
-            <kbd>{gradeIndex + 1}</kbd>
-            <span className="leitner-grade-label">{grade.label}</span>
-            <span className="leitner-grade-interval">{gradePreviews[gradeIndex]}</span>
-          </Button>
-        ))}
+        <Dock
+          className="leitner-grade-dock"
+          items={gradeDockItems}
+          panelHeight={68}
+          dockHeight={120}
+          baseItemWidth={92}
+          baseItemHeight={68}
+          magnifiedWidth={112}
+          magnifiedHeight={84}
+          distance={160}
+        />
       </div>
       <StudyAiPanel
         open={aiOpen}
