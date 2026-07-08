@@ -4,6 +4,8 @@ import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
 import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
 import type { ReviewGrade } from "../../../types";
+import { LeitnerDeckSessionComplete } from "./leitner-deck-session-complete";
+import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import {
   StudyEmpty,
   StudyFlipCard,
@@ -16,6 +18,7 @@ import { Button } from "../../ui/button";
 interface Props {
   deckId?: string | null;
   shuffle?: boolean;
+  onBackToHub?: () => void;
 }
 
 const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
@@ -25,17 +28,44 @@ const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
   { result: 3, label: copy.leitnerStudy.gradeEasy, className: "accent-button" },
 ];
 
-export function LearnMode({ deckId, shuffle = false }: Props) {
+type CompletionState =
+  | { kind: "idle" }
+  | { kind: "pending" }
+  | { kind: "global" }
+  | { kind: "deck"; remainingDueCount: number }
+  | { kind: "error" };
+
+export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
   const api = useAppApi();
   const recorder = useStudySessionRecorder();
   const sessionStartedRef = useRef(false);
-  const { queue, index, current, progress, loadQueue, next } = useStudyQueue(
-    deckId,
-    "due",
-    shuffle,
-  );
+  const {
+    queue,
+    index,
+    current,
+    progress,
+    queueReady,
+    queueError,
+    loadQueue,
+    next,
+  } = useStudyQueue(deckId, "due", shuffle);
   const [revealed, setRevealed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [completion, setCompletion] = useState<CompletionState>({ kind: "idle" });
+
+  const resolveCompletion = useCallback(async () => {
+    setCompletion({ kind: "pending" });
+    try {
+      const remainingDueCount = await api.getDueCount();
+      if (remainingDueCount === 0) {
+        setCompletion({ kind: "global" });
+        return;
+      }
+      setCompletion({ kind: "deck", remainingDueCount });
+    } catch {
+      setCompletion({ kind: "error" });
+    }
+  }, [api]);
 
   useEffect(() => {
     if (queue.length === 0) {
@@ -55,6 +85,19 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
     setRevealed(false);
     setAiOpen(false);
   }, [current]);
+
+  useEffect(() => {
+    if (current) {
+      setCompletion({ kind: "idle" });
+    }
+  }, [current]);
+
+  useEffect(() => {
+    if (!queueReady || queueError) return;
+    if (queue.length === 0 && !current) {
+      void resolveCompletion();
+    }
+  }, [queueReady, queueError, queue.length, current, resolveCompletion]);
 
   const submit = useCallback(
     async (result: ReviewGrade) => {
@@ -88,12 +131,77 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
   }, [current, submit]);
 
   if (!current) {
+    if (!queueReady) {
+      return (
+        <StudyEmpty
+          eyebrow={copy.leitnerStudy.emptyEyebrow}
+          title={copy.leitnerStudy.loadingQueue}
+          copy=""
+        />
+      );
+    }
+
+    if (queueError) {
+      return (
+        <StudyEmpty
+          eyebrow={copy.leitnerStudy.emptyEyebrow}
+          title={queueError}
+          copy={copy.leitnerStudy.hint}
+          onReload={() => void loadQueue()}
+          reloadLabel={copy.leitnerStudy.retryLoad}
+        />
+      );
+    }
+
+    if (completion.kind === "pending" || completion.kind === "idle") {
+      return (
+        <StudyEmpty
+          eyebrow={copy.leitnerStudy.emptyEyebrow}
+          title={copy.leitnerStudy.loadingQueue}
+          copy=""
+        />
+      );
+    }
+
+    if (completion.kind === "error") {
+      return (
+        <StudyEmpty
+          eyebrow={copy.leitnerStudy.emptyEyebrow}
+          title={copy.leitnerStudy.completionCheckError}
+          copy={copy.leitnerStudy.hint}
+          onReload={() => void resolveCompletion()}
+          reloadLabel={copy.leitnerStudy.retryLoad}
+        />
+      );
+    }
+
+    if (completion.kind === "global") {
+      return (
+        <div className="review-stage empty leitner-review-stage">
+          <LeitnerDueCompletePanel
+            layout="session"
+            onBackToHub={onBackToHub}
+          />
+        </div>
+      );
+    }
+
+    if (completion.kind === "deck" && onBackToHub) {
+      return (
+        <LeitnerDeckSessionComplete
+          remainingDueCount={completion.remainingDueCount}
+          onBackToHub={onBackToHub}
+        />
+      );
+    }
+
     return (
       <StudyEmpty
         eyebrow={copy.leitnerStudy.emptyEyebrow}
-        title={copy.leitnerStudy.completeTitle}
-        copy={copy.leitnerStudy.completeHint}
-        onReload={() => void loadQueue()}
+        title={copy.leitnerStudy.completionCheckError}
+        copy={copy.leitnerStudy.hint}
+        onReload={() => void resolveCompletion()}
+        reloadLabel={copy.leitnerStudy.retryLoad}
       />
     );
   }

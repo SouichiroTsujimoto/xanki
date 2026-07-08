@@ -147,28 +147,27 @@ export function MatchMode({ deckId, shuffle }: Props) {
     totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
   const isComplete = totalCount > 0 && remainingCount === 0;
 
-  useEffect(() => {
-    if (!isComplete || completeSentRef.current) return;
-    completeSentRef.current = true;
-    void recorder.completeSession();
-  }, [isComplete, recorder]);
-
-  const markKnown = useCallback(() => {
+  const markKnown = useCallback(async () => {
     if (batch.length === 0 || !deckId) return;
-    void recorder.recordDeckEvents(
+    await recorder.recordDeckEvents(
       batch.map((answer) => ({
         eventType: "deck_card_known" as const,
         cardId: answer.cardId,
         deckId,
       })),
     );
-    setRemaining((prev) => prev.slice(batch.length));
+    const nextRemaining = remaining.slice(batch.length);
+    setRemaining(nextRemaining);
     setRoundComplete(false);
-  }, [batch, deckId, recorder]);
+    if (nextRemaining.length === 0 && !completeSentRef.current) {
+      completeSentRef.current = true;
+      await recorder.completeSession();
+    }
+  }, [batch, deckId, recorder, remaining]);
 
-  const markStill = useCallback(() => {
+  const markStill = useCallback(async () => {
     if (batch.length === 0 || !deckId) return;
-    void recorder.recordDeckEvents(
+    await recorder.recordDeckEvents(
       batch.map((answer) => ({
         eventType: "deck_card_still" as const,
         cardId: answer.cardId,

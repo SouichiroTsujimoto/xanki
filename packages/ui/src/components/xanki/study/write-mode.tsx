@@ -61,12 +61,6 @@ export function WriteMode({ deckId, shuffle }: Props) {
     totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
   const isComplete = totalCount > 0 && index >= remaining.length;
 
-  useEffect(() => {
-    if (!isComplete || completeSentRef.current) return;
-    completeSentRef.current = true;
-    void recorder.completeSession();
-  }, [isComplete, recorder]);
-
   const hint = useMemo(() => {
     if (!current) return "";
     return `${current.answer.length} 文字`;
@@ -78,17 +72,22 @@ export function WriteMode({ deckId, shuffle }: Props) {
     setFeedback(ok ? "ok" : "ng");
   }
 
-  const markKnown = useCallback(() => {
+  const markKnown = useCallback(async () => {
     if (!current || !deckId) return;
-    void recorder.recordDeckKnown(current.cardId, deckId);
-    setRemaining((prev) => prev.filter((_, i) => i !== index));
+    await recorder.recordDeckKnown(current.cardId, deckId);
+    const nextRemaining = remaining.filter((_, i) => i !== index);
+    setRemaining(nextRemaining);
     setInput("");
     setFeedback("idle");
-  }, [current, deckId, index, recorder]);
+    if (index >= nextRemaining.length && !completeSentRef.current) {
+      completeSentRef.current = true;
+      await recorder.completeSession();
+    }
+  }, [current, deckId, index, recorder, remaining]);
 
-  const markStill = useCallback(() => {
+  const markStill = useCallback(async () => {
     if (!current || !deckId) return;
-    void recorder.recordDeckStill(current.cardId, deckId);
+    await recorder.recordDeckStill(current.cardId, deckId);
     setRemaining((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];

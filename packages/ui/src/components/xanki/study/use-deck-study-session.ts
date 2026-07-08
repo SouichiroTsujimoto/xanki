@@ -62,21 +62,22 @@ export function useDeckStudySession(
     totalCount > 0 ? ((totalCount - remaining + 1) / totalCount) * 100 : 0;
   const isComplete = ready && totalCount > 0 && index >= remainingIds.length;
 
-  useEffect(() => {
-    if (!isComplete || completeSentRef.current) return;
-    completeSentRef.current = true;
-    void recorder.completeSession();
-  }, [isComplete, recorder]);
-
-  const markKnown = useCallback(() => {
+  const markKnown = useCallback(async () => {
     if (!ready || !currentId || !deckId) return;
-    void recorder.recordDeckKnown(currentId, deckId);
-    setRemainingIds((prev) => prev.filter((id) => id !== currentId));
-  }, [currentId, deckId, ready, recorder]);
+    await recorder.recordDeckKnown(currentId, deckId);
+    const nextRemaining = remainingIds.filter((id) => id !== currentId);
+    setRemainingIds(nextRemaining);
+    const willComplete =
+      nextRemaining.length === 0 || index >= nextRemaining.length;
+    if (willComplete && !completeSentRef.current) {
+      completeSentRef.current = true;
+      await recorder.completeSession();
+    }
+  }, [currentId, deckId, index, ready, recorder, remainingIds]);
 
-  const markStill = useCallback(() => {
+  const markStill = useCallback(async () => {
     if (!ready || !currentId || !deckId) return;
-    void recorder.recordDeckStill(currentId, deckId);
+    await recorder.recordDeckStill(currentId, deckId);
     setRemainingIds((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];

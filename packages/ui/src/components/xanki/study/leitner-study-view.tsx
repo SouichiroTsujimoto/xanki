@@ -4,6 +4,7 @@ import { useAppApi } from "../../../context/app-api-context";
 import { useAppShell } from "../../../context/app-shell-context";
 import type { Deck } from "../../../types";
 import { LearnMode } from "./learn-mode";
+import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import type { StudySessionInfo } from "./deck-study-view";
 
 interface Props {
@@ -112,7 +113,6 @@ export function LeitnerStudyView({
       {phase === "hub" ? (
         <div className="leitner-study-hub">
           <header className="leitner-study-hub-head">
-            <p className="eyebrow">{copy.leitnerStudy.hubEyebrow}</p>
             <h2 className="leitner-study-hub-title">{copy.leitnerStudy.hubTitle}</h2>
           </header>
 
@@ -143,9 +143,7 @@ export function LeitnerStudyView({
                 <section className="leitner-deck-due-list" aria-label={copy.leitnerStudy.decksSection}>
                   <div className="leitner-deck-due-head">
                     <p className="eyebrow">{copy.leitnerStudy.decksSection}</p>
-                    <p className="leitner-deck-due-sub">
-                      デッキを選ぶと、そのデッキの due だけ復習します
-                    </p>
+                    <p className="leitner-deck-due-sub">{copy.leitnerStudy.deckDueHint}</p>
                   </div>
                   <ul className="leitner-deck-due-items">
                     {deckDueRows.map(({ deck, dueCount: deckDue }) => (
@@ -168,20 +166,17 @@ export function LeitnerStudyView({
               )}
             </>
           ) : (
-            <div className="leitner-study-complete-panel">
-              <span className="leitner-complete-mark" aria-hidden>
-                ✓
-              </span>
-              <p className="eyebrow">{copy.leitnerStudy.emptyEyebrow}</p>
-              <h3>{copy.leitnerStudy.completeTitle}</h3>
-              <p>{copy.leitnerStudy.completeHint}</p>
-            </div>
+            <LeitnerDueCompletePanel layout="hub" />
           )}
         </div>
       ) : (
         <div className="study-session leitner-study-session">
           <div className="study-session-body">
-            <LearnMode deckId={sessionDeckId} shuffle />
+            <LearnMode
+              deckId={sessionDeckId}
+              shuffle
+              onBackToHub={exitSession}
+            />
           </div>
         </div>
       )}

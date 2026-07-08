@@ -565,6 +565,64 @@
   font-size: 1.25rem;
 }
 
+.leitner-study-complete-panel p {
+  margin: 0;
+  color: var(--color-muted-foreground);
+}
+
+.leitner-study-complete-panel--session {
+  width: min(100%, 520px);
+}
+
+.leitner-complete-session-wrap {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: 1rem;
+}
+
+.leitner-complete-particles {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.leitner-complete-particle {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.leitner-complete-particle--accent {
+  background: var(--color-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+
+.leitner-complete-particle--leitner {
+  background: var(--color-leitner-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-leitner-accent) 45%, transparent);
+}
+
+.leitner-complete-actions {
+  margin-top: 1.1rem;
+}
+
+.leitner-deck-session-complete p {
+  color: var(--color-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leitner-complete-particle {
+    display: none;
+  }
+}
+
 .leitner-grade-actions {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -46,7 +46,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 |----|-----|------|
 | user_id | TEXT | |
 | card_id | TEXT | |
-| box | INTEGER | Leitner 箱 1..5 |
+| box | INTEGER | 復習箱 1..5（`LeitnerScheduler`） |
 | due_at | INTEGER | 次回復習 unix ms |
 | last_result | INTEGER | 直近評価 **0–3**（4 段階） |
 | updated_at | INTEGER | unix ms |

@@ -18,8 +18,8 @@
 | [glossary.md](./glossary.md) | ユビキタス言語（UI 表示名・コード対応） |
 | [library.md](./library.md) | デッキとカード一覧（旧称: ライブラリ） |
 | [study.md](./study.md) | 学習 2 トラック索引 |
-| [deck-study.md](./deck-study.md) | デッキ学習（Quizlet 型・セッションキュー） |
-| [leitner-study.md](./leitner-study.md) | Leitner学習（横断 due・4 段階評価） |
+| [deck-study.md](./deck-study.md) | デッキ学習（セッションキュー） |
+| [leitner-study.md](./leitner-study.md) | スマート学習（横断復習予定・4 段階評価） |
 | [study-metrics.md](./study-metrics.md) | 学習メトリクス（イベント・習熟度・ホーム UI） |
 | [ui.md](./ui.md) | デザイン原則、ダイアログ、ショートカット表 |
 | [cloud.md](./cloud.md) | 認証・同期・Web UI・課金・AI(クラウド層) |

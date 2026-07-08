@@ -68,12 +68,6 @@ export function TestMode({ deckId, shuffle }: Props) {
     totalCount > 0 ? ((totalCount - remainingCount + 1) / totalCount) * 100 : 0;
   const isComplete = totalCount > 0 && index >= remaining.length;
 
-  useEffect(() => {
-    if (!isComplete || completeSentRef.current) return;
-    completeSentRef.current = true;
-    void recorder.completeSession();
-  }, [isComplete, recorder]);
-
   const feedback = useMemo(() => {
     if (!selected || !current) return null;
     return selected === current.answer.answer ? "ok" : "ng";
@@ -84,16 +78,21 @@ export function TestMode({ deckId, shuffle }: Props) {
     setSelected(choice);
   }
 
-  const markKnown = useCallback(() => {
+  const markKnown = useCallback(async () => {
     if (!current || !deckId) return;
-    void recorder.recordDeckKnown(current.answer.cardId, deckId);
-    setRemaining((prev) => prev.filter((_, i) => i !== index));
+    await recorder.recordDeckKnown(current.answer.cardId, deckId);
+    const nextRemaining = remaining.filter((_, i) => i !== index);
+    setRemaining(nextRemaining);
     setSelected(null);
-  }, [current, deckId, index, recorder]);
+    if (index >= nextRemaining.length && !completeSentRef.current) {
+      completeSentRef.current = true;
+      await recorder.completeSession();
+    }
+  }, [current, deckId, index, recorder, remaining]);
 
-  const markStill = useCallback(() => {
+  const markStill = useCallback(async () => {
     if (!current || !deckId) return;
-    void recorder.recordDeckStill(current.answer.cardId, deckId);
+    await recorder.recordDeckStill(current.answer.cardId, deckId);
     setRemaining((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];

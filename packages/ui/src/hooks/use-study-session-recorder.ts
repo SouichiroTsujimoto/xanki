@@ -24,17 +24,23 @@ export function useStudySessionRecorder() {
   const completedRef = useRef(false);
   const cardsCompletedRef = useRef(0);
   const pendingEventsRef = useRef<PendingDeckEvent[]>([]);
+  const inFlightRef = useRef(0);
 
   const flushPendingEvents = useCallback(
     async (sessionId: string) => {
       if (pendingEventsRef.current.length === 0) return;
       const events = pendingEventsRef.current;
       pendingEventsRef.current = [];
-      await api.recordStudyEvents(sessionId, {
-        tzOffsetMinutes: getTzOffsetMinutes(),
-        events,
-      });
-      cardsCompletedRef.current += countKnownEvents(events);
+      inFlightRef.current += 1;
+      try {
+        await api.recordStudyEvents(sessionId, {
+          tzOffsetMinutes: getTzOffsetMinutes(),
+          events,
+        });
+        cardsCompletedRef.current += countKnownEvents(events);
+      } finally {
+        inFlightRef.current -= 1;
+      }
     },
     [api],
   );
@@ -42,12 +48,17 @@ export function useStudySessionRecorder() {
   const completeSession = useCallback(async () => {
     const sessionId = sessionIdRef.current;
     if (!sessionId || completedRef.current) return;
-    completedRef.current = true;
+
+    while (inFlightRef.current > 0) {
+      await Promise.resolve();
+    }
+
     await flushPendingEvents(sessionId);
     await api.completeStudySession(sessionId, {
       cardsCompleted: cardsCompletedRef.current,
       tzOffsetMinutes: getTzOffsetMinutes(),
     });
+    completedRef.current = true;
     sessionIdRef.current = null;
   }, [api, flushPendingEvents]);
 
@@ -60,7 +71,9 @@ export function useStudySessionRecorder() {
 
   const beginDeckSession = useCallback(
     async ({ deckId, mode, cardsTotal }: DeckSessionOptions) => {
-      await completeSession();
+      if (sessionIdRef.current && !completedRef.current) {
+        await completeSession();
+      }
       completedRef.current = false;
       cardsCompletedRef.current = 0;
       if (cardsTotal <= 0) {
@@ -83,7 +96,9 @@ export function useStudySessionRecorder() {
 
   const beginLeitnerSession = useCallback(
     async (deckId: string | null | undefined, cardsTotal: number) => {
-      await completeSession();
+      if (sessionIdRef.current && !completedRef.current) {
+        await completeSession();
+      }
       completedRef.current = false;
       cardsCompletedRef.current = 0;
       pendingEventsRef.current = [];
@@ -113,11 +128,16 @@ export function useStudySessionRecorder() {
         return;
       }
 
-      await api.recordStudyEvents(sessionId, {
-        tzOffsetMinutes: getTzOffsetMinutes(),
-        events,
-      });
-      cardsCompletedRef.current += countKnownEvents(events);
+      inFlightRef.current += 1;
+      try {
+        await api.recordStudyEvents(sessionId, {
+          tzOffsetMinutes: getTzOffsetMinutes(),
+          events,
+        });
+        cardsCompletedRef.current += countKnownEvents(events);
+      } finally {
+        inFlightRef.current -= 1;
+      }
     },
     [api],
   );
