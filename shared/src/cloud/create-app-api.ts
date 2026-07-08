@@ -18,6 +18,23 @@ import type {
   ReviewCard,
 } from "../library/app-api-types.js";
 
+async function sha256Hex(data: ArrayBuffer): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function uploadImageBlob(cloud: CloudClient, data: ArrayBuffer, mime: string): Promise<string> {
+  const hash = await sha256Hex(data);
+  const prepare = await cloud.prepareBlob(hash, data.byteLength, mime);
+  if (prepare.status === "upload") {
+    await cloud.uploadBlob(hash, data, mime);
+  }
+  await cloud.commitBlob(hash);
+  return hash;
+}
+
 const unsupported = (feature: string) => () => {
   throw new Error(`${feature} はこのプラットフォームでは未対応です`);
 };
@@ -216,6 +233,13 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
     triggerScreenshotCapture: platform.triggerScreenshotCapture,
     openNewCardEditor: platform.openNewCardEditor,
     qaGenerate: (text, kind, count) => cloud.qaGenerate(text, kind, count),
+    cardsGenerate: (request) => cloud.cardsGenerate(request),
+    getAccount: () =>
+      cloud.me().then((me) => ({
+        plan: me.plan,
+        aiCreditsRemaining: me.aiCreditsRemaining,
+      })),
+    uploadImageBlob: (data, mime) => uploadImageBlob(cloud, data, mime),
     askAi: (cardContext, question, signal) => cloud.askAi(cardContext, question, signal),
   };
 }

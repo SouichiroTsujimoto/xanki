@@ -56,7 +56,7 @@ flowchart TD
 | `BootstrapLoading` / `EditorLoading` | [`loading-views.tsx`](../../packages/ui/src/components/xanki/loading-views.tsx) | 起動中・エディタ読込中 | スピナー / プレースホルダの再実装 |
 | `Dock` | [`motion/dock.tsx`](../../packages/ui/src/components/motion/dock.tsx) | 学習手段選択（macOS Dock 風） | 手段ボタン列の再実装 |
 | `FadeSlide` / `MotionFade` | [`motion/fade-slide.tsx`](../../packages/ui/src/components/motion/fade-slide.tsx) | fade / slide アニメ | アプリ側から `motion/react` 直接 import |
-| `AiQaGeneratePanel` | [`mask/ai-qa-generate-panel.tsx`](../../packages/ui/src/components/xanki/mask/ai-qa-generate-panel.tsx) | AI 一問一答生成 | マスクエディタ内 AI パネル再実装 |
+| `AiCardGenerateDialog` | [`mask/ai-card-generate-dialog.tsx`](../../packages/ui/src/components/xanki/mask/ai-card-generate-dialog.tsx) | AI カード一括生成（テキスト / 画像） | 学習ハブ・マスクエディタ内 AI ダイアログ再実装 |
 | `StudyAiPanel` | [`study/study-ai-panel.tsx`](../../packages/ui/src/components/xanki/study/study-ai-panel.tsx) | 学習中 AI 補助 | 学習セッション内 AI ダイアログ再実装 |
 
 ## Screens

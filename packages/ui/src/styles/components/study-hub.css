@@ -177,6 +177,13 @@
   gap: 1rem;
 }
 
+.study-hub-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .study-hub-toolbar-title {
   margin: 0.15rem 0 0;
   font-size: 1.35rem;

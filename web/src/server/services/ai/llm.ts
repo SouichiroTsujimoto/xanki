@@ -24,6 +24,13 @@ const qaGenerateSchema = z.object({
 
 export type QaGenerateItem = z.infer<typeof qaItemSchema>;
 
+export type AiTier = "fast" | "thinking";
+
+export const AI_CREDIT_COST: Record<AiTier, number> = {
+  fast: 1,
+  thinking: 2,
+};
+
 /** Unified Billing 対応。DeepSeek は対象外（BYOK が必要）。 */
 export const DEFAULT_AI_MODEL = "google-ai-studio/gemini-2.5-flash";
 
@@ -55,22 +62,35 @@ export function resolveGoogleModelId(modelId: string): string | null {
   return null;
 }
 
-function createChatModel(env: Env) {
+export function resolveModelForTier(env: Env, tier: AiTier): string {
+  if (tier === "thinking") {
+    return env.AI_MODEL_THINKING ?? env.AI_MODEL ?? DEFAULT_AI_MODEL;
+  }
+  return env.AI_MODEL_FAST ?? env.AI_MODEL ?? DEFAULT_AI_MODEL;
+}
+
+export function getCreditCostForTier(tier: AiTier): number {
+  return AI_CREDIT_COST[tier];
+}
+
+function createModelForId(env: Env, modelId: string) {
   const gateway = createGateway(env);
-  const modelId = env.AI_MODEL ?? DEFAULT_AI_MODEL;
   return gateway(unified(modelId));
 }
 
 /** unified() は responseFormat 非対応のため、構造化出力はネイティブ Google を使う */
-function createObjectModel(env: Env) {
+function createObjectModelForId(env: Env, modelId: string) {
   const gateway = createGateway(env);
-  const modelId = env.AI_MODEL ?? DEFAULT_AI_MODEL;
   const googleModelId = resolveGoogleModelId(modelId);
   if (googleModelId) {
     const google = createGoogleGenerativeAI();
     return gateway(google(googleModelId));
   }
   return gateway(unified(modelId));
+}
+
+function createChatModel(env: Env) {
+  return createModelForId(env, resolveModelForTier(env, "fast"));
 }
 
 function responseBody(error: unknown): string {
@@ -110,14 +130,26 @@ export function isDevAiBypass(env: Env): boolean {
 export function canUseAi(
   env: Env,
   ent: { plan: string; aiCreditsRemaining: number },
+  cost = 1,
 ): boolean {
   if (isDevAiBypass(env)) return true;
-  return ent.plan === "pro" && ent.aiCreditsRemaining > 0;
+  return ent.plan === "pro" && ent.aiCreditsRemaining >= cost;
 }
 
-export async function generateQaItems(
+export interface SourceImage {
+  data: Uint8Array;
+  mime: string;
+}
+
+export async function generateCardsFromSource(
   env: Env,
-  params: { text: string; count: number; kind: "qa" | "choice" },
+  params: {
+    text?: string;
+    images?: SourceImage[];
+    count: number;
+    kind: "qa" | "choice";
+    tier: AiTier;
+  },
 ): Promise<{ items: QaGenerateItem[] }> {
   if (!isAiConfigured(env)) {
     throw new AiUnavailableError();
@@ -128,27 +160,53 @@ export async function generateQaItems(
       ? "Each item must include a choices array with exactly 4 options; the answer must match one choice."
       : "Do not include a choices field.";
 
-  const modelId = env.AI_MODEL ?? DEFAULT_AI_MODEL;
+  const modelId = resolveModelForTier(env, params.tier);
   const googleModelId = resolveGoogleModelId(modelId);
 
+  const promptLines = [
+    `Generate exactly ${params.count} flashcard Q&A pairs from the source material.`,
+    "Use the same language as the source for questions and answers.",
+    "Return a JSON object with an items array; each item has question and answer fields.",
+    kindInstruction,
+  ];
+
+  if (params.text) {
+    promptLines.push("", "Source text:", params.text);
+  } else {
+    promptLines.push("", "Source material is provided as image(s). Read them carefully.");
+  }
+
+  const content: Array<
+    | { type: "text"; text: string }
+    | { type: "image"; image: Uint8Array; mimeType?: string }
+  > = [{ type: "text", text: promptLines.join("\n") }];
+
+  for (const image of params.images ?? []) {
+    content.push({ type: "image", image: image.data, mimeType: image.mime });
+  }
+
   const { object } = await generateObject({
-    model: createObjectModel(env),
+    model: createObjectModelForId(env, modelId),
     schema: zodSchema(qaGenerateSchema),
     ...(googleModelId
       ? { providerOptions: { google: { structuredOutputs: true } } }
       : {}),
-    prompt: [
-      `Generate exactly ${params.count} flashcard Q&A pairs from the source text.`,
-      "Use the same language as the source for questions and answers.",
-      "Return a JSON object with an items array; each item has question and answer fields.",
-      kindInstruction,
-      "",
-      "Source text:",
-      params.text,
-    ].join("\n"),
+    messages: [{ role: "user", content }],
   });
 
   return { items: object.items };
+}
+
+export async function generateQaItems(
+  env: Env,
+  params: { text: string; count: number; kind: "qa" | "choice" },
+): Promise<{ items: QaGenerateItem[] }> {
+  return generateCardsFromSource(env, {
+    text: params.text,
+    count: params.count,
+    kind: params.kind,
+    tier: "fast",
+  });
 }
 
 export function createAskResponseStream(

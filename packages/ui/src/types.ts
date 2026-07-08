@@ -25,6 +25,7 @@ export type {
   UpdateCardRequest,
   UpdateDeckRequest,
   AiQaItem,
+  AiTier,
 } from "@xanki/shared";
 import type { TextMask } from "@xanki/shared";
 

@@ -15,7 +15,7 @@ import {
   getTextareaSelectionOffsets,
 } from "../../../lib/textSelection";
 import type { Deck, TextMask } from "../../../types";
-import { AiQaGeneratePanel } from "./ai-qa-generate-panel";
+import { AiCardGenerateDialog } from "./ai-card-generate-dialog";
 import { Button } from "../../ui/button";
 
 export interface TextMaskDraftOptions {
@@ -395,7 +395,6 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
     canSave,
     handleSave,
     resetDraft,
-    applyQaItem,
   } = draft;
 
   useEffect(() => {
@@ -504,11 +503,11 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
           </Button>
         </div>
       </div>
-      <AiQaGeneratePanel
+      <AiCardGenerateDialog
         open={aiOpen}
-        sourceText={content}
+        deckId={deckId}
+        initialSourceText={content}
         onClose={() => setAiOpen(false)}
-        onApply={(item) => applyQaItem(item.question, item.answer)}
       />
     </section>
   );

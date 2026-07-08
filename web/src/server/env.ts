@@ -17,6 +17,8 @@ export interface Env {
   AI_GATEWAY_ID?: string;
   AI_GATEWAY_TOKEN?: string;
   AI_MODEL?: string;
+  AI_MODEL_FAST?: string;
+  AI_MODEL_THINKING?: string;
   TEST_MIGRATIONS?: Array<{ name: string; queries: string[] }>;
 }
 

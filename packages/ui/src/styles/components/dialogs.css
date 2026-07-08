@@ -233,6 +233,147 @@
   color: var(--color-muted-foreground);
 }
 
+.ai-card-generate-dialog {
+  width: min(100%, 560px);
+}
+
+.ai-card-generate-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.ai-card-generate-source {
+  margin-top: 0.75rem;
+}
+
+.ai-card-generate-file-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ai-card-generate-file-hint {
+  font-size: 0.78rem;
+  color: var(--color-muted-foreground);
+}
+
+.ai-card-generate-dropzone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  border: var(--border-width-default) dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background: var(--color-background);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ai-card-generate-dropzone:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ai-card-generate-dropzone-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ai-card-generate-image-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-card-generate-image-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.5rem;
+  border: var(--border-width-default) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.ai-card-generate-image-item img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.ai-card-generate-options {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.ai-card-generate-fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.ai-card-generate-fieldset legend {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+  margin-bottom: 0.35rem;
+}
+
+.ai-card-generate-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ai-card-generate-credits,
+.ai-card-generate-status {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-muted-foreground);
+}
+
+.ai-card-generate-results {
+  margin-top: 0.85rem;
+}
+
+.ai-card-generate-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-card-generate-result {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.ai-card-generate-result-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ai-card-generate-edit {
+  min-height: 0;
+}
+
 .note-field input {
   min-width: 180px;
 }

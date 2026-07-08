@@ -166,6 +166,20 @@ export interface AiQaGenerateResponse {
   items: AiQaItem[];
 }
 
+export type AiTier = "fast" | "thinking";
+
+export interface AiCardsGenerateRequest {
+  text?: string;
+  images?: Array<{ blobHash: string }>;
+  count?: number;
+  kind: "qa";
+  tier: AiTier;
+}
+
+export interface AiCardsGenerateResponse {
+  items: AiQaItem[];
+}
+
 export interface AiAskRequest {
   cardContext: string;
   question: string;

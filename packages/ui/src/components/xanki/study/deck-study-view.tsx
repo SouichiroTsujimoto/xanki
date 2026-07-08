@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
+import { AiCardGenerateDialog } from "../mask/ai-card-generate-dialog";
 import { CardCollection } from "../card-collection";
 import { CollectionAddBar } from "../collection-add-bar";
 import { StudyCardCoverflow } from "./study-card-coverflow";
@@ -12,6 +13,7 @@ import { FlashcardsMode } from "./flashcards-mode";
 import { MatchMode } from "./match-mode";
 import { TestMode } from "./test-mode";
 import { WriteMode } from "./write-mode";
+import { Button } from "../../ui/button";
 
 export interface StudySessionInfo {
   active: boolean;
@@ -40,6 +42,8 @@ export function DeckStudyView({
   const [phase, setPhase] = useState<DeckStudyMode | "hub">("hub");
   const [shuffle, setShuffle] = useState(false);
   const [singleCard, setSingleCard] = useState<ReviewCard | null>(null);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [collectionRevisionBump, setCollectionRevisionBump] = useState(0);
 
   const beginStudySession = useCallback(() => {
     sidebarOpenBeforeSessionRef.current = sidebarOpen;
@@ -111,14 +115,24 @@ export function DeckStudyView({
                 <p className="eyebrow">{copy.deckStudy.modesEyebrow}</p>
                 <h2 className="study-hub-toolbar-title">{copy.deckStudy.hubTitle}</h2>
               </div>
-              <label className="shuffle-toggle">
-                <input
-                  type="checkbox"
-                  checked={shuffle}
-                  onChange={(e) => setShuffle(e.target.checked)}
-                />
-                {copy.deckStudy.shuffle}
-              </label>
+              <div className="study-hub-toolbar-actions">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={!deckId}
+                  onClick={() => setAiDialogOpen(true)}
+                >
+                  {copy.ai.cardsGenerateAddButton}
+                </Button>
+                <label className="shuffle-toggle">
+                  <input
+                    type="checkbox"
+                    checked={shuffle}
+                    onChange={(e) => setShuffle(e.target.checked)}
+                  />
+                  {copy.deckStudy.shuffle}
+                </label>
+              </div>
             </div>
             <div className="study-mode-launcher">
               {MODES.map((item) => (
@@ -145,8 +159,16 @@ export function DeckStudyView({
           <CardCollection
             deckId={deckId ?? null}
             searchQuery={searchQuery}
-            collectionRevision={collectionRevision}
+            collectionRevision={collectionRevision + collectionRevisionBump}
             onPreviewCard={startCardPreview}
+            onOpenAiGenerate={() => setAiDialogOpen(true)}
+          />
+
+          <AiCardGenerateDialog
+            open={aiDialogOpen}
+            deckId={deckId ?? null}
+            onClose={() => setAiDialogOpen(false)}
+            onSaved={() => setCollectionRevisionBump((value) => value + 1)}
           />
         </div>
       ) : (
