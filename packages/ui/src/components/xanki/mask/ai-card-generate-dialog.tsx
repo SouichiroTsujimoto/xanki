@@ -12,6 +12,13 @@ const IMAGE_FILE_ACCEPT = "image/jpeg,image/png,image/webp";
 
 type SourceTab = "text" | "image";
 
+interface UploadedImage {
+  id: string;
+  hash: string;
+  name: string;
+  previewUrl: string;
+}
+
 interface EditableItem extends AiQaItem {
   id: string;
 }
@@ -85,9 +92,7 @@ export function AiCardGenerateDialog({
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<SourceTab>("text");
   const [text, setText] = useState(initialSourceText);
-  const [images, setImages] = useState<
-    Array<{ hash: string; name: string; previewUrl: string }>
-  >([]);
+  const [images, setImages] = useState<UploadedImage[]>([]);
   const [count, setCount] = useState<(typeof COUNT_OPTIONS)[number]>(5);
   const [tier, setTier] = useState<AiTier>("thinking");
   const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
@@ -198,7 +203,12 @@ export function AiCardGenerateDialog({
           const hash = await api.uploadImageBlob(buffer, file.type || "image/jpeg");
           const previewUrl = URL.createObjectURL(file);
           previewUrlsRef.current.push(previewUrl);
-          nextImages.push({ hash, name: file.name, previewUrl });
+          nextImages.push({
+            id: crypto.randomUUID(),
+            hash,
+            name: file.name,
+            previewUrl,
+          });
         }
         setImages(nextImages);
       } catch (err) {
@@ -252,6 +262,18 @@ export function AiCardGenerateDialog({
       return;
     }
 
+    const savable = selected.filter(
+      (item) => item.question.trim().length > 0 && item.answer.trim().length > 0,
+    );
+    if (savable.length === 0) {
+      setError(copy.ai.cardsGenerateEmptyFields);
+      return;
+    }
+    if (savable.length < selected.length) {
+      setError(copy.ai.cardsGenerateEmptyFields);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSaveMessage(null);
@@ -261,7 +283,7 @@ export function AiCardGenerateDialog({
     let failed = false;
 
     try {
-      for (const item of selected) {
+      for (const item of savable) {
         try {
           await api.saveQaCard({
             deckId,
@@ -290,7 +312,7 @@ export function AiCardGenerateDialog({
         });
       }
 
-      const remaining = selected.length - savedIds.length;
+      const remaining = savable.length - savedIds.length;
       if (failed && savedIds.length > 0) {
         setSaveMessage(copy.ai.cardsGeneratePartialSave(savedIds.length, remaining));
         setError(copy.ai.errorGeneric);
@@ -314,6 +336,13 @@ export function AiCardGenerateDialog({
     tab,
     text,
   ]);
+
+  const canSaveSelected = items.some(
+    (item) =>
+      selectedIds.has(item.id) &&
+      item.question.trim().length > 0 &&
+      item.answer.trim().length > 0,
+  );
 
   const handleClose = useCallback(() => {
     if (busy) return;
@@ -427,7 +456,7 @@ export function AiCardGenerateDialog({
           {images.length > 0 && (
             <ul className="ai-card-generate-image-list">
               {images.map((image) => (
-                <li key={image.hash} className="ai-card-generate-image-item">
+                <li key={image.id} className="ai-card-generate-image-item">
                   <img src={image.previewUrl} alt={image.name} />
                   <span>{image.name}</span>
                   <Button
@@ -440,7 +469,7 @@ export function AiCardGenerateDialog({
                       previewUrlsRef.current = previewUrlsRef.current.filter(
                         (url) => url !== image.previewUrl,
                       );
-                      setImages((prev) => prev.filter((item) => item.hash !== image.hash));
+                      setImages((prev) => prev.filter((item) => item.id !== image.id));
                     }}
                   >
                     {copy.common.cancel}
@@ -556,7 +585,7 @@ export function AiCardGenerateDialog({
           <Button
             type="button"
             variant="accent"
-            disabled={busy || selectedIds.size === 0}
+            disabled={busy || selectedIds.size === 0 || !canSaveSelected}
             onClick={() => void handleSaveSelected()}
           >
             {saving

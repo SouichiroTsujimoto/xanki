@@ -327,6 +327,7 @@ export const copy = {
     cardsGenerateImageUploading: "画像をアップロード中…",
     cardsGenerateImageError: "画像のアップロードに失敗しました",
     cardsGenerateNoSelection: "保存するカードを選択してください",
+    cardsGenerateEmptyFields: "問題と解答が空のカードは保存できません",
     cardsGeneratePartialSave: (saved: number, remaining: number) =>
       `${saved} 枚を保存しました。残り ${remaining} 枚は保存に失敗しました。再試行してください。`,
     errorUnavailable:

@@ -45,6 +45,10 @@ export function DeckStudyView({
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [collectionRevisionBump, setCollectionRevisionBump] = useState(0);
 
+  const bumpCollectionRevision = useCallback(() => {
+    setCollectionRevisionBump((value) => value + 1);
+  }, []);
+
   const beginStudySession = useCallback(() => {
     sidebarOpenBeforeSessionRef.current = sidebarOpen;
     setStudySessionActive(true);
@@ -105,7 +109,7 @@ export function DeckStudyView({
         <div className="study-hub">
           <StudyCardCoverflow
             deckId={deckId ?? null}
-            collectionRevision={collectionRevision}
+            collectionRevision={collectionRevision + collectionRevisionBump}
             onSelectCard={startCardPreview}
           />
 
@@ -154,7 +158,7 @@ export function DeckStudyView({
             </div>
           </section>
 
-          <CollectionAddBar deckId={deckId ?? null} />
+          <CollectionAddBar deckId={deckId ?? null} onAiCardsSaved={bumpCollectionRevision} />
 
           <CardCollection
             deckId={deckId ?? null}
@@ -168,7 +172,7 @@ export function DeckStudyView({
             open={aiDialogOpen}
             deckId={deckId ?? null}
             onClose={() => setAiDialogOpen(false)}
-            onSaved={() => setCollectionRevisionBump((value) => value + 1)}
+            onSaved={bumpCollectionRevision}
           />
         </div>
       ) : (

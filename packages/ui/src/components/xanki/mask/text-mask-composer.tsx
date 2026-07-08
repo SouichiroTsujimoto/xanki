@@ -371,9 +371,10 @@ export function TextMaskQuestionField({
 
 interface EmbeddedProps {
   deckId: string | null;
+  onAiCardsSaved?: () => void;
 }
 
-export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
+export function TextMaskComposerEmbedded({ deckId, onAiCardsSaved }: EmbeddedProps) {
   const disabled = !deckId;
   const [aiOpen, setAiOpen] = useState(false);
 
@@ -508,6 +509,7 @@ export function TextMaskComposerEmbedded({ deckId }: EmbeddedProps) {
         deckId={deckId}
         initialSourceText={content}
         onClose={() => setAiOpen(false)}
+        onSaved={onAiCardsSaved}
       />
     </section>
   );
