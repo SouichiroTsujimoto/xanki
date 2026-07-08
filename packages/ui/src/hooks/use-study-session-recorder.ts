@@ -14,6 +14,10 @@ type PendingDeckEvent = {
   deckId: string;
 };
 
+function countKnownEvents(events: PendingDeckEvent[]): number {
+  return events.filter((event) => event.eventType === "deck_card_known").length;
+}
+
 export function useStudySessionRecorder() {
   const api = useAppApi();
   const sessionIdRef = useRef<string | null>(null);
@@ -30,6 +34,7 @@ export function useStudySessionRecorder() {
         tzOffsetMinutes: getTzOffsetMinutes(),
         events,
       });
+      cardsCompletedRef.current += countKnownEvents(events);
     },
     [api],
   );
@@ -58,9 +63,9 @@ export function useStudySessionRecorder() {
       await completeSession();
       completedRef.current = false;
       cardsCompletedRef.current = 0;
-      pendingEventsRef.current = [];
       if (cardsTotal <= 0) {
         sessionIdRef.current = null;
+        pendingEventsRef.current = [];
         return;
       }
       const session = await api.startStudySession({
@@ -101,9 +106,6 @@ export function useStudySessionRecorder() {
   const recordDeckEvents = useCallback(
     async (events: PendingDeckEvent[]) => {
       if (events.length === 0) return;
-      cardsCompletedRef.current += events.filter(
-        (event) => event.eventType === "deck_card_known",
-      ).length;
 
       const sessionId = sessionIdRef.current;
       if (!sessionId) {
@@ -115,6 +117,7 @@ export function useStudySessionRecorder() {
         tzOffsetMinutes: getTzOffsetMinutes(),
         events,
       });
+      cardsCompletedRef.current += countKnownEvents(events);
     },
     [api],
   );
