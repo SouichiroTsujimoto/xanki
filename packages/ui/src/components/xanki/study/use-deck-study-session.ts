@@ -46,7 +46,11 @@ export function useDeckStudySession(
     setIndex(0);
 
     try {
-      await completeSession();
+      try {
+        await completeSession();
+      } catch {
+        // Prior metrics session cleanup is optional; keep deck study usable.
+      }
       completeSentRef.current = false;
       const cards = await api.getStudyCards("all", deckId);
       const map = new Map(cards.map((card) => [card.card.id, card]));
