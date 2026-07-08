@@ -46,6 +46,8 @@ export function mapApiCard(raw: ApiCard, opts?: { imagePath?: string }): MappedC
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     boxNum: raw.boxNum,
+    reviewPhase: raw.reviewPhase,
+    reviewStep: raw.reviewStep,
     dueAt: raw.dueAt,
   };
 }

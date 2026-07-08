@@ -1,5 +1,5 @@
 import type { CardKind } from "../sync/sync.js";
-import type { DeckSchedulerConfig } from "../study/scheduler.js";
+import type { DeckSchedulerConfig, ReviewPhase } from "../study/scheduler.js";
 
 export interface ApiDeck {
   id: string;
@@ -28,6 +28,8 @@ export interface ApiCard {
   updatedAt: number;
   deletedAt?: number | null;
   boxNum?: number;
+  reviewPhase?: ReviewPhase;
+  reviewStep?: number;
   dueAt?: number;
   lastResult?: number | null;
 }
@@ -35,6 +37,8 @@ export interface ApiCard {
 export interface ApiReviewState {
   cardId: string;
   box: number;
+  phase: ReviewPhase;
+  step: number;
   dueAt: number;
   lastResult?: number | null;
   updatedAt: number;

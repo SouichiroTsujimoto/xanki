@@ -54,6 +54,8 @@ export const reviewState = sqliteTable(
     userId: text("user_id").notNull(),
     cardId: text("card_id").notNull(),
     box: integer("box").notNull(),
+    phase: text("phase").notNull().default("review"),
+    step: integer("step").notNull().default(0),
     dueAt: integer("due_at").notNull(),
     lastResult: integer("last_result"),
     updatedAt: integer("updated_at").notNull(),

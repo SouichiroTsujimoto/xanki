@@ -25,6 +25,7 @@ import {
   scheduleWebLibraryRefresh,
   setLibraryRefreshHandler,
   subscribeWebRevisions,
+  flushLibraryRefresh,
 } from "./library-sync";
 import { LoginPage } from "./pages/LoginPage";
 
@@ -152,6 +153,7 @@ function AuthenticatedApp({
               onSelectDeck={setSelectedDeckId}
               onGoToDeckStudy={() => handleTabChange("deckStudy")}
               onGoToLeitner={() => handleTabChange("leitner")}
+              onDeckConfigSaved={() => flushLibraryRefresh().then(() => refreshDecks())}
             />
           )}
           <AppTabLayer active={tab === "deckStudy"}>

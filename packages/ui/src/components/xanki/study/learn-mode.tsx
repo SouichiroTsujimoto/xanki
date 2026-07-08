@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildStudyCardContext,
-  formatReviewInterval,
+  normalizeReviewState,
   previewReviewGrade,
   resolveDeckSchedulerConfig,
 } from "@xanki/shared";
@@ -58,6 +58,7 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
   const [revealed, setRevealed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [completion, setCompletion] = useState<CompletionState>({ kind: "idle" });
+  const [previewNow, setPreviewNow] = useState(() => Date.now());
 
   const resolveCompletion = useCallback(async () => {
     setCompletion({ kind: "pending" });
@@ -102,14 +103,26 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
     );
   }, [current, deckConfigById]);
 
+  const reviewState = useMemo(() => {
+    if (!current) {
+      return normalizeReviewState({ phase: "learning", step: 0, box: 1 });
+    }
+    return normalizeReviewState({
+      phase: current.card.reviewPhase,
+      step: current.card.reviewStep,
+      box: current.card.boxNum ?? 1,
+    });
+  }, [current]);
+
   const gradePreviews = useMemo(() => {
-    const currentBox = current?.card.boxNum ?? 1;
     return GRADES.map((grade) =>
-      formatReviewInterval(
-        previewReviewGrade(currentBox, grade.result, currentSchedulerConfig)
-          .intervalDays,
-      ),
+      previewReviewGrade(reviewState, grade.result, currentSchedulerConfig, previewNow)
+        .label,
     );
+  }, [reviewState, currentSchedulerConfig, previewNow]);
+
+  useEffect(() => {
+    setPreviewNow(Date.now());
   }, [current, currentSchedulerConfig]);
 
   useEffect(() => {
