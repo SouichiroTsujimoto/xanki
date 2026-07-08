@@ -8,6 +8,7 @@
 | **値（色・半径・影）** | [`packages/ui/src/styles/tokens.css`](../../packages/ui/src/styles/tokens.css) |
 | コンポーネントスタイル | [`packages/ui/src/styles/globals.css`](../../packages/ui/src/styles/globals.css)（`base.css` + `components/*.css`） |
 | 共有 UI コンポーネント | [`packages/ui`](../../packages/ui/)（`@xanki/ui`） |
+| レイアウト実装メモ（WHY） | [`docs/dev-ui.md`](../dev-ui.md)（索引） |
 
 ## Browser Support
 

@@ -1,15 +1,21 @@
 import path from "node:path";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    cloudflare({
+      configPath: path.resolve(__dirname, "wrangler.toml"),
+      // root: src/client だとデフォルト state が web/src/client/.wrangler になり、
+      // wrangler d1 migrations (--local) が使う web/.wrangler と別 DB になる
+      persistState: { path: path.resolve(__dirname, ".wrangler/state") },
+    }),
+  ],
   root: "src/client",
-  build: {
-    outDir: "../../dist/client",
-    emptyOutDir: true,
-  },
   resolve: {
     alias: {
       "@xanki/shared": path.resolve(__dirname, "../shared/src/index.ts"),
@@ -17,8 +23,7 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      "/api": "http://localhost:8787",
-    },
+    port: 8787,
+    strictPort: true,
   },
 });

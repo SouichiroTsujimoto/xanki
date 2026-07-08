@@ -11,10 +11,8 @@
 | 画像マスク・座標 | [image-masks.md](./docs/spec/image-masks.md) |
 | DB / JSON | [data-model.md](./docs/spec/data-model.md) |
 | ライブラリ | [library.md](./docs/spec/library.md)（用語: [glossary.md](./docs/spec/glossary.md)） |
-| 学習（索引） | [study.md](./docs/spec/study.md) |
-| デッキ学習 | [deck-study.md](./docs/spec/deck-study.md) |
-| Leitner学習 | [leitner-study.md](./docs/spec/leitner-study.md) |
 | UI / ダイアログ | [ui.md](./docs/spec/ui.md) |
+| UI レイアウト（実装・索引） | [dev-ui.md](./docs/dev-ui.md) |
 | 用語・UI 文言 | [glossary.md](./docs/spec/glossary.md) |
 | クラウド層 | [cloud.md](./docs/spec/cloud.md) |
 
@@ -38,12 +36,29 @@
 | `sync/` | レガシー sync 型（縮小予定） |
 | `entitlements.ts` | プラン上限 |
 
-**クラウド層のローカル動作確認**: [docs/dev-cloud.md](./docs/dev-cloud.md)
+**開発者向けメモ（git 管理）** — 索引: [dev-ui.md](./docs/dev-ui.md)
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [dev-ui.md](./docs/dev-ui.md) | UI レイアウト索引・記録ルール |
+| [dev-cloud.md](./docs/dev-cloud.md) | クラウド層ローカル動作確認 |
+| [dev-app-shell.md](./docs/dev-app-shell.md) | シェル・サイドバー・狭幅ドロワー |
+| [dev-home.md](./docs/dev-home.md) | ホーム |
+| [dev-library.md](./docs/dev-library.md) | デッキ・カード一覧 |
+| [dev-study-hub.md](./docs/dev-study-hub.md) | 学習ハブ・Coverflow |
+| [dev-study-layout.md](./docs/dev-study-layout.md) | 学習セッション・フリップ |
+| [dev-mask-editor.md](./docs/dev-mask-editor.md) | マスクエディタ |
+| [dev-dialogs-overlays.md](./docs/dev-dialogs-overlays.md) | ダイアログ・オーバーレイ |
+| [dev-settings-auth.md](./docs/dev-settings-auth.md) | 設定・認証 |
+
+レイアウト問題修正時は dev doc の **履歴メモ** を同 PR で更新（[ui-layout-dev-docs.mdc](./.cursor/rules/ui-layout-dev-docs.mdc)）。
+
+**画面 UI 修正の一連ワークフロー**（設計スキル → 実装 → ブラウザ確認 → dev doc）: [`.cursor/skills/xanki-ui-fix-workflow/SKILL.md`](./.cursor/skills/xanki-ui-fix-workflow/SKILL.md) — 呼び出し例 `@xanki-ui-fix-workflow`
 
 ```bash
 pnpm setup:cloud          # 初回のみ
-pnpm dev:cloud            # Web API + SPA (8787)
-pnpm dev:cloud -- --skip-setup  # wrangler のみ再起動
+pnpm dev:cloud            # Web API + SPA (8787、Vite HMR)
+pnpm dev:cloud -- --skip-setup  # vite dev のみ再起動
 pnpm smoke:cloud          # API 自動テスト
 pnpm dev:cloud:all        # + Tauri デスクトップ
 pnpm dev:desktop          # Desktop のみ（Cloud は別途 dev:cloud）
@@ -64,10 +79,11 @@ UI 変更後の手動スモーク:
 ## ルール
 
 1. 挙動を変えたら **同じ変更で spec を更新**する
-2. 座標系・JSON・保存フローは spec と実装を必ず一致させる
-3. `window.confirm` / `window.alert` は Tauri で使わない（[ui.md](./docs/spec/ui.md)）
-4. **UI 共通化** — Web / Tauri で同じ画面・ダイアログは [`@xanki/ui`](./packages/ui/) に実装し、各アプリは import または認証などの薄い wrapper のみ（[ui.md](./docs/spec/ui.md) §デザイン SSoT）
-5. **用語** — UI・会話では [glossary.md](./docs/spec/glossary.md) の UI 表示（正）を使う。実装は [`packages/ui/src/copy.ts`](./packages/ui/src/copy.ts)
+2. **画面レイアウト問題**（見切れ・重なり等）を直したら **同じ PR で** [dev-ui.md](./docs/dev-ui.md) 索引の該当 dev doc に原因・再発防止を追記する
+3. 座標系・JSON・保存フローは spec と実装を必ず一致させる
+4. `window.confirm` / `window.alert` は Tauri で使わない（[ui.md](./docs/spec/ui.md)）
+5. **UI 共通化** — Web / Tauri で同じ画面・ダイアログは [`@xanki/ui`](./packages/ui/) に実装し、各アプリは import または認証などの薄い wrapper のみ（[ui.md](./docs/spec/ui.md) §デザイン SSoT）
+6. **用語** — UI・会話では [glossary.md](./docs/spec/glossary.md) の UI 表示（正）を使う。実装は [`packages/ui/src/copy.ts`](./packages/ui/src/copy.ts)
 
 ## アプリコード
 

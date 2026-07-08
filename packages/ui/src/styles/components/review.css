@@ -160,14 +160,14 @@
   grid-row: 4;
   width: 100%;
   min-height: 0;
-  height: 100%;
   max-height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   align-self: stretch;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   /* border / outline / shadow の描画余白（親 overflow で見切れないように） */
   padding-block: 20px;
@@ -181,6 +181,7 @@
 
 .study-session .study-flip-slot .study-flip-scene {
   width: 100%;
+  max-height: 100%;
   height: auto;
 }
 
@@ -190,7 +191,8 @@
   height: var(--flip-height, auto);
   min-height: var(--study-flip-min-h);
   max-height: min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h));
-  display: block;
+  display: grid;
+  grid-template-areas: "stack";
   transform-style: preserve-3d;
   overflow: visible;
 }
@@ -204,10 +206,14 @@
 }
 
 .study-session .study-flip-face {
-  position: absolute;
-  inset: 0;
+  grid-area: stack;
+  position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -233,9 +239,10 @@
   width: min(calc(100% - 4px), calc(min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h)) * 4 / 3));
   max-width: min(880px, calc(min(calc(var(--study-flip-max-vh) * 100vh), var(--study-flip-max-h)) * 4 / 3));
   margin-inline: auto;
-  height: 100%;
+  flex: 1 1 auto;
   min-height: 0;
   max-height: 100%;
+  height: auto;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: none;
@@ -269,9 +276,14 @@
 }
 
 .study-session .review-card:has(.study-text-body) {
-  justify-content: center;
+  justify-content: safe center;
   align-items: stretch;
   text-align: left;
+}
+
+/* overflow-y:auto では safe center だけでは足りない → dev-study-layout.md */
+.study-session .review-card:has(.study-text-body)[data-text-scrollable] {
+  justify-content: flex-start;
 }
 
 .study-session .study-text-body {

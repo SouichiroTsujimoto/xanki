@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { copy as uiCopy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
+import { useReviewCardTextOverflow } from "../../../hooks/use-review-card-text-overflow";
 import { ImageWithMaskOverlays } from "../mask/image-with-mask-overlays";
 import type { OcrResult, ReviewCard } from "../../../types";
 import { renderTextWithMasks, resolveImageOverlayRects } from "./study-text-masks";
@@ -73,9 +74,19 @@ export function StudyCardDisplay({
     ? (JSON.parse(card.card.ocrData) as OcrResult)
     : null;
   const overlayRects = resolveImageOverlayRects(imageMasks, ocrData);
+  const isTextLike = card.card.kind === "text" || card.card.kind === "qa";
+  const textOverflowKey = `${card.card.id}:${revealed}:${card.card.content ?? ""}:${card.card.answer ?? ""}`;
+  const { ref: cardRef, scrollable: textScrollable } = useReviewCardTextOverflow(
+    isTextLike,
+    textOverflowKey,
+  );
 
   return (
-    <div className={`review-card ${revealed ? "revealed" : "concealed"}`}>
+    <div
+      ref={cardRef}
+      className={`review-card ${revealed ? "revealed" : "concealed"}`}
+      {...(textScrollable ? { "data-text-scrollable": "" } : {})}
+    >
       {card.card.kind === "text" && card.card.content && (
         <div className="study-text-body">
           {renderTextWithMasks(card.card.content, textMasks, {

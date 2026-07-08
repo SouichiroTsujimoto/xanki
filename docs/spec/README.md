@@ -23,6 +23,8 @@
 | [ui.md](./ui.md) | デザイン原則、ダイアログ、ショートカット表 |
 | [cloud.md](./cloud.md) | 認証・同期・Web UI・課金・AI(クラウド層) |
 | [dev-cloud.md](../dev-cloud.md) | クラウド層ローカル動作確認 |
+| [dev-ui.md](../dev-ui.md) | UI レイアウト実装メモ（索引） |
+| [dev-study-layout.md](../dev-study-layout.md) | 学習セッション・フリップ（dev-ui 配下） |
 
 ## 更新ルール
 

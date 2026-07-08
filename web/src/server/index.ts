@@ -44,10 +44,6 @@ app.all("/api/auth/*", async (c) => {
 
 app.route("/auth", authCallbackRoutes);
 
-app.all("*", async (c) => {
-  return c.env.ASSETS.fetch(c.req.raw);
-});
-
 export default {
   fetch: app.fetch,
   scheduled: async (_event: ScheduledEvent, env: Env, _ctx: ExecutionContext) => {

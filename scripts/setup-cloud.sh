@@ -13,9 +13,6 @@ pnpm --filter @xanki/shared build
 echo "==> D1 migrate (local)"
 CI=1 pnpm --filter @xanki/web db:migrate:local
 
-echo "==> build Web SPA"
-pnpm --filter @xanki/web build:client
-
 echo ""
 echo "Setup complete."
 echo "  Web API + SPA : pnpm dev:cloud"

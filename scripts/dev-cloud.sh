@@ -29,9 +29,9 @@ if [[ "$SKIP_SETUP" != true ]]; then
 fi
 
 echo ""
-echo "==> starting wrangler dev on http://localhost:8787"
+echo "==> starting vite dev (Cloudflare plugin) on http://localhost:8787"
 cd "$ROOT/web"
-pnpm exec wrangler dev --port 8787 &
+pnpm exec vite dev --port 8787 &
 WEB_PID=$!
 
 cleanup() {
@@ -62,6 +62,6 @@ else
   echo "Desktop: pnpm dev:desktop  （別ターミナル）"
   echo "Smoke  : pnpm smoke:cloud"
   echo ""
-  echo "Press Ctrl+C to stop wrangler."
+  echo "Press Ctrl+C to stop vite dev."
   wait "$WEB_PID"
 fi

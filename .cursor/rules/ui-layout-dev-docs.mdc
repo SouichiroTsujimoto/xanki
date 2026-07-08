@@ -1,0 +1,26 @@
+---
+description: 画面レイアウト問題の修正後に dev-ui ドキュメントへ原因・再発防止を記録する
+alwaysApply: true
+---
+
+# UI レイアウト — dev ドキュメント記録
+
+ユーザーが **画面構成・レイアウト**（見切れ、重なり、スクロール、中央揃え、overflow、z-index、狭幅崩れ等）を指摘し、修正した場合、**コード修正と同じ PR** で dev doc を更新する。
+
+## 手順
+
+1. [docs/dev-ui.md](../../docs/dev-ui.md) の索引から該当 `docs/dev-*.md` を選ぶ
+2. **履歴メモ** に行追加: `| YYYY-MM | 症状 | 原因 | 対応 |`
+3. 判明した **不変条件** → §不変条件、**症状パターン** → §症状→原因
+4. ユーザー向け挙動が変わったときのみ `docs/spec/` を更新（WHAT は spec、WHY は dev）
+5. 非自明な CSS/JS には 1 行コメント + dev doc 参照
+
+## 対象外
+
+- 純ロジックバグ（レイアウト無関係）
+- クラウド API のみ → [dev-cloud.md](../../docs/dev-cloud.md)
+- 座標・masks JSON → spec (text-masks / image-masks) を優先
+
+## 実装
+
+- UI は `@xanki/ui` に置く。`web/` と `xanki/` に同等 UI をコピーしない

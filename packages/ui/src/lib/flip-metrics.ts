@@ -3,8 +3,43 @@ export const FLIP_MIN_HEIGHT_PX = 240;
 export const FLIP_MAX_HEIGHT_PX = 520;
 export const FLIP_MAX_HEIGHT_VH = 0.58;
 
-export function clampFlipHeight(natural: number): number {
-  const max = Math.min(window.innerHeight * FLIP_MAX_HEIGHT_VH, FLIP_MAX_HEIGHT_PX);
+export function resolveFlipMaxHeight(slot?: HTMLElement | null): number {
+  const viewportMax = Math.min(
+    window.innerHeight * FLIP_MAX_HEIGHT_VH,
+    FLIP_MAX_HEIGHT_PX,
+  );
+  if (!slot) return viewportMax;
+
+  const slotStyle = getComputedStyle(slot);
+  const slotPaddingBlock =
+    Number.parseFloat(slotStyle.paddingTop) + Number.parseFloat(slotStyle.paddingBottom);
+
+  let available = slot.clientHeight - slotPaddingBlock;
+
+  const stage = slot.closest(".review-stage");
+  if (stage instanceof HTMLElement) {
+    const stageStyle = getComputedStyle(stage);
+    const stagePaddingBlock =
+      Number.parseFloat(stageStyle.paddingTop) +
+      Number.parseFloat(stageStyle.paddingBottom);
+    let siblingsHeight = 0;
+    for (const child of stage.children) {
+      if (child === slot || !(child instanceof HTMLElement)) continue;
+      siblingsHeight += child.offsetHeight;
+    }
+    const fromStage = stage.clientHeight - siblingsHeight - stagePaddingBlock - slotPaddingBlock;
+    if (fromStage > 0) {
+      available = available > 0 ? Math.min(available, fromStage) : fromStage;
+    }
+  }
+
+  if (!Number.isFinite(available) || available <= 0) return viewportMax;
+
+  return Math.min(viewportMax, available);
+}
+
+export function clampFlipHeight(natural: number, maxHeight?: number): number {
+  const max = maxHeight ?? resolveFlipMaxHeight();
   return Math.min(max, Math.max(FLIP_MIN_HEIGHT_PX, natural));
 }
 
@@ -14,7 +49,10 @@ export function activeFaceCardSelector(revealed: boolean): string {
     : ".study-flip-front .review-card";
 }
 
-export function measureReviewCard(card: HTMLElement): number {
+export function measureReviewCard(
+  card: HTMLElement,
+  slot?: HTMLElement | null,
+): number {
   const previous = {
     height: card.style.height,
     maxHeight: card.style.maxHeight,
@@ -34,7 +72,8 @@ export function measureReviewCard(card: HTMLElement): number {
   card.style.maxHeight = previous.maxHeight;
   card.style.overflow = previous.overflow;
 
-  return clampFlipHeight(Math.max(measured, minAspectHeight));
+  const maxHeight = resolveFlipMaxHeight(slot);
+  return clampFlipHeight(Math.max(measured, minAspectHeight), maxHeight);
 }
 
 export function isDragPointerGesture(

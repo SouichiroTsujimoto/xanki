@@ -12,6 +12,11 @@ import {
   measureReviewCard,
 } from "../lib/flip-metrics";
 
+function getFlipSlot(inner: HTMLElement): HTMLElement | null {
+  const slot = inner.closest(".study-flip-slot");
+  return slot instanceof HTMLElement ? slot : null;
+}
+
 export function useFlipHeight(revealed: boolean) {
   const innerRef = useRef<HTMLDivElement>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -25,7 +30,7 @@ export function useFlipHeight(revealed: boolean) {
     if (!inner) return;
     const card = inner.querySelector(activeFaceCardSelector(revealed));
     if (!(card instanceof HTMLElement)) return;
-    setFlipHeight(measureReviewCard(card));
+    setFlipHeight(measureReviewCard(card, getFlipSlot(inner)));
   }, [revealed]);
 
   const lockFlipHeightForAnimation = useCallback((fromRevealed: boolean) => {
@@ -33,7 +38,8 @@ export function useFlipHeight(revealed: boolean) {
     if (!inner) return;
     const card = inner.querySelector(activeFaceCardSelector(fromRevealed));
     if (!(card instanceof HTMLElement)) return;
-    const nextHeight = measureReviewCard(card);
+    const slot = getFlipSlot(inner);
+    const nextHeight = measureReviewCard(card, slot);
     setHeightLock(nextHeight);
     setFlipHeight(nextHeight);
   }, []);
@@ -65,6 +71,11 @@ export function useFlipHeight(revealed: boolean) {
       if (card instanceof HTMLElement) {
         observer.observe(card);
       }
+    }
+
+    const slot = getFlipSlot(inner);
+    if (slot) {
+      observer.observe(slot);
     }
 
     return () => observer.disconnect();

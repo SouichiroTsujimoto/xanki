@@ -3,7 +3,7 @@
 ## 最短手順
 
 ```bash
-# 1. 初回セットアップ（依存関係・D1・Web SPA ビルド）
+# 1. 初回セットアップ（依存関係・D1 migrate）
 pnpm setup:cloud
 
 # 2. Google OAuth 設定（初回のみ）
@@ -11,7 +11,7 @@ pnpm setup:cloud
 #    Google Cloud Console で redirect URI:
 #      http://localhost:8787/api/auth/callback/google
 
-# 3. API + Web UI を起動（http://localhost:8787）
+# 3. API + Web UI を起動（http://localhost:8787、Vite HMR + workerd）
 pnpm dev:cloud
 
 # 4. 別ターミナル — API 自動テスト（Google OAuth 不要）
@@ -22,6 +22,25 @@ pnpm smoke:cloud
 
 ```bash
 pnpm dev:cloud:all
+```
+
+## 開発サーバー（HMR）
+
+`pnpm dev:cloud` は [`web/vite.config.ts`](../web/vite.config.ts) の `cloudflare({ configPath, persistState })` 経由で Worker 設定と D1 永続化パスを読み込む。
+
+- **configPath 必須**: `root: src/client` だけでは wrangler が見つからない
+- **persistState 必須**: 省略すると state が `web/src/client/.wrangler` になり、`pnpm setup:cloud` の migrate（`web/.wrangler`）と別 DB になる → `no such table: session`
+
+- **SPA**: Vite HMR（`@xanki/ui` 含む monorepo ソースを直接読む）
+- **API**: workerd 上で Hono Worker（D1 / R2 / DO bindings 利用可）
+- **オリジン**: `http://localhost:8787` 単一（OAuth / Cookie / Desktop `VITE_CLOUD_URL` と一致）
+
+Tauri（`pnpm dev:desktop`）と同様、UI 変更は保存後すぐ反映される。手動 `build:client` は **本番ビルド・preview・deploy 時** のみ必要。
+
+```bash
+pnpm --filter @xanki/web build    # または build:web
+pnpm --filter @xanki/web preview  # ビルド成果物を workerd で確認
+pnpm --filter @xanki/web deploy   # vite build && wrangler deploy
 ```
 
 ## D1 スキーマ変更後のリセット
@@ -37,10 +56,10 @@ pnpm setup:cloud
 
 | コマンド | 内容 |
 |---------|------|
-| `pnpm setup:cloud` | install + shared build + D1 migrate + Web SPA build |
-| `pnpm dev:cloud` | setup 込みで wrangler dev（8787） |
-| `pnpm dev:cloud -- --skip-setup` | setup を省略して wrangler のみ再起動 |
-| `pnpm dev:cloud:all` | wrangler + Tauri デスクトップ |
+| `pnpm setup:cloud` | install + shared build + D1 migrate |
+| `pnpm dev:cloud` | setup 込みで vite dev（8787、HMR） |
+| `pnpm dev:cloud -- --skip-setup` | setup を省略して vite dev のみ再起動 |
+| `pnpm dev:cloud:all` | vite dev + Tauri デスクトップ |
 | `pnpm dev:desktop` | デスクトップのみ（API は別途起動） |
 | `pnpm test:auth` | テスト用セッション + `/api/me`（Vitest） |
 | `pnpm smoke:cloud` | 認証→CRUD→storage→AI の Vitest 統合テスト |
@@ -115,9 +134,10 @@ curl -s -X POST http://localhost:8787/api/dev/purge-user \
 |------|------|
 | `redirect_uri_mismatch` | Google Console の redirect URI と `APP_URL` を一致させる |
 | `pnpm install` が esbuild で失敗 | ルート `.npmrc` で onlyBuiltDependencies 済み。再実行 |
-| Web が真っ白 | `pnpm --filter @xanki/web build:client` |
-| Web UI が Desktop と違う（古い UI） | `@xanki/ui` 変更後に `pnpm --filter @xanki/web build:client` を再実行し wrangler を再起動 |
-| D1 `SQLITE_BUSY` / wrangler 落ち | 8787 の wrangler をすべて停止し `pnpm dev:cloud` を 1 本だけ起動 |
+| Web が真っ白 | `pnpm dev:cloud` を再起動。port 8787 が他プロセスに占有されていないか確認 |
+| UI が更新されない | HMR 接続を確認（DevTools Console）。解決しない場合 `pnpm dev:cloud -- --skip-setup` で再起動 |
+| D1 `no such table: session` / auth 500 | `vite.config.ts` の `persistState` が `web/.wrangler/state` を指しているか確認。古い `web/src/client/.wrangler` があれば削除 → `pnpm setup:cloud` |
+| D1 `SQLITE_BUSY` / dev サーバー落ち | 8787 の vite dev をすべて停止し `pnpm dev:cloud` を 1 本だけ起動 |
 | AI `Authentication Fails (governor)` | DeepSeek 等は Unified Billing 非対応。BYOK 登録するか `AI_MODEL` を対応モデルに変更 |
 | AI `ai_auth_failed` | Gateway Settings → **Create authentication token** で再発行 |
 | AI が動かない（OpenAI/Google） | **Top-up credits** でクレジット残高を確認（支払い方法だけでは不足） |

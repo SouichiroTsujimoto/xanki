@@ -29,13 +29,13 @@
 ### よく使うコマンド
 
 ```bash
-# 初回セットアップ（install / shared build / D1 migrate / SPA build）
+# 初回セットアップ（install / shared build / D1 migrate）
 pnpm setup:cloud
 
-# Cloud API + Web UI
+# Cloud API + Web UI（Vite HMR + workerd）
 pnpm dev:cloud
 
-# セットアップ済みで wrangler だけ再起動したいとき
+# セットアップ済みで dev サーバーだけ再起動したいとき
 pnpm dev:cloud -- --skip-setup
 
 # Cloud + Desktop を 1 コマンドで
@@ -49,10 +49,10 @@ pnpm dev:desktop
 
 | コマンド | 内容 |
 |---------|------|
-| `pnpm setup:cloud` | 依存関係・D1・Web SPA の初回セットアップ |
-| `pnpm dev:cloud` | setup 込みで wrangler dev（8787） |
-| `pnpm dev:cloud -- --skip-setup` | setup 省略で wrangler のみ |
-| `pnpm dev:cloud:all` | wrangler + Tauri デスクトップ |
+| `pnpm setup:cloud` | 依存関係・D1 の初回セットアップ |
+| `pnpm dev:cloud` | setup 込みで vite dev（8787、HMR） |
+| `pnpm dev:cloud -- --skip-setup` | setup 省略で vite dev のみ |
+| `pnpm dev:cloud:all` | vite dev + Tauri デスクトップ |
 | `pnpm dev:desktop` | Tauri デスクトップのみ |
 | `pnpm smoke:cloud` | Cloud API 統合テスト（Vitest） |
 | `pnpm smoke:cloud:full` | setup 省略 + smoke 一括 |

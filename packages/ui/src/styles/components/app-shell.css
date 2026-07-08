@@ -132,11 +132,23 @@
   padding: 0.7rem 0.75rem;
   border-radius: var(--radius-sm);
   text-align: left;
+  border: none;
+  background: transparent;
+  box-shadow: none;
   transition: background 0.16s ease;
 }
 
-.rail-link:hover {
+.rail-nav .rail-link.ghost-button {
+  justify-content: flex-start;
+  font-weight: inherit;
+  font-size: inherit;
+}
+
+.rail-link:hover:not(:disabled):not(.active),
+.rail-nav .rail-link.ghost-button:hover:not(:disabled):not(.active) {
   background: rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+  border-color: transparent;
 }
 
 .rail-link.active {

@@ -17,9 +17,11 @@
 
 ### 3D フリップ
 
-- 表示中の面の高さを計測してロック → フリップ完了後に裏面へ再計測（[`use-flip-height`](../../packages/ui/src/hooks/use-flip-height.ts) + [`flip-metrics`](../../packages/ui/src/lib/flip-metrics.ts)）
+- 実装メモ（再発防止・デバッグ）: [dev-study-layout.md](../dev-study-layout.md)（索引: [dev-ui.md](../dev-ui.md)）
+- 表示中の面の高さを計測してロック → フリップ完了後に裏面へ再計測（[`use-flip-height`](../../packages/ui/src/hooks/use-flip-height.ts) + [`flip-metrics`](../../packages/ui/src/lib/flip-metrics.ts)）。高さ上限は **ビューポート**（`--study-flip-max-vh` / `--study-flip-max-h`）と **`.study-flip-slot` の残り領域**（`.review-actions` 等を除いた stage 内）の小さい方
 - 高さ制約トークン: `--study-flip-min-h`（240px）、`--study-flip-max-h`（520px）、`--study-flip-max-vh`（0.58）
 - `.study-flip-slot` は `container: flip-card / inline-size`（コンポーネント幅ベースの sizing）
+- `.study-flip-face` は grid stack（`position: absolute` は使わない）。`.study-flip-slot` は `overflow: visible`（影・枠の見切れ防止）
 - フリップ中 `overflow: visible`（`.study-flip-inner` に `overflow: hidden` 不可）
 - 静止時の非表示面は `visibility: hidden`
 - カード枠・影: `.study-flip-slot` padding + フリップ中の祖先 `overflow: visible`
@@ -28,6 +30,7 @@
 ### Q&A / テキスト / 画像カード
 
 - [qa-cards.md](./qa-cards.md), [text-masks.md](./text-masks.md), [image-masks.md](./image-masks.md)
+- テキスト / Q&A 本文: カード内に収まるとき **縦中央**（`justify-content: safe center`）。`scrollHeight > clientHeight` のとき **上揃え**（`data-text-scrollable` → `flex-start`）。計測は [`use-review-card-text-overflow`](../../packages/ui/src/hooks/use-review-card-text-overflow.ts) + `ResizeObserver`（詳細: [dev-study-layout.md](../dev-study-layout.md) §問題 2）
 - マスク peek（インタラクティブ時）、flip 後 stagger reveal
 
 ### AI に聞く（学習中）

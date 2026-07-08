@@ -137,6 +137,7 @@ export function AppShell({
           <Button
             key={item.id}
             type="button"
+            variant="ghost"
             className={`rail-link ${tab === item.id ? "active" : ""}`}
             data-tauri-drag-region="false"
             onClick={() => handleTabChange(item.id)}
