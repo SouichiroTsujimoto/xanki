@@ -101,6 +101,7 @@ export function useStudyQueue(
   const api = useAppApi();
   const [queue, setQueue] = useState<ReviewCard[]>([]);
   const [index, setIndex] = useState(0);
+  const [queueReady, setQueueReady] = useState(false);
 
   const loadQueue = useCallback(async () => {
     const cards =
@@ -112,9 +113,11 @@ export function useStudyQueue(
       : cards;
     setQueue(ordered);
     setIndex(0);
+    setQueueReady(true);
   }, [deckId, filter, shuffle, api]);
 
   useEffect(() => {
+    setQueueReady(false);
     void loadQueue();
   }, [loadQueue]);
 
@@ -128,5 +131,5 @@ export function useStudyQueue(
     }
   }
 
-  return { queue, index, current, progress, loadQueue, next, setIndex };
+  return { queue, index, current, progress, queueReady, loadQueue, next, setIndex };
 }

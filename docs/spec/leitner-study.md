@@ -11,7 +11,8 @@ Anki 型の **定着** トラック。`due_at <= now` のカードのみ。`revi
 - 今日の due **総数**（全デッキ横断）
 - **ヒーローカード**（件数 + 「復習を始める」）→ 横断 due をランダム混合でセッション開始（独立した「出題」ボタンは置かない）
 - 下部: due を含む **デッキ一覧**（件数付き）→ デッキ別 due セッション
-- due 0: **今日の Leitner 学習は完了です**
+- due 0: **今日の Leitner 学習は完了です** — 共有 [`LeitnerDueCompletePanel`](../../packages/ui/src/components/xanki/study/leitner-due-complete-panel.tsx)（Motion 登場 + パーティクル + ホログラム背景）。`prefers-reduced-motion` 時は即時表示
+- デッキ別セッション完了で他デッキに due 残存: 控えめ完了 UI（残件数 + 「Leitner 学習に戻る」）
 
 ## セッション
 
@@ -51,5 +52,6 @@ Anki 型の **定着** トラック。`due_at <= now` のカードのみ。`revi
 - [ ] 横断 due 総数とヒーローカードからのセッション開始
 - [ ] デッキ別 due 一覧からセッション開始
 - [ ] 4 段階評価で review_state 更新、Tray 件数減少
-- [ ] due 0 で完了表示
+- [ ] due 0 で完了表示（ハブ・セッション共通の派手演出）
+- [ ] デッキ別完了で他 due 残存時は控えめ完了 UI
 - [ ] Tray クリックで Leitner学習タブを開く

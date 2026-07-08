@@ -114,6 +114,7 @@ Tray **今日の復習: N件** → **Leitner学習**タブ（`navigate: "leitner
 - **900px 以下ドロワー**: spring スライド + スクリム fade
 - **削除確認ダイアログ**: backdrop / panel の fade + scale
 - **学習モード起動ボタン**: hover / tap の subtle motion（CSS transform と二重適用しない）
+- **Leitner 完了**（全デッキ due 0）: [`LeitnerDueCompletePanel`](../../packages/ui/src/components/xanki/study/leitner-due-complete-panel.tsx) — パネル spring 登場、✓ pop、テキスト stagger、Chartreuse / Leitner accent パーティクル burst。`prefers-reduced-motion` 時は即時・パーティクルなし
 
 ## ダイアログ方針
 

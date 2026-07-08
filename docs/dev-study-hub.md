@@ -9,7 +9,7 @@
 | 種別 | パス |
 |------|------|
 | デッキ学習 | [`deck-study-view.tsx`](../packages/ui/src/components/xanki/study/deck-study-view.tsx), [`flashcards-mode.tsx`](../packages/ui/src/components/xanki/study/flashcards-mode.tsx) 等 |
-| Leitner | [`leitner-study-view.tsx`](../packages/ui/src/components/xanki/study/leitner-study-view.tsx), [`learn-mode.tsx`](../packages/ui/src/components/xanki/study/learn-mode.tsx) |
+| Leitner | [`leitner-study-view.tsx`](../packages/ui/src/components/xanki/study/leitner-study-view.tsx), [`learn-mode.tsx`](../packages/ui/src/components/xanki/study/learn-mode.tsx), [`leitner-due-complete-panel.tsx`](../packages/ui/src/components/xanki/study/leitner-due-complete-panel.tsx) |
 | Coverflow | [`study-card-coverflow.tsx`](../packages/ui/src/components/xanki/study/study-card-coverflow.tsx), [`coverflow-motion.ts`](../packages/ui/src/lib/coverflow-motion.ts) |
 | スタイル | [`study-hub.css`](../packages/ui/src/styles/components/study-hub.css) |
 
@@ -34,6 +34,7 @@ Leitner: `.leitner-study-hub` — 同様にハブ全体 scroll、内部ヒーロ
 3. **Coverflow vs フリップ** — ハブの 3D は **別実装**（`study-coverflow-*`）。セッションの `study-flip-*` と CSS を混同しない
 4. **ドラッグ** — `touch-action: pan-y`（縦スクロールと競合しないよう）
 5. **user-select: none** — Coverflow 内（ドラッグ誤選択防止）。セッションのテキスト選択とは別コンテキスト
+6. **Leitner 完了 UI** — 全デッキ due 0 は `LeitnerDueCompletePanel`（ハブ・セッション共通）。デッキ別完了で他 due 残存は `LeitnerDeckSessionComplete`
 
 ## 症状 → 原因
 
@@ -67,4 +68,4 @@ Leitner: `.leitner-study-hub` — 同様にハブ全体 scroll、内部ヒーロ
 
 | 日付 | 症状 | 原因 | 対応 |
 |------|------|------|------|
-| — | （追記用） | | |
+| 2026-07 | セッション完了が静的 `StudyEmpty` で達成感不足 | ハブのみホロパネル、セッションは別 UI | `LeitnerDueCompletePanel` 共有化 + Motion / パーティクル。デッキ別完了は控えめ UI |

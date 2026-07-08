@@ -4,6 +4,7 @@ import { useAppApi } from "../../../context/app-api-context";
 import { useAppShell } from "../../../context/app-shell-context";
 import type { Deck } from "../../../types";
 import { LearnMode } from "./learn-mode";
+import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import type { StudySessionInfo } from "./deck-study-view";
 
 interface Props {
@@ -168,20 +169,17 @@ export function LeitnerStudyView({
               )}
             </>
           ) : (
-            <div className="leitner-study-complete-panel">
-              <span className="leitner-complete-mark" aria-hidden>
-                ✓
-              </span>
-              <p className="eyebrow">{copy.leitnerStudy.emptyEyebrow}</p>
-              <h3>{copy.leitnerStudy.completeTitle}</h3>
-              <p>{copy.leitnerStudy.completeHint}</p>
-            </div>
+            <LeitnerDueCompletePanel layout="hub" />
           )}
         </div>
       ) : (
         <div className="study-session leitner-study-session">
           <div className="study-session-body">
-            <LearnMode deckId={sessionDeckId} shuffle />
+            <LearnMode
+              deckId={sessionDeckId}
+              shuffle
+              onBackToHub={exitSession}
+            />
           </div>
         </div>
       )}

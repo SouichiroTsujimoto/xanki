@@ -3,8 +3,9 @@ import { buildStudyCardContext } from "@xanki/shared";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
 import type { ReviewGrade } from "../../../types";
+import { LeitnerDeckSessionComplete } from "./leitner-deck-session-complete";
+import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import {
-  StudyEmpty,
   StudyFlipCard,
   StudyProgress,
   useStudyQueue,
@@ -15,6 +16,7 @@ import { Button } from "../../ui/button";
 interface Props {
   deckId?: string | null;
   shuffle?: boolean;
+  onBackToHub?: () => void;
 }
 
 const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
@@ -24,20 +26,48 @@ const GRADES: { result: ReviewGrade; label: string; className: string }[] = [
   { result: 3, label: copy.leitnerStudy.gradeEasy, className: "accent-button" },
 ];
 
-export function LearnMode({ deckId, shuffle = false }: Props) {
+type CompletionState =
+  | { kind: "none" }
+  | { kind: "global" }
+  | { kind: "deck"; remainingDueCount: number };
+
+export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
   const api = useAppApi();
-  const { queue, index, current, progress, loadQueue, next } = useStudyQueue(
+  const { queue, index, current, progress, queueReady, loadQueue, next } = useStudyQueue(
     deckId,
     "due",
     shuffle,
   );
   const [revealed, setRevealed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [completion, setCompletion] = useState<CompletionState>({ kind: "none" });
+
+  const resolveCompletion = useCallback(async () => {
+    const globalDue = await api.getDueCards();
+    if (globalDue.length === 0) {
+      setCompletion({ kind: "global" });
+      return;
+    }
+    setCompletion({ kind: "deck", remainingDueCount: globalDue.length });
+  }, [api]);
 
   useEffect(() => {
     setRevealed(false);
     setAiOpen(false);
   }, [current]);
+
+  useEffect(() => {
+    if (current) {
+      setCompletion({ kind: "none" });
+    }
+  }, [current]);
+
+  useEffect(() => {
+    if (!queueReady) return;
+    if (queue.length === 0 && !current) {
+      void resolveCompletion();
+    }
+  }, [queueReady, queue.length, current, resolveCompletion]);
 
   const submit = useCallback(
     async (result: ReviewGrade) => {
@@ -70,14 +100,31 @@ export function LearnMode({ deckId, shuffle = false }: Props) {
   }, [current, submit]);
 
   if (!current) {
-    return (
-      <StudyEmpty
-        eyebrow={copy.leitnerStudy.emptyEyebrow}
-        title={copy.leitnerStudy.completeTitle}
-        copy={copy.leitnerStudy.completeHint}
-        onReload={() => void loadQueue()}
-      />
-    );
+    if (!queueReady) {
+      return null;
+    }
+
+    if (completion.kind === "global") {
+      return (
+        <div className="review-stage empty leitner-review-stage">
+          <LeitnerDueCompletePanel
+            layout="session"
+            onBackToHub={onBackToHub}
+          />
+        </div>
+      );
+    }
+
+    if (completion.kind === "deck" && onBackToHub) {
+      return (
+        <LeitnerDeckSessionComplete
+          remainingDueCount={completion.remainingDueCount}
+          onBackToHub={onBackToHub}
+        />
+      );
+    }
+
+    return null;
   }
 
   return (
