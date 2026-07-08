@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppApi } from "../../../context/app-api-context";
 import { copy } from "../../../copy";
-import type { AiQaItem, AiTier } from "../../../types";
+import type { AiQaItem, AiTier, AppApi } from "../../../types";
 import { Button } from "../../ui/button";
 import { NativeDialog } from "../../ui/native-dialog";
 
@@ -42,15 +42,27 @@ function createEditableItems(items: AiQaItem[]): EditableItem[] {
   }));
 }
 
-function buildSourceHint(text: string, imageCount: number): string {
+function buildSourceHint(tab: SourceTab, text: string, imageCount: number): string {
+  if (tab === "image") {
+    return imageCount > 0 ? `AI生成（画像 ${imageCount} 枚）` : "AI生成（画像）";
+  }
   const trimmed = text.trim();
   if (trimmed) {
     return trimmed.length > 120 ? `${trimmed.slice(0, 120)}…` : trimmed;
   }
-  if (imageCount > 0) {
-    return `AI生成（画像 ${imageCount} 枚）`;
-  }
   return "AI生成";
+}
+
+async function refreshCredits(
+  api: AppApi,
+  setCreditsRemaining: (value: number | null) => void,
+): Promise<void> {
+  try {
+    const account = await api.getAccount();
+    setCreditsRemaining(account.aiCreditsRemaining);
+  } catch {
+    setCreditsRemaining(null);
+  }
 }
 
 interface Props {
@@ -86,7 +98,9 @@ export function AiCardGenerateDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [generationSourceHint, setGenerationSourceHint] = useState<string | null>(null);
   const previewUrlsRef = useRef<string[]>([]);
+  const wasOpenRef = useRef(false);
 
   const creditCost = tier === "thinking" ? 2 : 1;
   const busy = loading || saving || uploadingImages;
@@ -98,27 +112,33 @@ export function AiCardGenerateDialog({
     previewUrlsRef.current = [];
   }, []);
 
-  const resetDialog = useCallback(() => {
-    revokePreviewUrls();
-    setTab("text");
-    setText(initialSourceText);
-    setImages([]);
-    setCount(5);
-    setTier("thinking");
-    setItems([]);
-    setSelectedIds(new Set());
-    setError(null);
-    setSaveMessage(null);
-  }, [initialSourceText, revokePreviewUrls]);
+  const resetDialog = useCallback(
+    (sourceText: string) => {
+      revokePreviewUrls();
+      setTab("text");
+      setText(sourceText);
+      setImages([]);
+      setCount(5);
+      setTier("thinking");
+      setItems([]);
+      setSelectedIds(new Set());
+      setGenerationSourceHint(null);
+      setError(null);
+      setSaveMessage(null);
+    },
+    [revokePreviewUrls],
+  );
 
   useEffect(() => {
-    if (!open) return;
-    resetDialog();
-    void api
-      .getAccount()
-      .then((account) => setCreditsRemaining(account.aiCreditsRemaining))
-      .catch(() => setCreditsRemaining(null));
-  }, [api, open, resetDialog]);
+    if (!open) {
+      wasOpenRef.current = false;
+      return;
+    }
+    if (wasOpenRef.current) return;
+    wasOpenRef.current = true;
+    resetDialog(initialSourceText);
+    void refreshCredits(api, setCreditsRemaining);
+  }, [api, initialSourceText, open, resetDialog]);
 
   useEffect(() => {
     return () => revokePreviewUrls();
@@ -149,11 +169,12 @@ export function AiCardGenerateDialog({
       const editable = createEditableItems(result.items);
       setItems(editable);
       setSelectedIds(new Set(editable.map((item) => item.id)));
-      const account = await api.getAccount();
-      setCreditsRemaining(account.aiCreditsRemaining);
+      setGenerationSourceHint(buildSourceHint(tab, text, images.length));
+      await refreshCredits(api, setCreditsRemaining);
     } catch (err) {
       const message = err instanceof Error ? err.message : "ai_failed";
       setError(message);
+      await refreshCredits(api, setCreditsRemaining);
     } finally {
       setLoading(false);
     }
@@ -235,27 +256,64 @@ export function AiCardGenerateDialog({
     setError(null);
     setSaveMessage(null);
 
-    const sourceHint = buildSourceHint(text, images.length);
+    const sourceHint = generationSourceHint ?? buildSourceHint(tab, text, images.length);
+    const savedIds: string[] = [];
+    let failed = false;
 
     try {
       for (const item of selected) {
-        await api.saveQaCard({
-          deckId,
-          content: item.question.trim(),
-          answer: item.answer.trim(),
-          masks: [],
-          sourceHint,
+        try {
+          await api.saveQaCard({
+            deckId,
+            content: item.question.trim(),
+            answer: item.answer.trim(),
+            masks: [],
+            sourceHint,
+          });
+          savedIds.push(item.id);
+        } catch (err) {
+          failed = true;
+          console.error("bulk save failed", err);
+          break;
+        }
+      }
+
+      if (savedIds.length > 0) {
+        onSaved?.(savedIds.length);
+        setItems((prev) => prev.filter((item) => !savedIds.includes(item.id)));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (const id of savedIds) {
+            next.delete(id);
+          }
+          return next;
         });
       }
-      setSaveMessage(copy.ai.cardsGenerateSaved(selected.length));
-      onSaved?.(selected.length);
-    } catch (err) {
-      console.error("bulk save failed", err);
-      setError(copy.ai.errorGeneric);
+
+      const remaining = selected.length - savedIds.length;
+      if (failed && savedIds.length > 0) {
+        setSaveMessage(copy.ai.cardsGeneratePartialSave(savedIds.length, remaining));
+        setError(copy.ai.errorGeneric);
+      } else if (failed) {
+        setError(copy.ai.errorGeneric);
+      } else {
+        setSaveMessage(copy.ai.cardsGenerateSaved(savedIds.length));
+      }
     } finally {
       setSaving(false);
     }
-  }, [api, deckId, images.length, items, onSaved, saving, selectedIds, text]);
+  }, [
+    api,
+    deckId,
+    generationSourceHint,
+    images.length,
+    items,
+    onSaved,
+    saving,
+    selectedIds,
+    tab,
+    text,
+  ]);
 
   const handleClose = useCallback(() => {
     if (busy) return;

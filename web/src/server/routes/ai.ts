@@ -128,10 +128,6 @@ aiRoutes.post("/cards-generate", async (c) => {
     return c.json({ error: "rate_limited" }, 429);
   }
 
-  if (!(await consumeCredit(c.env, db, user.id, cost))) {
-    return c.json({ error: "payment_required" }, 402);
-  }
-
   const sourceImages = [];
   for (const { blobHash } of body.images ?? []) {
     const obj = await getBlobObject(c.env.BLOBS, user.id, blobHash);
@@ -141,6 +137,10 @@ aiRoutes.post("/cards-generate", async (c) => {
     const data = new Uint8Array(await obj.arrayBuffer());
     const mime = obj.httpMetadata?.contentType ?? "image/jpeg";
     sourceImages.push({ data, mime });
+  }
+
+  if (!(await consumeCredit(c.env, db, user.id, cost))) {
+    return c.json({ error: "payment_required" }, 402);
   }
 
   try {

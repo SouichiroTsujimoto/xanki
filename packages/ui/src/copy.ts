@@ -327,6 +327,8 @@ export const copy = {
     cardsGenerateImageUploading: "画像をアップロード中…",
     cardsGenerateImageError: "画像のアップロードに失敗しました",
     cardsGenerateNoSelection: "保存するカードを選択してください",
+    cardsGeneratePartialSave: (saved: number, remaining: number) =>
+      `${saved} 枚を保存しました。残り ${remaining} 枚は保存に失敗しました。再試行してください。`,
     errorUnavailable:
       "AI が利用できません。Cloudflare AI Gateway の設定を確認してください。",
     errorAuthFailed:
