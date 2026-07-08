@@ -5,6 +5,7 @@
 #   診断: pnpm check:secrets
 #
 # Fallback（1Password なし）: cp .dev.vars.example .dev.vars して平文を記入
+# 1Password 利用時は .dev.vars 不要 — op run + wrangler.toml [secrets].required で process.env が Worker に渡る
 # BETTER_AUTH_SECRET=  # 本番は wrangler secret put BETTER_AUTH_SECRET
 # GOOGLE_CLIENT_ID=
 # GOOGLE_CLIENT_SECRET=

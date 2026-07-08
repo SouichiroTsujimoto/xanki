@@ -35,8 +35,16 @@ new_classes = ["UserSyncHub"]
 [vars]
 APP_URL = "http://localhost:8787"
 BETTER_AUTH_SECRET = "dev-better-auth-secret-min-32-chars-local"
-GOOGLE_CLIENT_ID = "replace-with-google-oauth-client-id"
-GOOGLE_CLIENT_SECRET = "replace-with-google-oauth-client-secret"
 STRIPE_PRICE_PRO = "price_pro_placeholder"
-STRIPE_WEBHOOK_SECRET = "whsec_dGVzdF93ZWJob29rX3NlY3JldA=="
+AI_GATEWAY_ID = "default"
 AI_MODEL = "google-ai-studio/gemini-2.5-flash"
+
+# op run（1Password）の process.env から自動ロード。平文 .dev.vars は fallback のみ。
+# https://developers.cloudflare.com/workers/configuration/secrets/
+[secrets]
+required = [
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "CF_ACCOUNT_ID",
+  "AI_GATEWAY_TOKEN",
+]
