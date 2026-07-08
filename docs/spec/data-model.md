@@ -51,7 +51,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | phase | TEXT | `learning` / `review` / `relearning`（migration 0007。既存行は `review`） |
 | step | INTEGER | 学習・再学習ステップ（0 始まり。既存行は 0） |
 | due_at | INTEGER | 次回復習 unix ms |
-| last_result | INTEGER | 直近採点 0..3（再度 / 難しい / 良好 / 簡単） |
+| last_result | INTEGER | 直近採点 0..3（もう一度 / 難しい / 正解 / 簡単） |
 | updated_at | INTEGER | unix ms |
 
 ### review_logs
@@ -61,7 +61,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | user_id | TEXT | |
 | id | TEXT | UUID |
 | card_id | TEXT | |
-| result | INTEGER | 0..3（再度 / 難しい / 良好 / 簡単） |
+| result | INTEGER | 0..3（もう一度 / 難しい / 正解 / 簡単） |
 | reviewed_at | INTEGER | unix ms |
 
 ### study_sessions

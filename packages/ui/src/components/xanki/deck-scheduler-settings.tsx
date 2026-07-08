@@ -24,6 +24,25 @@ function configFromDeck(deck: Deck): DeckSchedulerConfig {
   return resolveDeckSchedulerConfig(deck.schedulerConfig);
 }
 
+function maxAmountForUnit(unit: StudyIntervalUnit): number {
+  switch (unit) {
+    case "minute":
+      return 120;
+    case "hour":
+      return 168;
+    case "day":
+      return 365;
+    default: {
+      const _exhaustive: never = unit;
+      return _exhaustive;
+    }
+  }
+}
+
+function clampAmount(amount: number, unit: StudyIntervalUnit): number {
+  return Math.min(Math.max(0, amount), maxAmountForUnit(unit));
+}
+
 function unitLabel(unit: StudyIntervalUnit): string {
   switch (unit) {
     case "minute":
@@ -39,6 +58,11 @@ function unitLabel(unit: StudyIntervalUnit): string {
   }
 }
 
+function formatIntervalAmount(amount: number, unit: StudyIntervalUnit): string {
+  if (amount <= 0) return copy.deckScheduler.immediateInterval;
+  return `${amount}${unitLabel(unit)}`;
+}
+
 function IntervalField({
   label,
   interval,
@@ -50,33 +74,48 @@ function IntervalField({
   disabled?: boolean;
   onChange: (next: StudyInterval) => void;
 }) {
+  const amount = clampAmount(interval.amount, interval.unit);
+  const max = maxAmountForUnit(interval.unit);
+
   return (
     <label className="deck-scheduler-field">
-      <span>{label}</span>
+      <div className="deck-scheduler-field-head">
+        <span>{label}</span>
+        <span className="deck-scheduler-field-value">
+          {formatIntervalAmount(amount, interval.unit)}
+        </span>
+      </div>
       <div className="deck-scheduler-input-row">
         <input
-          type="number"
+          type="range"
+          className="deck-scheduler-range"
           min={0}
-          max={365}
+          max={max}
           step={1}
-          value={interval.amount}
+          value={amount}
           disabled={disabled}
+          aria-valuemin={0}
+          aria-valuemax={max}
+          aria-valuenow={amount}
+          aria-valuetext={formatIntervalAmount(amount, interval.unit)}
           onChange={(event) =>
             onChange({
               ...interval,
-              amount: Number.parseInt(event.target.value, 10) || 0,
+              amount: Number.parseInt(event.target.value, 10),
             })
           }
         />
         <select
           value={interval.unit}
           disabled={disabled}
-          onChange={(event) =>
+          aria-label={`${label} の単位`}
+          onChange={(event) => {
+            const unit = event.target.value as StudyIntervalUnit;
             onChange({
-              ...interval,
-              unit: event.target.value as StudyIntervalUnit,
-            })
-          }
+              unit,
+              amount: clampAmount(interval.amount, unit),
+            });
+          }}
         >
           {UNITS.map((unit) => (
             <option key={unit} value={unit}>
@@ -184,91 +223,95 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
   }
 
   return (
-    <section className="deck-scheduler-settings" aria-label={copy.deckScheduler.sectionLabel}>
-      <div className="deck-scheduler-settings-head">
-        <h3 className="deck-scheduler-settings-title">{copy.deckScheduler.title}</h3>
-        <p className="deck-scheduler-settings-copy">{copy.deckScheduler.description}</p>
-      </div>
+    <details className="deck-scheduler-settings" aria-label={copy.deckScheduler.sectionLabel}>
+      <summary className="deck-scheduler-settings-summary">
+        <span className="deck-scheduler-settings-summary-text">
+          <span className="deck-scheduler-settings-title">{copy.deckScheduler.title}</span>
+          <span className="deck-scheduler-settings-copy">{copy.deckScheduler.description}</span>
+        </span>
+      </summary>
 
-      <StepListEditor
-        title={copy.deckScheduler.learningStepsTitle}
-        steps={config.learningSteps}
-        disabled={saving}
-        onChange={(learningSteps) => setConfig({ ...config, learningSteps })}
-      />
+      <div className="deck-scheduler-settings-body">
+        <StepListEditor
+          title={copy.deckScheduler.learningStepsTitle}
+          steps={config.learningSteps}
+          disabled={saving}
+          onChange={(learningSteps) => setConfig({ ...config, learningSteps })}
+        />
 
-      <StepListEditor
-        title={copy.deckScheduler.relearningStepsTitle}
-        steps={config.relearningSteps}
-        disabled={saving}
-        onChange={(relearningSteps) => setConfig({ ...config, relearningSteps })}
-      />
+        <StepListEditor
+          title={copy.deckScheduler.relearningStepsTitle}
+          steps={config.relearningSteps}
+          disabled={saving}
+          onChange={(relearningSteps) => setConfig({ ...config, relearningSteps })}
+        />
 
-      <div className="deck-scheduler-subsection">
-        <h4>{copy.deckScheduler.reviewIntervalsTitle}</h4>
-        <div className="deck-scheduler-grid">
-          {config.reviewIntervals.map((interval, index) => (
+        <div className="deck-scheduler-subsection">
+          <h4>{copy.deckScheduler.reviewIntervalsTitle}</h4>
+          <div className="deck-scheduler-grid">
+            {config.reviewIntervals.map((interval, index) => (
+              <IntervalField
+                key={index}
+                label={copy.deckScheduler.boxLabel(index + 2)}
+                interval={interval}
+                disabled={saving}
+                onChange={(next) => updateReviewInterval(index, next)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="deck-scheduler-subsection">
+          <h4>{copy.deckScheduler.singleIntervalsTitle}</h4>
+          <div className="deck-scheduler-grid">
             <IntervalField
-              key={index}
-              label={copy.deckScheduler.boxLabel(index + 2)}
-              interval={interval}
+              label={copy.deckScheduler.hardIntervalLabel}
+              interval={config.hardInterval}
               disabled={saving}
-              onChange={(next) => updateReviewInterval(index, next)}
+              onChange={(hardInterval) => setConfig({ ...config, hardInterval })}
             />
-          ))}
+            <IntervalField
+              label={copy.deckScheduler.graduatingIntervalLabel}
+              interval={config.graduatingInterval}
+              disabled={saving}
+              onChange={(graduatingInterval) => setConfig({ ...config, graduatingInterval })}
+            />
+            <IntervalField
+              label={copy.deckScheduler.easyIntervalLabel}
+              interval={config.easyInterval}
+              disabled={saving}
+              onChange={(easyInterval) => setConfig({ ...config, easyInterval })}
+            />
+          </div>
+        </div>
+
+        {error && <p className="deck-scheduler-error">{error}</p>}
+        {saved && !error && (
+          <p className="deck-scheduler-saved">{copy.deckScheduler.saved}</p>
+        )}
+        <div className="deck-scheduler-actions">
+          <Button
+            type="button"
+            variant="accent"
+            disabled={saving}
+            onClick={() => void handleSave(config)}
+          >
+            {copy.deckScheduler.save}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={saving}
+            onClick={() => {
+              const defaults = defaultDeckSchedulerConfig();
+              setConfig(defaults);
+              void handleSave(defaults);
+            }}
+          >
+            {copy.deckScheduler.reset}
+          </Button>
         </div>
       </div>
-
-      <div className="deck-scheduler-subsection">
-        <h4>{copy.deckScheduler.singleIntervalsTitle}</h4>
-        <div className="deck-scheduler-grid">
-          <IntervalField
-            label={copy.deckScheduler.hardIntervalLabel}
-            interval={config.hardInterval}
-            disabled={saving}
-            onChange={(hardInterval) => setConfig({ ...config, hardInterval })}
-          />
-          <IntervalField
-            label={copy.deckScheduler.graduatingIntervalLabel}
-            interval={config.graduatingInterval}
-            disabled={saving}
-            onChange={(graduatingInterval) => setConfig({ ...config, graduatingInterval })}
-          />
-          <IntervalField
-            label={copy.deckScheduler.easyIntervalLabel}
-            interval={config.easyInterval}
-            disabled={saving}
-            onChange={(easyInterval) => setConfig({ ...config, easyInterval })}
-          />
-        </div>
-      </div>
-
-      {error && <p className="deck-scheduler-error">{error}</p>}
-      {saved && !error && (
-        <p className="deck-scheduler-saved">{copy.deckScheduler.saved}</p>
-      )}
-      <div className="deck-scheduler-actions">
-        <Button
-          type="button"
-          variant="accent"
-          disabled={saving}
-          onClick={() => void handleSave(config)}
-        >
-          {copy.deckScheduler.save}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={saving}
-          onClick={() => {
-            const defaults = defaultDeckSchedulerConfig();
-            setConfig(defaults);
-            void handleSave(defaults);
-          }}
-        >
-          {copy.deckScheduler.reset}
-        </Button>
-      </div>
-    </section>
+    </details>
   );
 }

@@ -23,9 +23,9 @@
 
 | result | UI | フェーズ別の挙動（概要） |
 |--------|-----|------------------------|
-| `0` | 再度 | **learning**: ステップ 0 へ、学習ステップ[0] まで / **review**: **relearning** へ、再学習ステップ[0] まで / **relearning**: ステップ 0 へ |
+| `0` | もう一度 | **learning**: ステップ 0 へ、学習ステップ[0] まで / **review**: **relearning** へ、再学習ステップ[0] まで / **relearning**: ステップ 0 へ |
 | `1` | 難しい | **learning / relearning**: 現ステップ維持、現在〜次ステップの中間（最終ステップは `hardInterval`） / **review**: 箱据置、`hardInterval` |
-| `2` | 良好 | **learning**: 次ステップ、最終後 **卒業** → review 箱 2 + `graduatingInterval` / **review**: 箱 +1（max 5）、該当復習間隔 / **relearning**: 次ステップ、完了後 review に復帰（同箱） |
+| `2` | 正解 | **learning**: 次ステップ、最終後 **卒業** → review 箱 2 + `graduatingInterval` / **review**: 箱 +1（max 5）、該当復習間隔 / **relearning**: 次ステップ、完了後 review に復帰（同箱） |
 | `3` | 簡単 | **learning**: **卒業** → review 箱 2 + `easyInterval` / **review**: 箱 +2（max 5）、該当復習間隔 / **relearning**: review に復帰 + `easyInterval` |
 
 - 各採点ボタンに **次回までの間隔**（例: `今すぐ` / `10分後` / `1日後`）を表示する（Anki 風）
@@ -57,7 +57,7 @@
 | 再学習ステップ | 10 分 | 同上 |
 | 復習間隔（箱 2〜5） | 1, 3, 7, 21 日 | 同上 |
 | 難しい | 1 日 | 同上 |
-| 卒業（良好で学習完了） | 1 日 | 同上 |
+| 卒業（正解で学習完了） | 1 日 | 同上 |
 | 簡単 | 4 日 | 同上 |
 
 - **新規カード**: `phase=learning`, `step=0`, `box=1`, `due_at=now`（今すぐ）

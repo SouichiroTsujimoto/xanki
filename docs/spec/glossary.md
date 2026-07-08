@@ -133,7 +133,7 @@
 |------|--------|----------------|------|
 | 復習予定 | `dueAt`, `StudyFilter.due` | **復習予定**（説明） | コード `due` 維持 |
 | 復習待ち | `dueCount` | **N 件が復習待ち** / Tray **今日の復習** | スマート学習タブ |
-| 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **再度 / 難しい / 良好 / 簡単**（1–4 キー） | |
+| 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **もう一度 / 難しい / 正解 / 簡単**（1–4 キー） | Anki 表記に準拠 |
 | スマート学習完了 | `LearnMode` empty | **今日のスマート学習は完了です** | |
 | 復習箱 | `LeitnerScheduler`, `review_state.box` | **Box**（開発者向け。UI 非表示） | spec・開発用 |
 | 習熟度 | `masteryPercent` | **習熟度**（Box 加重平均 %） | [study-metrics.md](./study-metrics.md) |
