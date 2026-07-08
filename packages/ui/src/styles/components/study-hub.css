@@ -640,6 +640,16 @@
   font-size: 0.82rem;
 }
 
+.leitner-grade-label {
+  font-weight: 600;
+}
+
+.leitner-grade-interval {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-muted-foreground);
+}
+
 @media (max-width: 720px) {
   .leitner-grade-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));

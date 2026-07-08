@@ -61,6 +61,18 @@ export const copy = {
       deckDue: (count: number) => `${count} 件復習待ち`,
     },
   },
+  deckScheduler: {
+    sectionLabel: "再学習間隔",
+    title: "再学習間隔",
+    description: "復習箱ごとに、次回出題までの日数を設定します。変更は次回採点から反映されます。",
+    boxLabel: (box: number) => `箱 ${box}`,
+    daysSuffix: "日後",
+    save: "保存",
+    reset: "デフォルトに戻す",
+    saved: "保存しました",
+    invalidIntervals: "箱の間隔は小さい番号から大きい番号へ増えるように設定してください。",
+    saveFailed: "保存に失敗しました。もう一度お試しください。",
+  },
   deckStudy: {
     hubTitle: "学習を始める",
     modesEyebrow: "学習モード",

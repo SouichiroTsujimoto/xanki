@@ -4,6 +4,7 @@ import { copy } from "../../copy";
 import { useAppApi } from "../../context/app-api-context";
 import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { DeckSchedulerSettings } from "./deck-scheduler-settings";
 import { HomeMetricsPanel } from "./home-metrics-panel";
 import type { Deck, DeckExport } from "../../types";
 import { Button } from "../ui/button";
@@ -83,7 +84,7 @@ export function HomeView({
 
   async function handleRenameDeck(deckId: string) {
     if (!editingDeckName.trim()) return;
-    await api.updateDeck(deckId, editingDeckName.trim());
+    await api.updateDeck(deckId, { name: editingDeckName.trim() });
     setEditingDeckId(null);
   }
 
@@ -182,6 +183,8 @@ export function HomeView({
         loading={metricsLoading}
         deckName={selectedDeck?.name ?? null}
       />
+
+      {selectedDeck && <DeckSchedulerSettings deck={selectedDeck} />}
 
       <section className="home-create-bar" aria-label="デッキの追加">
         <form

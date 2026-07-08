@@ -1,4 +1,8 @@
 import type { ApiCard, ApiDeck } from "./api-types.js";
+import {
+  parseDeckSchedulerConfig,
+  type DeckSchedulerConfig,
+} from "../study/scheduler.js";
 
 export type StudyFilter = "due" | "all";
 
@@ -12,6 +16,7 @@ export function mapApiDeck(raw: {
   cardCount?: number;
   createdAt?: number;
   updatedAt?: number;
+  schedulerConfig?: DeckSchedulerConfig | null;
 }): MappedDeck {
   return {
     id: raw.id,
@@ -19,6 +24,7 @@ export function mapApiDeck(raw: {
     cardCount: raw.cardCount ?? 0,
     createdAt: raw.createdAt ?? Date.now(),
     updatedAt: raw.updatedAt ?? Date.now(),
+    schedulerConfig: raw.schedulerConfig ?? null,
   };
 }
 

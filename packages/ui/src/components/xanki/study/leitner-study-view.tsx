@@ -174,6 +174,7 @@ export function LeitnerStudyView({
           <div className="study-session-body">
             <LearnMode
               deckId={sessionDeckId}
+              decks={decks}
               shuffle
               onBackToHub={exitSession}
             />

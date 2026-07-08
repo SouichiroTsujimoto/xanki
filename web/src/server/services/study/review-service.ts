@@ -1,10 +1,14 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { leitnerScheduler } from "@xanki/shared";
+import {
+  LeitnerScheduler,
+  resolveDeckSchedulerConfig,
+} from "@xanki/shared";
 import type { Env } from "../../env";
 import type { Db } from "../../db/index";
 import { cards, reviewLogs, reviewState } from "../../db/schema";
 import { nowMs, randomId } from "../../utils";
 import { finishMutation } from "../library/mutation";
+import { getDeckSchedulerConfig } from "../library/deck-service";
 import { recordStudyEvent } from "./study-metrics-service";
 
 export async function submitReview(
@@ -20,6 +24,10 @@ export async function submitReview(
     .from(cards)
     .where(and(eq(cards.userId, userId), eq(cards.id, cardId), isNull(cards.deletedAt)))
     .get();
+  if (!card) throw new Error("card_not_found");
+
+  const deckConfig = await getDeckSchedulerConfig(db, userId, card.deckId);
+  const scheduler = new LeitnerScheduler(resolveDeckSchedulerConfig(deckConfig));
 
   const existing = await db
     .select()
@@ -28,7 +36,7 @@ export async function submitReview(
     .get();
   const now = nowMs();
   const box = existing?.box ?? 1;
-  const next = leitnerScheduler.submitReviewGrade(box, result, now);
+  const next = scheduler.submitReviewGrade(box, result, now);
 
   if (existing) {
     await db
@@ -64,7 +72,7 @@ export async function submitReview(
 
   await recordStudyEvent(db, userId, {
     eventType: "leitner_review",
-    deckId: card?.deckId ?? null,
+    deckId: card.deckId,
     cardId,
     grade: result,
     tzOffsetMinutes,

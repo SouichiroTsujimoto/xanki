@@ -1,4 +1,5 @@
 import type { CardKind } from "../sync/sync.js";
+import type { DeckSchedulerConfig } from "../study/scheduler.js";
 
 export interface ApiDeck {
   id: string;
@@ -7,6 +8,7 @@ export interface ApiDeck {
   updatedAt: number;
   cardCount?: number;
   deletedAt?: number | null;
+  schedulerConfig?: DeckSchedulerConfig | null;
 }
 
 export interface ApiCard {
@@ -43,7 +45,8 @@ export interface CreateDeckRequest {
 }
 
 export interface UpdateDeckRequest {
-  name: string;
+  name?: string;
+  schedulerConfig?: DeckSchedulerConfig;
 }
 
 export interface CreateCardRequest {

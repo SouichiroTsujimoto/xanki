@@ -18,7 +18,7 @@ import {
   type AppTab,
   type PermissionStatus,
 } from "@xanki/ui";
-import { isCloudUnauthorized } from "@xanki/shared";
+import { isCloudUnauthorized, mapApiDeck } from "@xanki/shared";
 import { createCloudAppApi } from "../../lib/cloud/app-api";
 import { cloud } from "../../lib/cloud/client";
 import {
@@ -118,15 +118,7 @@ export function MainApp() {
   const refreshLibrary = useCallback(async () => {
     try {
       const [deckList, allCards] = await Promise.all([cloud.listDecks(), cloud.listCards()]);
-      setDecks(
-        deckList.map((deck) => ({
-          id: deck.id,
-          name: deck.name,
-          cardCount: deck.cardCount ?? 0,
-          createdAt: deck.createdAt ?? Date.now(),
-          updatedAt: deck.updatedAt ?? Date.now(),
-        })),
-      );
+      setDecks(deckList.map(mapApiDeck));
       const deckIds = new Set(deckList.map((deck) => deck.id));
       const lastUsed = localStorage.getItem("xanki:lastUsedDeckId");
       if (lastUsed && !deckIds.has(lastUsed)) {

@@ -11,6 +11,7 @@ export const decks = sqliteTable(
     userId: text("user_id").notNull(),
     id: text("id").notNull(),
     name: text("name").notNull(),
+    schedulerConfig: text("scheduler_config"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
     deletedAt: integer("deleted_at"),

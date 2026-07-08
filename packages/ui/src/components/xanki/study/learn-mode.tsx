@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { buildStudyCardContext } from "@xanki/shared";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  buildStudyCardContext,
+  formatReviewInterval,
+  previewReviewGrade,
+  resolveDeckSchedulerConfig,
+} from "@xanki/shared";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
 import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
-import type { ReviewGrade } from "../../../types";
+import type { Deck, ReviewGrade } from "../../../types";
 import { LeitnerDeckSessionComplete } from "./leitner-deck-session-complete";
 import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import {
@@ -17,6 +22,7 @@ import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
+  decks: Deck[];
   shuffle?: boolean;
   onBackToHub?: () => void;
 }
@@ -35,7 +41,7 @@ type CompletionState =
   | { kind: "deck"; remainingDueCount: number }
   | { kind: "error" };
 
-export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
+export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props) {
   const api = useAppApi();
   const recorder = useStudySessionRecorder();
   const sessionStartedRef = useRef(false);
@@ -80,6 +86,31 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
     sessionStartedRef.current = true;
     void recorder.beginLeitnerSession(deckId, queue.length);
   }, [deckId, queue.length, recorder]);
+
+  const deckConfigById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof resolveDeckSchedulerConfig>>();
+    for (const deck of decks) {
+      map.set(deck.id, resolveDeckSchedulerConfig(deck.schedulerConfig));
+    }
+    return map;
+  }, [decks]);
+
+  const currentSchedulerConfig = useMemo(() => {
+    if (!current) return resolveDeckSchedulerConfig(null);
+    return (
+      deckConfigById.get(current.card.deckId) ?? resolveDeckSchedulerConfig(null)
+    );
+  }, [current, deckConfigById]);
+
+  const gradePreviews = useMemo(() => {
+    const currentBox = current?.card.boxNum ?? 1;
+    return GRADES.map((grade) =>
+      formatReviewInterval(
+        previewReviewGrade(currentBox, grade.result, currentSchedulerConfig)
+          .intervalDays,
+      ),
+    );
+  }, [current, currentSchedulerConfig]);
 
   useEffect(() => {
     setRevealed(false);
@@ -234,7 +265,8 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
             onClick={() => void submit(grade.result)}
           >
             <kbd>{gradeIndex + 1}</kbd>
-            {grade.label}
+            <span className="leitner-grade-label">{grade.label}</span>
+            <span className="leitner-grade-interval">{gradePreviews[gradeIndex]}</span>
           </Button>
         ))}
       </div>

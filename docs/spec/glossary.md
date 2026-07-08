@@ -95,6 +95,7 @@
 | 画像カード | `kind: "image"` | **画像** | [image-masks.md](./image-masks.md) |
 | マスク | `masks` JSON | **マスク** | [data-model.md](./data-model.md) |
 | 復習箱 | `boxNum`, `review_state.box` | **Box**（開発者向け。UI 非表示） | [study.md](./study.md) |
+| 再学習間隔 | `schedulerConfig`, `scheduler_config` | **再学習間隔** | [leitner-study.md](./leitner-study.md), [library.md](./library.md) |
 
 ---
 

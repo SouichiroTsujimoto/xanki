@@ -18,6 +18,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | user_id | TEXT | |
 | id | TEXT | UUID v7 |
 | name | TEXT | デッキ名 |
+| scheduler_config | TEXT | Leitner 箱 1..5 の間隔 JSON（省略時デフォルト） |
 | created_at / updated_at | INTEGER | unix ms |
 | deleted_at | INTEGER | 論理削除 |
 
