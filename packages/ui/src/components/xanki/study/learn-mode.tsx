@@ -109,8 +109,8 @@ export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props
       return normalizeReviewState({ phase: "learning", step: 0, box: 1 });
     }
     return normalizeReviewState({
-      phase: current.card.reviewPhase,
-      step: current.card.reviewStep,
+      phase: current.card.reviewPhase ?? "learning",
+      step: current.card.reviewStep ?? 0,
       box: current.card.boxNum ?? 1,
     });
   }, [current]);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultDeckSchedulerConfig,
   parseDeckSchedulerConfig,
@@ -22,6 +22,10 @@ const UNITS: StudyIntervalUnit[] = ["minute", "hour", "day"];
 
 function configFromDeck(deck: Deck): DeckSchedulerConfig {
   return resolveDeckSchedulerConfig(deck.schedulerConfig);
+}
+
+function deckSchedulerConfigKey(deck: Deck): string {
+  return JSON.stringify(configFromDeck(deck));
 }
 
 function maxAmountForUnit(unit: StudyIntervalUnit): number {
@@ -186,12 +190,32 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const prevDeckIdRef = useRef(deck.id);
+  const prevConfigKeyRef = useRef(deckSchedulerConfigKey(deck));
+  const configKey = useMemo(
+    () => deckSchedulerConfigKey(deck),
+    [deck.id, JSON.stringify(deck.schedulerConfig ?? null)],
+  );
 
   useEffect(() => {
-    setConfig(configFromDeck(deck));
+    const deckChanged = prevDeckIdRef.current !== deck.id;
+    if (!deckChanged && isDirty) return;
+    if (!deckChanged && prevConfigKeyRef.current === configKey) return;
+
+    setConfig(JSON.parse(configKey) as DeckSchedulerConfig);
     setError(null);
     setSaved(false);
-  }, [deck.id, deck.schedulerConfig]);
+    setIsDirty(false);
+    prevDeckIdRef.current = deck.id;
+    prevConfigKeyRef.current = configKey;
+  }, [configKey, deck.id, isDirty]);
+
+  function markDirty() {
+    setIsDirty(true);
+    setSaved(false);
+    setError(null);
+  }
 
   async function handleSave(nextConfig: DeckSchedulerConfig) {
     if (!parseDeckSchedulerConfig(nextConfig)) {
@@ -205,12 +229,20 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
     try {
       await api.updateDeck(deck.id, { schedulerConfig: nextConfig });
       setSaved(true);
-      await onSaved?.();
+      setIsDirty(false);
+      prevConfigKeyRef.current = JSON.stringify(nextConfig);
     } catch (saveError) {
       console.error("scheduler save failed", saveError);
       setError(copy.deckScheduler.saveFailed);
+      return;
     } finally {
       setSaving(false);
+    }
+
+    try {
+      await onSaved?.();
+    } catch (refreshError) {
+      console.error("scheduler refresh failed", refreshError);
     }
   }
 
@@ -218,8 +250,7 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
     const next = [...config.reviewIntervals] as ReviewIntervals;
     next[index] = interval;
     setConfig({ ...config, reviewIntervals: next });
-    setSaved(false);
-    setError(null);
+    markDirty();
   }
 
   return (
@@ -236,14 +267,20 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
           title={copy.deckScheduler.learningStepsTitle}
           steps={config.learningSteps}
           disabled={saving}
-          onChange={(learningSteps) => setConfig({ ...config, learningSteps })}
+          onChange={(learningSteps) => {
+            setConfig({ ...config, learningSteps });
+            markDirty();
+          }}
         />
 
         <StepListEditor
           title={copy.deckScheduler.relearningStepsTitle}
           steps={config.relearningSteps}
           disabled={saving}
-          onChange={(relearningSteps) => setConfig({ ...config, relearningSteps })}
+          onChange={(relearningSteps) => {
+            setConfig({ ...config, relearningSteps });
+            markDirty();
+          }}
         />
 
         <div className="deck-scheduler-subsection">
@@ -268,19 +305,28 @@ export function DeckSchedulerSettings({ deck, onSaved }: Props) {
               label={copy.deckScheduler.hardIntervalLabel}
               interval={config.hardInterval}
               disabled={saving}
-              onChange={(hardInterval) => setConfig({ ...config, hardInterval })}
+              onChange={(hardInterval) => {
+                setConfig({ ...config, hardInterval });
+                markDirty();
+              }}
             />
             <IntervalField
               label={copy.deckScheduler.graduatingIntervalLabel}
               interval={config.graduatingInterval}
               disabled={saving}
-              onChange={(graduatingInterval) => setConfig({ ...config, graduatingInterval })}
+              onChange={(graduatingInterval) => {
+                setConfig({ ...config, graduatingInterval });
+                markDirty();
+              }}
             />
             <IntervalField
               label={copy.deckScheduler.easyIntervalLabel}
               interval={config.easyInterval}
               disabled={saving}
-              onChange={(easyInterval) => setConfig({ ...config, easyInterval })}
+              onChange={(easyInterval) => {
+                setConfig({ ...config, easyInterval });
+                markDirty();
+              }}
             />
           </div>
         </div>
