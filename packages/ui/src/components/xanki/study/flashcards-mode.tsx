@@ -88,6 +88,28 @@ export function FlashcardsMode({
     );
   }
 
+  if (!isSingle && !sessionMeta.ready) {
+    return (
+      <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
+        title={copy.deckStudy.loadingSession}
+        copy=""
+      />
+    );
+  }
+
+  if (!isSingle && sessionMeta.loadError) {
+    return (
+      <StudyEmpty
+        eyebrow={copy.deckStudy.emptyEyebrow}
+        title={sessionMeta.loadError}
+        copy={copy.flashcardsMode.emptyCopy}
+        onReload={restart}
+        reloadLabel={copy.deckStudy.retryLoad}
+      />
+    );
+  }
+
   if (!activeCard) {
     return (
       <StudyEmpty

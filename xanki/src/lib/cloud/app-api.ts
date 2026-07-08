@@ -81,6 +81,11 @@ export function createCloudAppApi(onDataChanged?: () => void): AppApi {
         } catch {
           deckId = (await cloud.createDeck(data.deck.name)).id;
         }
+        if (data.deck.schedulerConfig) {
+          await cloud.updateDeck(deckId, {
+            schedulerConfig: data.deck.schedulerConfig,
+          });
+        }
         for (const card of data.cards) {
           await cloud.createCard({
             deckId,

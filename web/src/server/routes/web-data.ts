@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import { parseDeckSchedulerConfig } from "@xanki/shared";
 import type { Env } from "../env";
 import { authMiddleware, type AppVars } from "../middleware/auth";
 import {
@@ -22,30 +23,51 @@ deckRoutes.get("/", async (c) => {
 deckRoutes.post("/", async (c) => {
   const body = z.object({ name: z.string().min(1) }).parse(await c.req.json());
   const id = randomId();
-  const row = await upsertDeck(c.get("db"), c.get("user").id, id, body.name, c.env);
+  const row = await upsertDeck(c.get("db"), c.get("user").id, id, { name: body.name }, c.env);
   return c.json({
     id: row.id,
     name: row.name,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    schedulerConfig: row.schedulerConfig,
     cardCount: 0,
   });
 });
 
+const updateDeckBodySchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    schedulerConfig: z.unknown().optional(),
+  })
+  .refine((body) => body.name !== undefined || body.schedulerConfig !== undefined, {
+    message: "name or schedulerConfig required",
+  });
+
 deckRoutes.patch("/:id", async (c) => {
-  const body = z.object({ name: z.string().min(1) }).parse(await c.req.json());
+  const body = updateDeckBodySchema.parse(await c.req.json());
+  let schedulerConfig: ReturnType<typeof parseDeckSchedulerConfig> | undefined;
+  if (body.schedulerConfig !== undefined) {
+    schedulerConfig = parseDeckSchedulerConfig(body.schedulerConfig);
+    if (!schedulerConfig) {
+      return c.json({ error: "invalid_scheduler_config" }, 400);
+    }
+  }
   const row = await upsertDeck(
     c.get("db"),
     c.get("user").id,
     c.req.param("id"),
-    body.name,
+    {
+      name: body.name,
+      schedulerConfig,
+    },
     c.env,
   );
   return c.json({
     id: row.id,
     name: row.name,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    schedulerConfig: row.schedulerConfig,
   });
 });
 

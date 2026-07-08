@@ -1,4 +1,8 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
+import {
+  parseDeckSchedulerConfig,
+  type DeckSchedulerConfig,
+} from "@xanki/shared";
 import type { Env } from "../../env";
 import type { Db } from "../../db/index";
 import { cards, decks, reviewState } from "../../db/schema";
@@ -7,6 +11,52 @@ import { purgeOrphanedCards } from "./card-service";
 import { finishMutation } from "./mutation";
 
 export const DEFAULT_DECK_NAME = "デフォルト";
+
+function readDeckSchedulerConfig(raw: string | null | undefined) {
+  if (!raw) return null;
+  try {
+    return parseDeckSchedulerConfig(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function serializeDeckSchedulerConfig(config: DeckSchedulerConfig | null | undefined) {
+  return config ? JSON.stringify(config) : null;
+}
+
+export function mapDeckRow(d: {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  schedulerConfig?: string | null;
+  cardCount?: number;
+}) {
+  return {
+    id: d.id,
+    name: d.name,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+    cardCount: d.cardCount,
+    schedulerConfig: readDeckSchedulerConfig(d.schedulerConfig),
+  };
+}
+
+export async function getDeckSchedulerConfig(
+  db: Db,
+  userId: string,
+  deckId: string,
+): Promise<DeckSchedulerConfig | null> {
+  const row = await db
+    .select({ schedulerConfig: decks.schedulerConfig })
+    .from(decks)
+    .where(
+      and(eq(decks.userId, userId), eq(decks.id, deckId), isNull(decks.deletedAt)),
+    )
+    .get();
+  return readDeckSchedulerConfig(row?.schedulerConfig);
+}
 
 export async function ensureDefaultDeck(db: Db, userId: string, env?: Env) {
   const existing = await db
@@ -17,7 +67,7 @@ export async function ensureDefaultDeck(db: Db, userId: string, env?: Env) {
     .get();
   if (existing) return;
 
-  await upsertDeck(db, userId, randomId(), DEFAULT_DECK_NAME, env);
+  await upsertDeck(db, userId, randomId(), { name: DEFAULT_DECK_NAME }, env);
 }
 
 export async function listDecks(db: Db, userId: string, env?: Env) {
@@ -46,22 +96,32 @@ export async function listDecks(db: Db, userId: string, env?: Env) {
 
   const counts = new Map(countRows.map((r) => [r.deckId, r.count]));
 
-  return deckRows.map((d) => ({
-    id: d.id,
-    name: d.name,
-    createdAt: d.createdAt,
-    updatedAt: d.updatedAt,
-    cardCount: counts.get(d.id) ?? 0,
-  }));
+  return deckRows.map((d) =>
+    mapDeckRow({
+      id: d.id,
+      name: d.name,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
+      schedulerConfig: d.schedulerConfig,
+      cardCount: counts.get(d.id) ?? 0,
+    }),
+  );
+}
+
+export interface UpsertDeckPatch {
+  name?: string;
+  schedulerConfig?: DeckSchedulerConfig | null;
 }
 
 export async function upsertDeck(
   db: Db,
   userId: string,
   id: string,
-  name: string,
+  patch: UpsertDeckPatch | string,
   env?: Env,
 ) {
+  const resolvedPatch: UpsertDeckPatch =
+    typeof patch === "string" ? { name: patch } : patch;
   const now = nowMs();
   const existing = await db
     .select()
@@ -70,27 +130,41 @@ export async function upsertDeck(
     .get();
 
   if (existing) {
+    const nextName = resolvedPatch.name ?? existing.name;
+    const nextSchedulerConfig =
+      resolvedPatch.schedulerConfig === undefined
+        ? existing.schedulerConfig
+        : serializeDeckSchedulerConfig(resolvedPatch.schedulerConfig);
     await db
       .update(decks)
-      .set({ name, updatedAt: now })
+      .set({
+        name: nextName,
+        schedulerConfig: nextSchedulerConfig,
+        updatedAt: now,
+      })
       .where(and(eq(decks.userId, userId), eq(decks.id, id)));
   } else {
+    if (!resolvedPatch.name) {
+      throw new Error("deck_name_required");
+    }
     await db.insert(decks).values({
       userId,
       id,
-      name,
+      name: resolvedPatch.name,
+      schedulerConfig: serializeDeckSchedulerConfig(resolvedPatch.schedulerConfig),
       createdAt: now,
       updatedAt: now,
     });
   }
 
   await finishMutation(db, env, userId);
-  return {
-    id,
-    name,
-    created_at: existing?.createdAt ?? now,
-    updated_at: now,
-  };
+  const row = await db
+    .select()
+    .from(decks)
+    .where(and(eq(decks.userId, userId), eq(decks.id, id)))
+    .get();
+  if (!row) throw new Error("deck_not_found");
+  return mapDeckRow(row);
 }
 
 export async function deleteDeck(db: Db, userId: string, id: string, env?: Env) {

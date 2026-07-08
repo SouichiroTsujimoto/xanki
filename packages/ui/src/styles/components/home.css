@@ -467,3 +467,156 @@
   margin-top: 0.5rem;
 }
 
+.deck-scheduler-settings {
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.deck-scheduler-settings-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.deck-scheduler-settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+.deck-scheduler-settings-summary::before {
+  content: "▸";
+  flex: none;
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+  color: var(--color-muted-foreground);
+  transition: transform 0.15s ease;
+}
+
+.deck-scheduler-settings[open] .deck-scheduler-settings-summary::before {
+  transform: rotate(90deg);
+}
+
+.deck-scheduler-settings-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.deck-scheduler-settings-body {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.deck-scheduler-settings-head {
+  margin-bottom: 1rem;
+}
+
+.deck-scheduler-settings-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.deck-scheduler-settings-copy {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted-foreground);
+}
+
+.deck-scheduler-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.deck-scheduler-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.deck-scheduler-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.deck-scheduler-field-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.deck-scheduler-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deck-scheduler-range {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--color-accent, #2563eb);
+}
+
+.deck-scheduler-input-row select {
+  min-width: 4.5rem;
+  flex: none;
+}
+
+.deck-scheduler-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.deck-scheduler-error {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-destructive, #c0392b);
+}
+
+.deck-scheduler-saved {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-accent-text);
+}
+
+.deck-scheduler-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.deck-scheduler-subsection-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.deck-scheduler-subsection h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.deck-scheduler-step-row {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.deck-scheduler-step-row .deck-scheduler-field {
+  flex: 1;
+}

@@ -9,6 +9,7 @@ import type {
   StudyMetrics,
   StudySessionMode,
   StudyTrack,
+  UpdateDeckRequest,
 } from "./api-types.js";
 import type { ImageMask, OcrData, TextMask } from "../masks/masks.js";
 import type { StudyFilter } from "./cloud-mappers.js";
@@ -79,7 +80,7 @@ export interface EditorInitPayload {
 export interface AppApi {
   listDecks(): Promise<Deck[]>;
   createDeck(name: string): Promise<Deck>;
-  updateDeck(deckId: string, name: string): Promise<Deck>;
+  updateDeck(deckId: string, patch: UpdateDeckRequest): Promise<Deck>;
   deleteDeck(deckId: string): Promise<void>;
   getLastUsedDeckId(): Promise<string | null>;
   exportDeck(deckId: string): Promise<DeckExport>;

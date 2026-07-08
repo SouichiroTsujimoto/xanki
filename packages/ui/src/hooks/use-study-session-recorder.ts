@@ -1,5 +1,5 @@
 import { getTzOffsetMinutes, type DeckStudyMode, type StudySessionMode } from "@xanki/shared";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAppApi } from "../context/app-api-context";
 
 interface DeckSessionOptions {
@@ -168,14 +168,27 @@ export function useStudySessionRecorder() {
     };
   }, [completeSession]);
 
-  return {
-    beginDeckSession,
-    beginLeitnerSession,
-    recordDeckEvents,
-    recordDeckKnown,
-    recordDeckStill,
-    noteCardCompleted,
-    completeSession,
-    resetSession,
-  };
+  // Memoized return — deps に丸ごと入れると useEffect 無限ループの原因になる（dev-study-layout.md 参照）
+  return useMemo(
+    () => ({
+      beginDeckSession,
+      beginLeitnerSession,
+      recordDeckEvents,
+      recordDeckKnown,
+      recordDeckStill,
+      noteCardCompleted,
+      completeSession,
+      resetSession,
+    }),
+    [
+      beginDeckSession,
+      beginLeitnerSession,
+      recordDeckEvents,
+      recordDeckKnown,
+      recordDeckStill,
+      noteCardCompleted,
+      completeSession,
+      resetSession,
+    ],
+  );
 }

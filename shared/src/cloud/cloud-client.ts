@@ -10,6 +10,7 @@ import type {
   StudyMetrics,
   SubmitReviewRequest,
   UpdateCardRequest,
+  UpdateDeckRequest,
 } from "../library/api-types.js";
 import type { AccountStorageResponse } from "../sync/sync.js";
 
@@ -75,10 +76,10 @@ export function createCloudClient(options: CloudClientOptions) {
     createDeck: (name: string) =>
       request<ApiDeck>("/api/decks", { method: "POST", body: JSON.stringify({ name }) }),
 
-    updateDeck: (deckId: string, name: string) =>
+    updateDeck: (deckId: string, patch: UpdateDeckRequest) =>
       request<ApiDeck>(`/api/decks/${encodeURIComponent(deckId)}`, {
         method: "PATCH",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(patch),
       }),
 
     deleteDeck: (deckId: string) =>

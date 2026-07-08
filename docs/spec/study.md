@@ -44,18 +44,19 @@
 
 UI 名 **「スマート学習」** は暫定。内部識別子 `leitner` / `LeitnerScheduler` は安定キーとして維持する。
 
-実装: [`shared/src/study/scheduler.ts`](../../shared/src/study/scheduler.ts)（`LeitnerScheduler`）
+実装: [`shared/src/study/scheduler.ts`](../../shared/src/study/scheduler.ts)（`submitReviewGrade` / `previewReviewGrade`）
 
-### 古典 Leitner 方式との差分
+### 古典 Leitner / Anki との差分
 
-| 観点 | 古典 Leitner | xanki 実装 |
-|------|-------------|-----------|
-| 評価 | 正解 / 不正解（2 値） | **4 段階**（再度 / 難しい / 良好 / 簡単） |
-| 箱の進み方 | 正解 → 次箱、不正解 → 箱 1 | 段階ごとに box +1 / +2 / 据置 / 箱 1 |
-| 間隔 | 箱ごとに一括復習（物理箱） | **カード単位** `due_at` |
-| 間隔値 | 指数増（例: 1, 2, 4, 8 日…） | 固定テーブル **0 / 1 / 3 / 7 / 21 日** |
+| 観点 | 古典 Leitner | Anki | xanki 実装 |
+|------|-------------|------|-----------|
+| 評価 | 正解 / 不正解（2 値） | 4 段階 | **4 段階**（もう一度 / 難しい / 正解 / 簡単） |
+| 学習フェーズ | なし（箱のみ） | learning / review / relearning | **同様**（`review_state.phase` + `step`） |
+| 間隔 | 箱ごとに一括復習（物理箱） | 学習ステップ（分）+ 復習間隔（日） | **同様**（`DeckSchedulerConfig` v2） |
+| 間隔値 | 指数増 | ease factor 等 | **デッキ設定の固定間隔**（SM-2 なし） |
+| Hard | — | 乗算 / 中間 | デッキ設定 `hardInterval`（分 / 時間 / 日） |
 
-厳密な Leitner 方式ではない。**箱 1–5 + 4 段階評価の簡略 SRS** として記述する。詳細は [leitner-study.md](./leitner-study.md)。
+厳密な Leitner 方式でも Anki 完全互換でもない。**Anki 型フェーズ + 4 段階評価の簡略 SRS** として記述する。詳細は [leitner-study.md](./leitner-study.md)。
 
 ## 旧構成からの移行
 
@@ -66,6 +67,7 @@ UI 名 **「スマート学習」** は暫定。内部識別子 `leitner` / `Lei
 | `learn` + 1/2 | スマート学習 + 4 段階 |
 | Tray → study | Tray → leitner |
 | UI「Leitner学習」 | UI「スマート学習」 |
+| `boxIntervalDays`（日数のみ） | `DeckSchedulerConfig` v2（学習 / 再学習 / 復習分離） |
 
 ## 受け入れ条件（横断）
 

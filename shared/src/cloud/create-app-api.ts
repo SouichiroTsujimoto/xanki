@@ -69,8 +69,8 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
       notify();
       return deck;
     },
-    updateDeck: async (deckId, name) => {
-      const deck = mapDeck(await cloud.updateDeck(deckId, name));
+    updateDeck: async (deckId, patch) => {
+      const deck = mapDeck(await cloud.updateDeck(deckId, patch));
       notify();
       return deck;
     },

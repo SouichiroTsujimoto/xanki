@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { buildStudyCardContext } from "@xanki/shared";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  buildStudyCardContext,
+  normalizeReviewState,
+  previewReviewGrade,
+  resolveDeckSchedulerConfig,
+} from "@xanki/shared";
 import { copy } from "../../../copy";
 import { useAppApi } from "../../../context/app-api-context";
 import { useStudySessionRecorder } from "../../../hooks/use-study-session-recorder";
-import type { ReviewGrade } from "../../../types";
+import type { Deck, ReviewGrade } from "../../../types";
 import { LeitnerDeckSessionComplete } from "./leitner-deck-session-complete";
 import { LeitnerDueCompletePanel } from "./leitner-due-complete-panel";
 import {
@@ -17,6 +22,7 @@ import { Button } from "../../ui/button";
 
 interface Props {
   deckId?: string | null;
+  decks: Deck[];
   shuffle?: boolean;
   onBackToHub?: () => void;
 }
@@ -35,9 +41,10 @@ type CompletionState =
   | { kind: "deck"; remainingDueCount: number }
   | { kind: "error" };
 
-export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
+export function LearnMode({ deckId, decks, shuffle = false, onBackToHub }: Props) {
   const api = useAppApi();
-  const recorder = useStudySessionRecorder();
+  const { beginLeitnerSession, completeSession, noteCardCompleted } =
+    useStudySessionRecorder();
   const sessionStartedRef = useRef(false);
   const {
     queue,
@@ -52,6 +59,7 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
   const [revealed, setRevealed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [completion, setCompletion] = useState<CompletionState>({ kind: "idle" });
+  const [previewNow, setPreviewNow] = useState(() => Date.now());
 
   const resolveCompletion = useCallback(async () => {
     setCompletion({ kind: "pending" });
@@ -70,7 +78,7 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
   useEffect(() => {
     if (queue.length === 0) {
       if (sessionStartedRef.current) {
-        void recorder.completeSession().finally(() => {
+        void completeSession().finally(() => {
           sessionStartedRef.current = false;
         });
       }
@@ -78,8 +86,45 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
     }
     if (sessionStartedRef.current) return;
     sessionStartedRef.current = true;
-    void recorder.beginLeitnerSession(deckId, queue.length);
-  }, [deckId, queue.length, recorder]);
+    void beginLeitnerSession(deckId, queue.length);
+  }, [beginLeitnerSession, completeSession, deckId, queue.length]);
+
+  const deckConfigById = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof resolveDeckSchedulerConfig>>();
+    for (const deck of decks) {
+      map.set(deck.id, resolveDeckSchedulerConfig(deck.schedulerConfig));
+    }
+    return map;
+  }, [decks]);
+
+  const currentSchedulerConfig = useMemo(() => {
+    if (!current) return resolveDeckSchedulerConfig(null);
+    return (
+      deckConfigById.get(current.card.deckId) ?? resolveDeckSchedulerConfig(null)
+    );
+  }, [current, deckConfigById]);
+
+  const reviewState = useMemo(() => {
+    if (!current) {
+      return normalizeReviewState({ phase: "learning", step: 0, box: 1 });
+    }
+    return normalizeReviewState({
+      phase: current.card.reviewPhase ?? "learning",
+      step: current.card.reviewStep ?? 0,
+      box: current.card.boxNum ?? 1,
+    });
+  }, [current]);
+
+  const gradePreviews = useMemo(() => {
+    return GRADES.map((grade) =>
+      previewReviewGrade(reviewState, grade.result, currentSchedulerConfig, previewNow)
+        .label,
+    );
+  }, [reviewState, currentSchedulerConfig, previewNow]);
+
+  useEffect(() => {
+    setPreviewNow(Date.now());
+  }, [current, currentSchedulerConfig]);
 
   useEffect(() => {
     setRevealed(false);
@@ -103,7 +148,7 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
     async (result: ReviewGrade) => {
       if (!current) return;
       await api.submitReview(current.card.id, result);
-      recorder.noteCardCompleted();
+      noteCardCompleted();
       setRevealed(false);
       if (index + 1 < queue.length) {
         next();
@@ -111,7 +156,7 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
         await loadQueue();
       }
     },
-    [current, index, loadQueue, next, queue.length, api, recorder],
+    [api, current, index, loadQueue, next, noteCardCompleted, queue.length],
   );
 
   useEffect(() => {
@@ -234,7 +279,8 @@ export function LearnMode({ deckId, shuffle = false, onBackToHub }: Props) {
             onClick={() => void submit(grade.result)}
           >
             <kbd>{gradeIndex + 1}</kbd>
-            {grade.label}
+            <span className="leitner-grade-label">{grade.label}</span>
+            <span className="leitner-grade-interval">{gradePreviews[gradeIndex]}</span>
           </Button>
         ))}
       </div>

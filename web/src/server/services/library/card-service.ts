@@ -1,5 +1,4 @@
 import { and, eq, isNull, like, or, sql } from "drizzle-orm";
-import { leitnerScheduler } from "@xanki/shared";
 import type { Env } from "../../env";
 import type { Db } from "../../db/index";
 import { cards, decks, reviewState } from "../../db/schema";
@@ -113,6 +112,8 @@ export async function listCards(db: Db, userId: string, deckId?: string, q?: str
       createdAt: card.createdAt,
       updatedAt: card.updatedAt,
       boxNum: rs?.box,
+      reviewPhase: rs?.phase as "learning" | "review" | "relearning" | undefined,
+      reviewStep: rs?.step,
       dueAt: rs?.dueAt,
       lastResult: rs?.lastResult,
     };
@@ -201,7 +202,9 @@ export async function upsertCard(db: Db, userId: string, card: CardInput, env?: 
         userId,
         cardId: card.id,
         box: 1,
-        dueAt: leitnerScheduler.dueAtForBox(1, card.created_at),
+        phase: "learning",
+        step: 0,
+        dueAt: card.created_at,
         lastResult: null,
         updatedAt: card.updated_at,
       });

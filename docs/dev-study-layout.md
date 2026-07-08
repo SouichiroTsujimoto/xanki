@@ -15,6 +15,9 @@
 | 高さ計測 hook | [`packages/ui/src/hooks/use-flip-height.ts`](../packages/ui/src/hooks/use-flip-height.ts) |
 | 高さ計測ロジック | [`packages/ui/src/lib/flip-metrics.ts`](../packages/ui/src/lib/flip-metrics.ts) |
 | テキスト縦配置 hook | [`packages/ui/src/hooks/use-review-card-text-overflow.ts`](../packages/ui/src/hooks/use-review-card-text-overflow.ts) |
+| デッキ学習セッション load | [`use-deck-study-session.ts`](../packages/ui/src/components/xanki/study/use-deck-study-session.ts) |
+| study metrics recorder | [`use-study-session-recorder.ts`](../packages/ui/src/hooks/use-study-session-recorder.ts) |
+| スマート学習キュー | [`study-progress.tsx`](../packages/ui/src/components/xanki/study/study-progress.tsx)（`useStudyQueue`） |
 
 ## DOM とスクロールの分担
 
@@ -172,9 +175,74 @@ pnpm dev:desktop    # Tauri（Cloud API は別途 dev:cloud）
 
 ---
 
+## 学習セッションのデータ読み込み（React hooks）
+
+レイアウト以外の **学習キュー fetch・空表示・API 連打** に関する再発防止メモ。ユーザー向け WHAT は [study.md](./spec/study.md)。
+
+### 典型パターン（罠）
+
+```tsx
+// ❌ hook が毎 render で新しいオブジェクトを返すと identity が毎回変わる
+const recorder = useStudySessionRecorder();
+const loadSession = useCallback(async () => { ... }, [recorder]);
+useEffect(() => { void loadSession(); }, [loadSession]);
+// → loadSession が毎 render 再生成 → useEffect が毎 render 実行 → setState → 無限ループ
+```
+
+Network では `GET /api/cards?deck_id=...` 等が **秒間数千〜万回**、コンソールは `Maximum update depth exceeded`。
+
+### 不変条件（変更前に確認）
+
+1. **`useEffect` / `useCallback` の deps に hook の戻りオブジェクトを丸ごと入れない**  
+   必要なのは `beginDeckSession` 等の **関数** か、プリミティブ state だけ。
+2. **カスタム hook がオブジェクトを返すとき**は `useMemo` で安定化する（[`use-study-session-recorder.ts`](../packages/ui/src/hooks/use-study-session-recorder.ts) 参照）。
+3. **load 系 effect** は `ready`（または同等）を持ち、**空 UI は `ready === true` のあと**にだけ出す（読み込み中はローディング文言）。
+4. **`try/finally`** で `ready` を必ず立てる。API 失敗時は `loadError` を表示し、空タイトルと混同しない。
+5. **`startStudySession`（metrics）失敗は学習本体を止めない** — カード fetch が成功すればセッションは続行（metrics は任意）。
+
+### 同様のリスクがある箇所
+
+| ファイル | パターン | 備考 |
+|----------|----------|------|
+| [`use-deck-study-session.ts`](../packages/ui/src/components/xanki/study/use-deck-study-session.ts) | `loadSession` + `useEffect` | **今回の本番障害**。フラッシュカード |
+| [`write-mode.tsx`](../packages/ui/src/components/xanki/study/write-mode.tsx) | `useEffect` 内 inline load + `recorder` deps | 修正済み（関数分解） |
+| [`test-mode.tsx`](../packages/ui/src/components/xanki/study/test-mode.tsx) | 同上 | 同上 |
+| [`match-mode.tsx`](../packages/ui/src/components/xanki/study/match-mode.tsx) | `loadSession` + `useEffect([loadSession])` | 同上 |
+| [`learn-mode.tsx`](../packages/ui/src/components/xanki/study/learn-mode.tsx) | `useEffect` + `recorder` | `sessionStartedRef` で再入は抑止されていたが deps は関数分解推奨 |
+| [`study-progress.tsx`](../packages/ui/src/components/xanki/study/study-progress.tsx) | `useStudyQueue` → `loadQueue` in deps | `loadQueue` は `useCallback([api, …])`。**現状 OK** |
+| [`use-study-ai-ask.ts`](../packages/ui/src/hooks/use-study-ai-ask.ts) | 戻りオブジェクト | `useMemo` 化済み。deps に丸ごと入れない |
+| [`use-main-app-state.ts`](../packages/ui/src/hooks/use-main-app-state.ts) | 戻りオブジェクト | App 側は分解利用。**丸ごと deps に入れない** |
+
+新規 hook を足すときは上表を更新する。
+
+### 症状 → 原因
+
+| 症状 | 原因 |
+|------|------|
+| Network で同一 API が連打、Provisional headers | load effect の deps が毎 render 変化 → 無限 fetch |
+| コンソール `Maximum update depth exceeded` | 上記 + load 内の `setState` |
+| カードがあるのに「カードがありません」 | load ループで `current` が常に undefined、または `ready` 未確認で空 UI |
+| 一覧には見えるが学習モードだけ空 | 学習だけ `getStudyCards` + `startStudySession` 経路。metrics 失敗で `ready` 未設定（旧実装） |
+
+### デバッグ手順
+
+1. DevTools **Network** — `/api/cards` 等の件数（正常は初回 + 明示的再読み込みのみ）
+2. **Console** — `Maximum update depth exceeded` の有無
+3. React **useEffect 依存** — hook 戻り値オブジェクトが deps に入っていないか
+4. auth 401 等 — 単発失敗ならエラー UI、連打なら hooks ループを疑う
+
+### 変更時ガイド
+
+- `useStudySessionRecorder` を触ったら **戻り値の `useMemo` を維持**
+- デッキ学習モードを新設するときは **`useDeckStudySession` を再利用**するか、同じ `ready` / `loadError` 契約に揃える
+- PR では Network タブで API 件数が増えないことを確認
+
+---
+
 ## 履歴メモ（2026-07）
 
 | 事象 | 対応 |
 |------|------|
+| フラッシュカードで `/api/cards` 連打・「カードがありません」 | `useStudySessionRecorder` 戻り値を `useMemo` 化、`useDeckStudySession` で deps 分解 + `ready`/`loadError`。§学習セッションのデータ読み込み 参照 |
 | 画面高さ依存でカード・操作ボタンが見切れ | slot `overflow: visible`、face grid 化、`resolveFlipMaxHeight` で stage 残り高さ、slot ResizeObserver |
 | 長文テキストが中央のまま上までスクロールできない | `use-review-card-text-overflow` + `data-text-scrollable` |

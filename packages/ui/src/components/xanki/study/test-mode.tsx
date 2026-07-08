@@ -23,7 +23,12 @@ interface TestQuestion {
 
 export function TestMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
-  const recorder = useStudySessionRecorder();
+  const {
+    beginDeckSession,
+    completeSession,
+    recordDeckKnown,
+    recordDeckStill,
+  } = useStudySessionRecorder();
   const completeSentRef = useRef(false);
   const [remaining, setRemaining] = useState<TestQuestion[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -38,7 +43,7 @@ export function TestMode({ deckId, shuffle }: Props) {
         return;
       }
       completeSentRef.current = false;
-      await recorder.completeSession();
+      await completeSession();
       const cards = await api.listCards(deckId ?? undefined);
       const answers = extractMaskAnswers(cards);
       const built = answers.map((answer) => {
@@ -48,7 +53,7 @@ export function TestMode({ deckId, shuffle }: Props) {
       });
       const ordered = shuffle ? shuffleArray(built) : built;
       if (ordered.length > 0) {
-        await recorder.beginDeckSession({
+        await beginDeckSession({
           deckId,
           mode: "test",
           cardsTotal: ordered.length,
@@ -60,7 +65,7 @@ export function TestMode({ deckId, shuffle }: Props) {
       setSelected(null);
     }
     void load();
-  }, [deckId, shuffle, api, recorder]);
+  }, [api, beginDeckSession, completeSession, deckId, shuffle]);
 
   const current = remaining[index];
   const remainingCount = Math.max(remaining.length - index, 0);
@@ -80,19 +85,19 @@ export function TestMode({ deckId, shuffle }: Props) {
 
   const markKnown = useCallback(async () => {
     if (!current || !deckId) return;
-    await recorder.recordDeckKnown(current.answer.cardId, deckId);
+    await recordDeckKnown(current.answer.cardId, deckId);
     const nextRemaining = remaining.filter((_, i) => i !== index);
     setRemaining(nextRemaining);
     setSelected(null);
     if (index >= nextRemaining.length && !completeSentRef.current) {
       completeSentRef.current = true;
-      await recorder.completeSession();
+      await completeSession();
     }
-  }, [current, deckId, index, recorder, remaining]);
+  }, [completeSession, current, deckId, index, recordDeckKnown, remaining]);
 
   const markStill = useCallback(async () => {
     if (!current || !deckId) return;
-    await recorder.recordDeckStill(current.answer.cardId, deckId);
+    await recordDeckStill(current.answer.cardId, deckId);
     setRemaining((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];
@@ -101,7 +106,7 @@ export function TestMode({ deckId, shuffle }: Props) {
       return next;
     });
     setSelected(null);
-  }, [current, deckId, index, recorder]);
+  }, [current, deckId, index, recordDeckStill]);
 
   if (remaining.length === 0 && totalCount === 0) {
     return (
@@ -123,7 +128,7 @@ export function TestMode({ deckId, shuffle }: Props) {
           void (async () => {
             if (!deckId) return;
             completeSentRef.current = false;
-            await recorder.completeSession();
+            await completeSession();
             const cards = await api.listCards(deckId ?? undefined);
             const answers = extractMaskAnswers(cards);
             const built = answers.map((answer) => {
@@ -133,7 +138,7 @@ export function TestMode({ deckId, shuffle }: Props) {
             });
             const ordered = shuffle ? shuffleArray(built) : built;
             if (ordered.length > 0) {
-              await recorder.beginDeckSession({
+              await beginDeckSession({
                 deckId,
                 mode: "test",
                 cardsTotal: ordered.length,

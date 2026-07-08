@@ -20,11 +20,12 @@ import {
 import { authClient } from "./auth-client";
 import { cloudApi, SESSION_CLEARED_EVENT } from "./api";
 import { createCloudAppApi } from "./app-api";
-import { countDueCards } from "@xanki/shared";
+import { countDueCards, mapApiDeck } from "@xanki/shared";
 import {
   scheduleWebLibraryRefresh,
   setLibraryRefreshHandler,
   subscribeWebRevisions,
+  flushLibraryRefresh,
 } from "./library-sync";
 import { LoginPage } from "./pages/LoginPage";
 
@@ -46,13 +47,7 @@ function AuthenticatedApp({
 
   const refreshDecks = useCallback(async () => {
     const items = await cloudApi.listDecks();
-    setDecks(items.map((d) => ({
-      id: d.id,
-      name: d.name,
-      cardCount: d.cardCount ?? 0,
-      createdAt: d.createdAt ?? Date.now(),
-      updatedAt: d.updatedAt ?? Date.now(),
-    })));
+    setDecks(items.map(mapApiDeck));
     setSelectedDeckId((current) => {
       if (items.length === 0) return null;
       if (current && items.some((deck) => deck.id === current)) return current;
@@ -158,6 +153,7 @@ function AuthenticatedApp({
               onSelectDeck={setSelectedDeckId}
               onGoToDeckStudy={() => handleTabChange("deckStudy")}
               onGoToLeitner={() => handleTabChange("leitner")}
+              onDeckConfigSaved={() => flushLibraryRefresh().then(() => refreshDecks())}
             />
           )}
           <AppTabLayer active={tab === "deckStudy"}>

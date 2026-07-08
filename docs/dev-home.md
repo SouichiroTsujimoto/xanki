@@ -19,6 +19,7 @@
   └── .home-view              ← flex:1, overflow-y:auto, max-width 960px
         ├── .home-spotlight
         ├── .home-metrics     ← 学習サマリー + デッキ詳細
+        ├── details.deck-scheduler-settings  ← デフォルト折りたたみ
         ├── .home-create-bar
         ├── .home-deck-section  ← デッキグリッド / 操作
         └── …
@@ -63,4 +64,5 @@
 
 | 日付 | 症状 | 原因 | 対応 |
 |------|------|------|------|
+| 2026-07 | スマート学習の間隔パネルが常時展開で縦長 | 全セクションを常時表示 | `<details>` でデフォルト折りたたみ。数値は range スライダー + 単位 select（[`deck-scheduler-settings.tsx`](../packages/ui/src/components/xanki/deck-scheduler-settings.tsx)） |
 | — | （追記用） | | |

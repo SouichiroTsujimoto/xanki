@@ -95,6 +95,11 @@
 | 画像カード | `kind: "image"` | **画像** | [image-masks.md](./image-masks.md) |
 | マスク | `masks` JSON | **マスク** | [data-model.md](./data-model.md) |
 | 復習箱 | `boxNum`, `review_state.box` | **Box**（開発者向け。UI 非表示） | [study.md](./study.md) |
+| 学習フェーズ | `reviewPhase`, `review_state.phase` | （UI 非表示） | [leitner-study.md](./leitner-study.md) |
+| スマート学習の間隔 | `schedulerConfig`, `scheduler_config` | **スマート学習の間隔** | [leitner-study.md](./leitner-study.md), [library.md](./library.md) |
+| 学習ステップ | `learningSteps` | **学習ステップ**（設定 UI） | [leitner-study.md](./leitner-study.md) |
+| 再学習ステップ | `relearningSteps` | **再学習ステップ**（設定 UI） | [leitner-study.md](./leitner-study.md) |
+| 復習間隔 | `reviewIntervals` | **復習間隔（箱 2〜5）**（設定 UI） | [leitner-study.md](./leitner-study.md) |
 
 ---
 
@@ -128,17 +133,20 @@
 |------|--------|----------------|------|
 | 復習予定 | `dueAt`, `StudyFilter.due` | **復習予定**（説明） | コード `due` 維持 |
 | 復習待ち | `dueCount` | **N 件が復習待ち** / Tray **今日の復習** | スマート学習タブ |
-| 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **再度 / 難しい / 良好 / 簡単**（1–4 キー） | |
+| 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **もう一度 / 難しい / 正解 / 簡単**（1–4 キー） | Anki 表記に準拠 |
 | スマート学習完了 | `LearnMode` empty | **今日のスマート学習は完了です** | |
 | 復習箱 | `LeitnerScheduler`, `review_state.box` | **Box**（開発者向け。UI 非表示） | spec・開発用 |
 | 習熟度 | `masteryPercent` | **習熟度**（Box 加重平均 %） | [study-metrics.md](./study-metrics.md) |
 | 連続日数 | `streakDays` | **N 日**（ホーム） | [study-metrics.md](./study-metrics.md) |
 | 今日の学習 | `todayStudyCount` | **N 回**（スマート学習 + デッキ学習） | [study-metrics.md](./study-metrics.md) |
+| 学習フェーズ | `reviewPhase`, `review_state.phase` | （UI 非表示） | `learning` / `review` / `relearning` |
+| 次回まで | `formatStudyIntervalFromNow` | **今すぐ** / **N分後** / **N時間後** / **N日後** | 採点ボタンプレビュー |
 
 ### アルゴリズム用語（開発者向け）
 
 - **Leitner 方式**: 物理箱 + 2 値評価の古典的手法。xanki の UI 名ではない
-- **SRS**: 間隔反復。xanki スマート学習は **箱 1–5 + 4 段階評価の簡略 SRS**（[`study.md`](./study.md) §スマート学習のアルゴリズム定義）
+- **SRS**: 間隔反復。xanki スマート学習は **Anki 型フェーズ（learning / review / relearning）+ 4 段階評価の簡略 SRS**（[`study.md`](./study.md) §スマート学習のアルゴリズム定義）
+- **DeckSchedulerConfig v2**: 学習ステップ・再学習ステップ・復習間隔・Hard / 卒業 / 簡単を分離したデッキ設定 JSON
 - UI 名 **スマート学習** は暫定。内部識別子 `leitner` / `LeitnerScheduler` は安定キー
 
 ---
