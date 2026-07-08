@@ -168,6 +168,7 @@ export function useStudySessionRecorder() {
     };
   }, [completeSession]);
 
+  // Memoized return — deps に丸ごと入れると useEffect 無限ループの原因になる（dev-study-layout.md 参照）
   return useMemo(
     () => ({
       beginDeckSession,

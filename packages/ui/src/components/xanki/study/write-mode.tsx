@@ -19,7 +19,12 @@ interface Props {
 
 export function WriteMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
-  const recorder = useStudySessionRecorder();
+  const {
+    beginDeckSession,
+    completeSession,
+    recordDeckKnown,
+    recordDeckStill,
+  } = useStudySessionRecorder();
   const completeSentRef = useRef(false);
   const [remaining, setRemaining] = useState<MaskAnswer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -35,12 +40,12 @@ export function WriteMode({ deckId, shuffle }: Props) {
         return;
       }
       completeSentRef.current = false;
-      await recorder.completeSession();
+      await completeSession();
       const cards = await api.listCards(deckId ?? undefined);
       const extracted = extractMaskAnswers(cards);
       const ordered = shuffle ? shuffleArray(extracted) : extracted;
       if (ordered.length > 0) {
-        await recorder.beginDeckSession({
+        await beginDeckSession({
           deckId,
           mode: "write",
           cardsTotal: ordered.length,
@@ -53,7 +58,7 @@ export function WriteMode({ deckId, shuffle }: Props) {
       setFeedback("idle");
     }
     void load();
-  }, [deckId, shuffle, api, recorder]);
+  }, [api, beginDeckSession, completeSession, deckId, shuffle]);
 
   const current = remaining[index];
   const remainingCount = Math.max(remaining.length - index, 0);
@@ -74,20 +79,20 @@ export function WriteMode({ deckId, shuffle }: Props) {
 
   const markKnown = useCallback(async () => {
     if (!current || !deckId) return;
-    await recorder.recordDeckKnown(current.cardId, deckId);
+    await recordDeckKnown(current.cardId, deckId);
     const nextRemaining = remaining.filter((_, i) => i !== index);
     setRemaining(nextRemaining);
     setInput("");
     setFeedback("idle");
     if (index >= nextRemaining.length && !completeSentRef.current) {
       completeSentRef.current = true;
-      await recorder.completeSession();
+      await completeSession();
     }
-  }, [current, deckId, index, recorder, remaining]);
+  }, [completeSession, current, deckId, index, recordDeckKnown, remaining]);
 
   const markStill = useCallback(async () => {
     if (!current || !deckId) return;
-    await recorder.recordDeckStill(current.cardId, deckId);
+    await recordDeckStill(current.cardId, deckId);
     setRemaining((prev) => {
       if (index >= prev.length) return prev;
       const next = [...prev];
@@ -97,7 +102,7 @@ export function WriteMode({ deckId, shuffle }: Props) {
     });
     setInput("");
     setFeedback("idle");
-  }, [current, deckId, index, recorder]);
+  }, [current, deckId, index, recordDeckStill]);
 
   if (remaining.length === 0 && totalCount === 0) {
     return (
@@ -119,12 +124,12 @@ export function WriteMode({ deckId, shuffle }: Props) {
           void (async () => {
             if (!deckId) return;
             completeSentRef.current = false;
-            await recorder.completeSession();
+            await completeSession();
             const cards = await api.listCards(deckId ?? undefined);
             const extracted = extractMaskAnswers(cards);
             const ordered = shuffle ? shuffleArray(extracted) : extracted;
             if (ordered.length > 0) {
-              await recorder.beginDeckSession({
+              await beginDeckSession({
                 deckId,
                 mode: "write",
                 cardsTotal: ordered.length,

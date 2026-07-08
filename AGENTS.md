@@ -46,7 +46,7 @@
 | [dev-home.md](./docs/dev-home.md) | ホーム |
 | [dev-library.md](./docs/dev-library.md) | デッキ・カード一覧 |
 | [dev-study-hub.md](./docs/dev-study-hub.md) | 学習ハブ・Coverflow |
-| [dev-study-layout.md](./docs/dev-study-layout.md) | 学習セッション・フリップ |
+| [dev-study-layout.md](./docs/dev-study-layout.md) | 学習セッション・フリップ、**hooks による load ループ再発防止** |
 | [dev-mask-editor.md](./docs/dev-mask-editor.md) | マスクエディタ |
 | [dev-dialogs-overlays.md](./docs/dev-dialogs-overlays.md) | ダイアログ・オーバーレイ |
 | [dev-settings-auth.md](./docs/dev-settings-auth.md) | 設定・認証 |
@@ -84,6 +84,7 @@ UI 変更後の手動スモーク:
 4. `window.confirm` / `window.alert` は Tauri で使わない（[ui.md](./docs/spec/ui.md)）
 5. **UI 共通化** — Web / Tauri で同じ画面・ダイアログは [`@xanki/ui`](./packages/ui/) に実装し、各アプリは import または認証などの薄い wrapper のみ（[ui.md](./docs/spec/ui.md) §デザイン SSoT）
 6. **用語** — UI・会話では [glossary.md](./docs/spec/glossary.md) の UI 表示（正）を使う。実装は [`packages/ui/src/copy.ts`](./packages/ui/src/copy.ts)
+7. **学習セッション hooks** — `useEffect` / `useCallback` の deps にカスタム hook の**戻りオブジェクト丸ごと**を入れない。load ループ・API 連打の再発防止は [dev-study-layout.md §学習セッションのデータ読み込み](./docs/dev-study-layout.md)
 
 ## アプリコード
 

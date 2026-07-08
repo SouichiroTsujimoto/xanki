@@ -43,7 +43,11 @@ function buildTiles(answers: MaskAnswer[]): MatchTile[] {
 
 export function MatchMode({ deckId, shuffle }: Props) {
   const api = useAppApi();
-  const recorder = useStudySessionRecorder();
+  const {
+    beginDeckSession,
+    completeSession,
+    recordDeckEvents,
+  } = useStudySessionRecorder();
   const completeSentRef = useRef(false);
   const [remaining, setRemaining] = useState<MaskAnswer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -60,12 +64,12 @@ export function MatchMode({ deckId, shuffle }: Props) {
       return;
     }
     completeSentRef.current = false;
-    await recorder.completeSession();
+    await completeSession();
     const cards = await api.listCards(deckId ?? undefined);
     const extracted = extractMaskAnswers(cards);
     const ordered = shuffle ? shuffleArray(extracted) : extracted;
     if (ordered.length > 0) {
-      await recorder.beginDeckSession({
+      await beginDeckSession({
         deckId,
         mode: "match",
         cardsTotal: ordered.length,
@@ -74,7 +78,7 @@ export function MatchMode({ deckId, shuffle }: Props) {
     setRemaining(ordered);
     setTotalCount(ordered.length);
     setRoundComplete(false);
-  }, [api, deckId, shuffle, recorder]);
+  }, [api, beginDeckSession, completeSession, deckId, shuffle]);
 
   useEffect(() => {
     void loadSession();
@@ -149,7 +153,7 @@ export function MatchMode({ deckId, shuffle }: Props) {
 
   const markKnown = useCallback(async () => {
     if (batch.length === 0 || !deckId) return;
-    await recorder.recordDeckEvents(
+    await recordDeckEvents(
       batch.map((answer) => ({
         eventType: "deck_card_known" as const,
         cardId: answer.cardId,
@@ -161,13 +165,13 @@ export function MatchMode({ deckId, shuffle }: Props) {
     setRoundComplete(false);
     if (nextRemaining.length === 0 && !completeSentRef.current) {
       completeSentRef.current = true;
-      await recorder.completeSession();
+      await completeSession();
     }
-  }, [batch, deckId, recorder, remaining]);
+  }, [batch, completeSession, deckId, recordDeckEvents, remaining]);
 
   const markStill = useCallback(async () => {
     if (batch.length === 0 || !deckId) return;
-    await recorder.recordDeckEvents(
+    await recordDeckEvents(
       batch.map((answer) => ({
         eventType: "deck_card_still" as const,
         cardId: answer.cardId,
@@ -181,7 +185,7 @@ export function MatchMode({ deckId, shuffle }: Props) {
       return next;
     });
     setRoundComplete(false);
-  }, [batch, deckId, recorder]);
+  }, [batch, deckId, recordDeckEvents]);
 
   useEffect(() => {
     if (!roundComplete) return;

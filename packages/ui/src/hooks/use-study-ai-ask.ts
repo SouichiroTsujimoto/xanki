@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useAppApi } from "../context/app-api-context";
 
 export function useStudyAiAsk() {
@@ -52,5 +52,8 @@ export function useStudyAiAsk() {
     setStreaming(false);
   }, []);
 
-  return { ask, cancel, reset, streaming, answer, error };
+  return useMemo(
+    () => ({ ask, cancel, reset, streaming, answer, error }),
+    [ask, cancel, reset, streaming, answer, error],
+  );
 }
