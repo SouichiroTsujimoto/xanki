@@ -9,6 +9,7 @@ import {
   useImageOverlayLayout,
   type ImageRect,
 } from "../../../lib/imageOverlay";
+import { IMAGE_EDITOR_OCR_ENABLED } from "../../../lib/imageEditorFeatures";
 import {
   DEFAULT_MASK_COLOR_ID,
   MASK_COLORS,
@@ -241,6 +242,7 @@ export function ImageMaskEditor({
   }
 
   async function runOcr() {
+    if (!IMAGE_EDITOR_OCR_ENABLED) return;
     setOcrLoading(true);
     try {
       const result = await api.runOcr(imagePath);
@@ -349,29 +351,31 @@ export function ImageMaskEditor({
               </div>
             </div>
 
-            <div className="step-switch image-editor-mode-switch">
-              <Button
-                type="button"
-                className={mode === "mask" ? "active" : ""}
-                onClick={() => setMode("mask")}
-              >
-                {copy.editor.maskMode}
-              </Button>
-              <Button
-                type="button"
-                className={mode === "ocr" ? "active" : ""}
-                disabled={ocrLoading}
-                onClick={() => {
-                  if (ocr) {
-                    setMode("ocr");
-                  } else {
-                    void runOcr();
-                  }
-                }}
-              >
-                {ocrLoading ? "OCR..." : "文字"}
-              </Button>
-            </div>
+            {IMAGE_EDITOR_OCR_ENABLED ? (
+              <div className="step-switch image-editor-mode-switch">
+                <Button
+                  type="button"
+                  className={mode === "mask" ? "active" : ""}
+                  onClick={() => setMode("mask")}
+                >
+                  {copy.editor.maskMode}
+                </Button>
+                <Button
+                  type="button"
+                  className={mode === "ocr" ? "active" : ""}
+                  disabled={ocrLoading}
+                  onClick={() => {
+                    if (ocr) {
+                      setMode("ocr");
+                    } else {
+                      void runOcr();
+                    }
+                  }}
+                >
+                  {ocrLoading ? "OCR..." : copy.editor.ocrMode}
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
@@ -424,7 +428,8 @@ export function ImageMaskEditor({
                     />
                   )}
 
-                  {mode === "ocr" &&
+                  {IMAGE_EDITOR_OCR_ENABLED &&
+                    mode === "ocr" &&
                     ocr?.words.map((word) => {
                       const ocrMask = masks.find(
                         (mask): mask is Extract<ImageMask, { type: "ocr" }> =>
