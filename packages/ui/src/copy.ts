@@ -78,6 +78,10 @@ export const copy = {
     deckSessionCompleteCopy: (remaining: number) =>
       `他デッキにあと ${remaining} 件の復習があります。`,
     backToHub: "Leitner 学習に戻る",
+    queueLoadError: "復習カードを読み込めませんでした",
+    completionCheckError: "完了状態を確認できませんでした",
+    loadingQueue: "復習カードを読み込み中…",
+    retryLoad: "再読み込み",
     emptyEyebrow: "Leitner学習",
     hint: "Space / クリック 答え · 1 再度 · 2 難しい · 3 良好 · 4 簡単",
     gradeAgain: "再度",

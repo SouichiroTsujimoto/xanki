@@ -102,22 +102,31 @@ export function useStudyQueue(
   const [queue, setQueue] = useState<ReviewCard[]>([]);
   const [index, setIndex] = useState(0);
   const [queueReady, setQueueReady] = useState(false);
+  const [queueError, setQueueError] = useState<string | null>(null);
 
   const loadQueue = useCallback(async () => {
-    const cards =
-      filter === "due"
-        ? await api.getDueCards(deckId ?? undefined)
-        : await api.getStudyCards(filter, deckId ?? undefined);
-    const ordered = shuffle
-      ? [...cards].sort(() => Math.random() - 0.5)
-      : cards;
-    setQueue(ordered);
-    setIndex(0);
-    setQueueReady(true);
+    setQueueReady(false);
+    setQueueError(null);
+    try {
+      const cards =
+        filter === "due"
+          ? await api.getDueCards(deckId ?? undefined)
+          : await api.getStudyCards(filter, deckId ?? undefined);
+      const ordered = shuffle
+        ? [...cards].sort(() => Math.random() - 0.5)
+        : cards;
+      setQueue(ordered);
+      setIndex(0);
+    } catch {
+      setQueue([]);
+      setIndex(0);
+      setQueueError(uiCopy.leitnerStudy.queueLoadError);
+    } finally {
+      setQueueReady(true);
+    }
   }, [deckId, filter, shuffle, api]);
 
   useEffect(() => {
-    setQueueReady(false);
     void loadQueue();
   }, [loadQueue]);
 
@@ -131,5 +140,15 @@ export function useStudyQueue(
     }
   }
 
-  return { queue, index, current, progress, queueReady, loadQueue, next, setIndex };
+  return {
+    queue,
+    index,
+    current,
+    progress,
+    queueReady,
+    queueError,
+    loadQueue,
+    next,
+    setIndex,
+  };
 }
