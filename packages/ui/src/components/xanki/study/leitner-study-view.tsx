@@ -113,7 +113,6 @@ export function LeitnerStudyView({
       {phase === "hub" ? (
         <div className="leitner-study-hub">
           <header className="leitner-study-hub-head">
-            <p className="eyebrow">{copy.leitnerStudy.hubEyebrow}</p>
             <h2 className="leitner-study-hub-title">{copy.leitnerStudy.hubTitle}</h2>
           </header>
 
@@ -144,9 +143,7 @@ export function LeitnerStudyView({
                 <section className="leitner-deck-due-list" aria-label={copy.leitnerStudy.decksSection}>
                   <div className="leitner-deck-due-head">
                     <p className="eyebrow">{copy.leitnerStudy.decksSection}</p>
-                    <p className="leitner-deck-due-sub">
-                      デッキを選ぶと、そのデッキの due だけ復習します
-                    </p>
+                    <p className="leitner-deck-due-sub">{copy.leitnerStudy.deckDueHint}</p>
                   </div>
                   <ul className="leitner-deck-due-items">
                     {deckDueRows.map(({ deck, dueCount: deckDue }) => (

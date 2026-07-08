@@ -83,7 +83,7 @@ pnpm setup:cloud
 - [ ] 未 Pro で AI → 402（本番相当。dev localhost ではバイパス）
 - [ ] `POST /api/dev/promote-pro`（Bearer）後 AI 成功（Gateway 設定時）
 - [ ] カード追加 → **AI で生成** → Q&A 保存
-- [ ] デッキ学習 / Leitner → **AI に聞く** → SSE 応答
+- [ ] デッキ学習 / スマート学習 → **AI に聞く** → SSE 応答
 
 ## AI Gateway（dev）
 
