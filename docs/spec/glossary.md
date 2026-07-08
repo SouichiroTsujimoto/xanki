@@ -17,6 +17,7 @@
 - ユーザー向け本文は **日本語**
 - コード・型・REST パスは **英語**（変更しない）
 - **homonym 禁止**: タブ名と学習モード名を同一日本語にしない（例: タブ「学習」≠ モード `learn` → UI「復習」）
+- **デッキ学習** と **スマート学習** は接頭辞で区別（両方に「学習」が入る）
 - eyebrow（小見出し）も原則日本語（固有名 `Coverflow` 等は例外）
 
 ---
@@ -27,10 +28,10 @@
 |------|-------------|--------------|-----------|------|
 | ホームタブ | `AppTab.home`, `navigate: "home"` | サイドバー **ホーム** / トップバー **ホーム** | Home, デッキ管理（旧トップバー） | [library.md](./library.md), [ui.md](./ui.md) |
 | デッキ学習タブ | `AppTab.deckStudy`, `navigate: "deckStudy"` / `"study"` | サイドバー **デッキ学習** | 学習（旧タブ名） | [deck-study.md](./deck-study.md) |
-| Leitner学習タブ | `AppTab.leitner`, `navigate: "leitner"` / `"review"` | サイドバー **Leitner学習** | 復習タブ | [leitner-study.md](./leitner-study.md) |
+| スマート学習タブ | `AppTab.leitner`, `navigate: "leitner"` / `"review"` | サイドバー **スマート学習** | Leitner学習, 復習タブ | [leitner-study.md](./leitner-study.md) |
 | 設定タブ | `AppTab.settings` | **設定** | Settings | [ui.md](./ui.md) |
 | デッキ学習ハブ | `DeckStudyView`, `phase === "hub"` | （専用ラベルなし） | 学習ハブ | [deck-study.md](./deck-study.md) |
-| Leitner学習ハブ | `LeitnerStudyView`, `phase === "hub"` | **Leitner学習** | — | [leitner-study.md](./leitner-study.md) |
+| スマート学習ハブ | `LeitnerStudyView`, `phase === "hub"` | **スマート学習** | Leitner学習 | [leitner-study.md](./leitner-study.md) |
 | 学習セッション | `studySessionActive`, `phase !== "hub"` | 手段名 / 復習中 + **戻る** | — | [deck-study.md](./deck-study.md), [leitner-study.md](./leitner-study.md) |
 | サイドバー | `sidebarOpen` | **サイドバー** | — | [ui.md](./ui.md) |
 | メインウィンドウ | Tauri label `main` | **メインウィンドウ** | — | [architecture.md](./architecture.md) |
@@ -72,12 +73,12 @@
 | 概念 | コード | UI 表示（正） | タブ | 参照 |
 |------|--------|--------------|------|------|
 | フラッシュカード | `flashcards` | **フラッシュカード** | デッキ学習 | [deck-study.md](./deck-study.md) |
-| Leitner 出題 | `learn` | （Leitner学習セッション内） | Leitner学習 | [leitner-study.md](./leitner-study.md) |
+| スマート学習出題 | `learn` | （スマート学習セッション内） | スマート学習 | [leitner-study.md](./leitner-study.md) |
 | 書く | `write` | **書く** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | テスト | `test` | **テスト** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | マッチ | `match` | **マッチ** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | 覚えた / まだ | セッション操作 | **覚えた** / **まだ** | デッキ学習 | [deck-study.md](./deck-study.md) |
-| 復習を始める | `LeitnerStudyView` ヒーローカード | **復習を始める** | Leitner学習 | [leitner-study.md](./leitner-study.md) |
+| 復習を始める | `LeitnerStudyView` ヒーローカード | **復習を始める** | スマート学習 | [leitner-study.md](./leitner-study.md) |
 | カードプレビュー | `singleCard` + flashcards | **カードプレビュー** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | 手段起動 | `study-hub-toolbar` | **学習を始める** / **学習モード** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | シャッフル | `shuffle` | **シャッフル** | デッキ学習 | [deck-study.md](./deck-study.md) |
@@ -93,7 +94,7 @@
 | Q&A カード | `kind: "qa"` | **Q&A** | [qa-cards.md](./qa-cards.md) |
 | 画像カード | `kind: "image"` | **画像** | [image-masks.md](./image-masks.md) |
 | マスク | `masks` JSON | **マスク** | [data-model.md](./data-model.md) |
-| Leitner 箱 | `boxNum`, `review_state.box` | **Box**（Leitner 学習。デッキ学習一覧では非表示） | [study.md](./study.md) |
+| 復習箱 | `boxNum`, `review_state.box` | **Box**（開発者向け。UI 非表示） | [study.md](./study.md) |
 
 ---
 
@@ -121,15 +122,21 @@
 
 ---
 
-## H. Leitner・SRS
+## H. スマート学習・SRS
 
 | 概念 | コード | UI / 説明（正） | 備考 |
 |------|--------|----------------|------|
 | 復習予定 | `dueAt`, `StudyFilter.due` | **復習予定**（説明） | コード `due` 維持 |
-| 復習待ち | `dueCount` | **N 件が復習待ち** / Tray **今日の復習** | Leitner学習タブ |
+| 復習待ち | `dueCount` | **N 件が復習待ち** / Tray **今日の復習** | スマート学習タブ |
 | 評価 4 段階 | `submitReview(0\|1\|2\|3)` | **再度 / 難しい / 良好 / 簡単**（1–4 キー） | |
-| Leitner 完了 | `LearnMode` empty | **今日の Leitner 学習は完了です** | |
-| Leitner 箱 | `LeitnerScheduler` | **Box**（Leitner 学習。デッキ学習一覧では非表示） | spec・開発用 |
+| スマート学習完了 | `LearnMode` empty | **今日のスマート学習は完了です** | |
+| 復習箱 | `LeitnerScheduler`, `review_state.box` | **Box**（開発者向け。UI 非表示） | spec・開発用 |
+
+### アルゴリズム用語（開発者向け）
+
+- **Leitner 方式**: 物理箱 + 2 値評価の古典的手法。xanki の UI 名ではない
+- **SRS**: 間隔反復。xanki スマート学習は **箱 1–5 + 4 段階評価の簡略 SRS**（[`study.md`](./study.md) §スマート学習のアルゴリズム定義）
+- UI 名 **スマート学習** は暫定。内部識別子 `leitner` / `LeitnerScheduler` は安定キー
 
 ---
 
@@ -155,16 +162,18 @@
 | **`library-changed`** | Tauri イベント名 | **`data-changed`**（`xanki:data-changed`） |
 | **`LibraryCardPreview`** | カードタイルプレビュー | **`CardTilePreview`** |
 | **library** (`navigate`) | `home` タブ | Tray menu id **`home`** |
-| **review** (`navigate`) | **Leitner学習**タブ | Tray menu id `review` |
+| **review** (`navigate`) | **スマート学習**タブ | Tray menu id `review` |
 | **study** (`navigate`) | **デッキ学習**タブ | 後方互換 |
-| **学習**（旧タブ名） | **デッキ学習** / **Leitner学習** | — |
-| **学習**（StudyMode `learn`） | Leitner学習セッション（コード `learn`） | — |
+| **学習**（旧タブ名） | **デッキ学習** / **スマート学習** | — |
+| **Leitner学習**（UI タブ名） | **スマート学習** | `AppTab.leitner`（コードは維持） |
+| **学習**（StudyMode `learn`） | スマート学習セッション（コード `learn`） | — |
 | **デッキ管理**（トップバー） | **ホーム** | — |
+| **定着** / **仕上げ**（プロダクト説明） | 2 トラックの用途メタファー | 使用禁止。機能記述で説明する |
 
 ---
 
 ## 受け入れ条件
 
 - [ ] 新規 UI 文言は `copy.ts` 経由で追加される
-- [ ] spec・会話で旧称（I 節）を使わない
+- [ ] spec・会話で旧称（J 節）を使わない
 - [ ] 学習タブと `learn` モード（UI「復習」）が homonym にならない
