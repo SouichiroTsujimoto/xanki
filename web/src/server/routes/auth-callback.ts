@@ -35,9 +35,32 @@ function isLoopbackReturnUrl(url: string): boolean {
   }
 }
 
+function buildDeepLinkCallback(query: Record<string, string>): string {
+  const params = new URLSearchParams(query);
+  return `xanki://auth/callback?${params.toString()}`;
+}
+
+function buildCanonicalAuthUrl(requestUrl: string, appUrl: string): string | null {
+  try {
+    const request = new URL(requestUrl);
+    const canonical = new URL(appUrl);
+    if (request.origin === canonical.origin) {
+      return null;
+    }
+    return new URL(`${request.pathname}${request.search}`, canonical.origin).toString();
+  } catch {
+    return null;
+  }
+}
+
 export const authCallbackRoutes = new Hono<{ Bindings: Env }>();
 
 authCallbackRoutes.get("/desktop-sign-in", async (c) => {
+  const canonicalUrl = buildCanonicalAuthUrl(c.req.url, c.env.APP_URL);
+  if (canonicalUrl) {
+    return c.redirect(canonicalUrl, 302);
+  }
+
   const returnParam = c.req.query("return");
   const returnUrl =
     returnParam && isLoopbackReturnUrl(returnParam) ? returnParam : null;
@@ -85,22 +108,29 @@ authCallbackRoutes.get("/desktop-callback", async (c) => {
   const auth = createAuth(c.env);
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   const token = session?.session?.token;
-  if (!token) {
-    return c.html(DESKTOP_CALLBACK_ERROR_HTML, 401);
-  }
 
   const returnParam = c.req.query("return");
   const returnUrl =
     returnParam && isLoopbackReturnUrl(returnParam) ? returnParam : null;
+
+  if (!token) {
+    if (returnUrl) {
+      return c.html(DESKTOP_CALLBACK_ERROR_HTML, 401);
+    }
+    // ASWebAuthenticationSession は HTML 401 を拾えずキャンセル扱いになる。深リンクで error を返す。
+    return c.redirect(buildDeepLinkCallback({ error: "session_missing" }), 302);
+  }
+
   if (returnUrl) {
     // Top-level 302 — JS redirect だと Chrome の Local Network Access で
     // localhost → 127.0.0.1 へ届かず chrome-error になることがある
     return c.redirect(`${returnUrl}?token=${encodeURIComponent(token)}`, 302);
   }
-  const redirectTarget = `xanki://auth/callback?token=${encodeURIComponent(token)}`;
-  // ASWebAuthenticationSession: 302 が拾えない端末向けに HTML も返す（Accept で切替）
-  const accept = c.req.header("Accept") ?? "";
-  if (accept.includes("text/html")) {
+  const redirectTarget = buildDeepLinkCallback({ token });
+  // iOS ASWebAuthenticationSession は HTTP 302 の xanki:// のみ拾う。
+  // Accept: text/html でも HTML/JS リダイレクトは拾えないため、深リンクは常に 302。
+  // 外部ブラウザ向け HTML フォールバックが必要なら ?format=html を明示する。
+  if (c.req.query("format") === "html") {
     return c.html(DESKTOP_CALLBACK_SUCCESS_HTML(redirectTarget));
   }
   return c.redirect(redirectTarget, 302);

@@ -5,6 +5,7 @@ import { AuthSession } from "../native/auth-session";
 import {
   AUTH_BROWSER_CLOSED_EVENT,
   AUTH_COMPLETE_EVENT,
+  AUTH_FAILED_EVENT,
   CLOUD_URL,
   getSessionToken,
   setSessionToken,
@@ -12,12 +13,34 @@ import {
 
 const AUTH_CALLBACK_PREFIX = "xanki://auth/callback";
 
+const AUTH_CALLBACK_ERRORS: Record<string, string> = {
+  session_missing: "ログインセッションを取得できませんでした。もう一度お試しください。",
+};
+
+function getAuthErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "ログインに失敗しました";
+}
+
+function dispatchAuthFailure(error: unknown): void {
+  window.dispatchEvent(
+    new CustomEvent(AUTH_FAILED_EVENT, {
+      detail: { message: getAuthErrorMessage(error) },
+    }),
+  );
+}
+
 export async function handleAuthCallbackUrl(url: string): Promise<boolean> {
   if (!url.startsWith(AUTH_CALLBACK_PREFIX)) {
     return false;
   }
 
-  const token = new URL(url).searchParams.get("token");
+  const parsed = new URL(url);
+  const errorCode = parsed.searchParams.get("error");
+  if (errorCode) {
+    throw new Error(AUTH_CALLBACK_ERRORS[errorCode] ?? "ログインに失敗しました");
+  }
+
+  const token = parsed.searchParams.get("token");
   if (!token) {
     return false;
   }
@@ -40,12 +63,12 @@ export function registerAuthDeepLinkListener(): () => void {
 
   void App.getLaunchUrl().then((launch) => {
     if (launch?.url) {
-      void handleAuthCallbackUrl(launch.url);
+      void handleAuthCallbackUrl(launch.url).catch(dispatchAuthFailure);
     }
   });
 
   void App.addListener("appUrlOpen", (event) => {
-    void handleAuthCallbackUrl(event.url);
+    void handleAuthCallbackUrl(event.url).catch(dispatchAuthFailure);
   }).then((handle) => {
     if (removed) {
       void handle.remove();
@@ -56,12 +79,16 @@ export function registerAuthDeepLinkListener(): () => void {
 
   void App.addListener("resume", () => {
     void (async () => {
-      const launch = await App.getLaunchUrl();
-      if (launch?.url && (await handleAuthCallbackUrl(launch.url))) {
-        return;
-      }
-      if (await getSessionToken()) {
-        window.dispatchEvent(new Event(AUTH_COMPLETE_EVENT));
+      try {
+        const launch = await App.getLaunchUrl();
+        if (launch?.url && (await handleAuthCallbackUrl(launch.url))) {
+          return;
+        }
+        if (await getSessionToken()) {
+          window.dispatchEvent(new Event(AUTH_COMPLETE_EVENT));
+        }
+      } catch (error) {
+        dispatchAuthFailure(error);
       }
     })();
   }).then((handle) => {
@@ -74,15 +101,19 @@ export function registerAuthDeepLinkListener(): () => void {
 
   void Browser.addListener("browserFinished", () => {
     void (async () => {
-      const launch = await App.getLaunchUrl();
-      if (launch?.url && (await handleAuthCallbackUrl(launch.url))) {
-        return;
+      try {
+        const launch = await App.getLaunchUrl();
+        if (launch?.url && (await handleAuthCallbackUrl(launch.url))) {
+          return;
+        }
+        if (await getSessionToken()) {
+          window.dispatchEvent(new Event(AUTH_COMPLETE_EVENT));
+          return;
+        }
+        window.dispatchEvent(new Event(AUTH_BROWSER_CLOSED_EVENT));
+      } catch (error) {
+        dispatchAuthFailure(error);
       }
-      if (await getSessionToken()) {
-        window.dispatchEvent(new Event(AUTH_COMPLETE_EVENT));
-        return;
-      }
-      window.dispatchEvent(new Event(AUTH_BROWSER_CLOSED_EVENT));
     })();
   }).then((handle) => {
     if (removed) {
@@ -104,6 +135,11 @@ export async function signInWithGoogle(): Promise<void> {
   const signInUrl = `${CLOUD_URL}/auth/desktop-sign-in`;
 
   if (Capacitor.isNativePlatform()) {
+    if (!Capacitor.isPluginAvailable("AuthSession")) {
+      throw new Error(
+        "認証プラグインが読み込まれていません。`pnpm cap:ios` でアプリを再ビルドしてください。",
+      );
+    }
     const { url } = await AuthSession.openAuthSession({
       url: signInUrl,
       callbackScheme: "xanki",

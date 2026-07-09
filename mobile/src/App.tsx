@@ -19,10 +19,11 @@ import {
   useMainAppState,
   type Deck,
 } from "@xanki/ui";
-import { countDueCards, mapApiDeck } from "@xanki/shared";
+import { countDueCards, mapApiDeck, CLOUD_UNAUTHORIZED } from "@xanki/shared";
 import {
   AUTH_COMPLETE_EVENT,
   cloudApi,
+  CLOUD_URL,
   logout,
   SESSION_CLEARED_EVENT,
 } from "./lib/cloud/client";
@@ -210,13 +211,22 @@ function AuthenticatedApp({
 export function App() {
   const [user, setUser] = useState<{ email: string; plan: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const loadUser = useCallback(() => {
     setLoading(true);
+    setAuthError(null);
     cloudApi
       .me()
       .then((me) => setUser({ email: me.email, plan: me.plan }))
-      .catch(() => setUser(null))
+      .catch((error) => {
+        setUser(null);
+        if (error instanceof Error && error.message !== CLOUD_UNAUTHORIZED) {
+          setAuthError(
+            `ログイン後の接続に失敗しました（${CLOUD_URL}）。${error.message}`,
+          );
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -247,7 +257,15 @@ export function App() {
   if (!user) {
     return (
       <Routes>
-        <Route path="*" element={<LoginPage onAuthComplete={loadUser} />} />
+        <Route
+          path="*"
+          element={
+            <LoginPage
+              onAuthComplete={loadUser}
+              initialError={authError}
+            />
+          }
+        />
       </Routes>
     );
   }

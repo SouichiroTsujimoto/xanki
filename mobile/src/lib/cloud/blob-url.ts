@@ -1,4 +1,5 @@
 import { CLOUD_UNAUTHORIZED } from "@xanki/shared";
+import { mobileFetchBlob } from "./native-http";
 import { CLOUD_URL, getSessionToken } from "./session";
 
 const blobUrlCache = new Map<string, string>();
@@ -23,14 +24,9 @@ export async function resolveAuthenticatedBlobUrl(imagePath: string): Promise<st
     throw new Error(CLOUD_UNAUTHORIZED);
   }
 
-  const res = await fetch(`${CLOUD_URL}/api/blobs/${hash}`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const blob = await mobileFetchBlob(`${CLOUD_URL}/api/blobs/${hash}`, {
+    Authorization: `Bearer ${token}`,
   });
-  if (!res.ok) {
-    throw new Error("blob_fetch_failed");
-  }
-
-  const blob = await res.blob();
   const objectUrl = URL.createObjectURL(blob);
   blobUrlCache.set(hash, objectUrl);
   return objectUrl;

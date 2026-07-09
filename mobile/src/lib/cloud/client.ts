@@ -1,8 +1,10 @@
 import { CLOUD_UNAUTHORIZED, createCloudClient, markSessionExpired } from "@xanki/shared";
 import { clearAuthenticatedBlobUrlCache } from "./blob-url";
+import { mobileFetch } from "./native-http";
 import {
   AUTH_BROWSER_CLOSED_EVENT,
   AUTH_COMPLETE_EVENT,
+  AUTH_FAILED_EVENT,
   clearLastUsedDeckIdPref,
   clearSessionToken,
   CLOUD_URL,
@@ -10,7 +12,14 @@ import {
   SESSION_CLEARED_EVENT,
 } from "./session";
 
-export { AUTH_BROWSER_CLOSED_EVENT, AUTH_COMPLETE_EVENT, CLOUD_URL, SESSION_CLEARED_EVENT, getSessionToken };
+export {
+  AUTH_BROWSER_CLOSED_EVENT,
+  AUTH_COMPLETE_EVENT,
+  AUTH_FAILED_EVENT,
+  CLOUD_URL,
+  SESSION_CLEARED_EVENT,
+  getSessionToken,
+};
 
 let handlingUnauthorized = false;
 
@@ -32,6 +41,7 @@ async function notifyUnauthorized(): Promise<void> {
 export const cloudApi = createCloudClient({
   baseUrl: CLOUD_URL,
   credentials: "omit",
+  fetch: mobileFetch,
   onUnauthorized: notifyUnauthorized,
   getAuthHeaders: async (): Promise<Record<string, string>> => {
     const token = await getSessionToken();
@@ -46,7 +56,7 @@ export async function logout(): Promise<void> {
   const token = await getSessionToken();
   if (token) {
     try {
-      await fetch(`${CLOUD_URL}/api/auth/sign-out`, {
+      await mobileFetch(`${CLOUD_URL}/api/auth/sign-out`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

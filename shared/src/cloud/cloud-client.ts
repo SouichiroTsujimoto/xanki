@@ -24,6 +24,8 @@ export function isCloudUnauthorized(error: unknown): boolean {
 export interface CloudClientOptions {
   baseUrl: string;
   credentials?: RequestCredentials;
+  fetch?: typeof fetch;
+  eventFetch?: typeof fetch;
   getAuthHeaders?: () => Promise<Record<string, string>> | Record<string, string>;
   onUnauthorized?: () => void | Promise<void>;
 }
@@ -49,9 +51,11 @@ async function rejectUnauthorized(options: CloudClientOptions): Promise<never> {
 
 export function createCloudClient(options: CloudClientOptions) {
   const base = options.baseUrl.replace(/\/$/, "");
+  const requestFetch = options.fetch ?? fetch;
+  const eventFetch = options.eventFetch ?? fetch;
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(`${base}${path}`, {
+    const res = await requestFetch(`${base}${path}`, {
       ...init,
       credentials: options.credentials ?? "include",
       headers: await resolveHeaders(options, init),
@@ -176,7 +180,7 @@ export function createCloudClient(options: CloudClientOptions) {
       }),
 
     uploadBlob: async (hash: string, data: ArrayBuffer, mime: string) => {
-      const res = await fetch(`${base}/api/blobs/${hash}/upload`, {
+      const res = await requestFetch(`${base}/api/blobs/${hash}/upload`, {
         method: "PUT",
         credentials: options.credentials ?? "include",
         headers: {
@@ -210,7 +214,7 @@ export function createCloudClient(options: CloudClientOptions) {
       question: string,
       signal?: AbortSignal,
     ): AsyncGenerator<string, void, unknown> {
-      const res = await fetch(`${base}/api/ai/ask`, {
+      const res = await requestFetch(`${base}/api/ai/ask`, {
         method: "POST",
         credentials: options.credentials ?? "include",
         headers: await resolveHeaders(options),
@@ -274,7 +278,7 @@ export function createCloudClient(options: CloudClientOptions) {
         while (!closed) {
           abort = new AbortController();
           try {
-            const res = await fetch(`${base}/api/events`, {
+            const res = await eventFetch(`${base}/api/events`, {
               credentials: options.credentials ?? "include",
               headers: await resolveHeaders(options),
               signal: abort.signal,

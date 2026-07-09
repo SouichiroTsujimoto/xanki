@@ -11,11 +11,11 @@ pnpm dev:cloud
 # ターミナル 2: Vite（ブラウザ確認）
 pnpm dev:mobile
 
-# シミュレータ / 実機（AuthSession プラグイン登録込み）
-cd mobile && pnpm build && pnpm cap:ios
+# シミュレータ（build + cap sync + AuthSession プラグイン登録込み）
+cd mobile && pnpm cap:ios
 ```
 
-環境変数: `mobile/.env.example` を `mobile/.env.local` にコピーし `VITE_CLOUD_URL` を設定（dev 既定: `http://localhost:8787`）。
+環境変数: iOS シミュレータの dev 既定は `VITE_CLOUD_URL=http://localhost:8787`。Cloud REST は native `NativeHttpPlugin`（URLSession）経由で実行する。`pnpm dev:cloud` は IPv4 でも listen する。`pnpm dev:cloud` 再起動だけでは iOS アプリ内の `dist` は更新されないため、認証周りを変えた後は `pnpm cap:ios` または `pnpm build:mobile:ios` を実行する。
 
 ## TestFlight / App Store ビルド
 

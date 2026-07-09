@@ -6,6 +6,7 @@ const LAST_DECK_KEY = "xanki:lastUsedDeckId";
 export const SESSION_CLEARED_EVENT = "xanki:session-cleared";
 export const AUTH_COMPLETE_EVENT = "xanki:auth-complete";
 export const AUTH_BROWSER_CLOSED_EVENT = "xanki:auth-browser-closed";
+export const AUTH_FAILED_EVENT = "xanki:auth-failed";
 export const CLOUD_URL = import.meta.env.VITE_CLOUD_URL ?? "http://localhost:8787";
 
 export async function getSessionToken(): Promise<string | null> {
