@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Dev secrets loader: 1Password (op run) preferred, .dev.vars fallback.
-# See docs/dev-cloud.md and .cursor/rules/dev-secrets-1password.mdc
+# Dev secrets loader: materialized .dev.vars preferred, then op run, then fallback.
+# Materialize: pnpm materialize:dev-vars (or worktree setup). See docs/dev-cloud.md
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,7 +20,8 @@ Dev secrets are missing. Set up 1Password CLI:
   2. op signin
   3. Create a 1Password item (e.g. "xanki-dev") with dev secret fields
   4. Edit web/.dev.vars.op — set op:// references to your vault/item/fields
-  5. pnpm check:secrets
+  5. pnpm materialize:dev-vars   # writes web/.dev.vars (worktree でも 1 回)
+  6. pnpm check:secrets
 
 See docs/dev-cloud.md for details.
 
@@ -28,13 +29,14 @@ Fallback (no 1Password): cp web/.dev.vars.example web/.dev.vars and fill in valu
 EOF
 }
 
+# Materialized file: wrangler reads web/.dev.vars; no op session per dev:cloud.
+if [[ -f "$DEV_VARS" ]]; then
+  exec "$@"
+fi
+
 if [[ -f "$DEV_VARS_OP" ]]; then
   if command -v op >/dev/null 2>&1 && op whoami >/dev/null 2>&1; then
     exec op run --no-masking --env-file="$DEV_VARS_OP" -- "$@"
-  fi
-  if [[ -f "$DEV_VARS" ]]; then
-    echo "note: using web/.dev.vars (op unavailable or not signed in)" >&2
-    exec "$@"
   fi
   if ! command -v op >/dev/null 2>&1; then
     echo "error: web/.dev.vars.op exists but 1Password CLI (op) is not installed." >&2
@@ -42,11 +44,8 @@ if [[ -f "$DEV_VARS_OP" ]]; then
     exit 1
   fi
   echo "error: 1Password CLI is not signed in. Run: op signin" >&2
+  echo "  Or: pnpm materialize:dev-vars  (after op signin once)" >&2
   exit 1
-fi
-
-if [[ -f "$DEV_VARS" ]]; then
-  exec "$@"
 fi
 
 print_setup_help

@@ -13,7 +13,30 @@ REQUIRED_VARS=(
   AI_GATEWAY_TOKEN
 )
 
+check_dev_vars_file() {
+  local file="$1"
+  local failed=0
+  for var in "${REQUIRED_VARS[@]}"; do
+    if ! value="$(grep -E "^${var}=" "$file" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"')" || [[ -z "$value" ]]; then
+      echo "FAIL: $var — missing or empty in $file" >&2
+      failed=1
+    else
+      echo "    OK: $var"
+    fi
+  done
+  return "$failed"
+}
+
 echo "==> checking dev secrets"
+
+if [[ -f "$DEV_VARS" ]]; then
+  echo "    source: web/.dev.vars (materialized)"
+  if check_dev_vars_file "$DEV_VARS"; then
+    echo "==> all required dev secrets present"
+    exit 0
+  fi
+  exit 1
+fi
 
 if [[ -f "$DEV_VARS_OP" ]]; then
   if ! command -v op >/dev/null 2>&1; then
@@ -43,12 +66,6 @@ if [[ -f "$DEV_VARS_OP" ]]; then
   fi
 
   echo "==> all required dev secrets resolved"
-  exit 0
-fi
-
-if [[ -f "$DEV_VARS" ]]; then
-  echo "    fallback: web/.dev.vars (no 1Password template)"
-  echo "==> secrets file present (not validated)"
   exit 0
 fi
 

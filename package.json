@@ -6,6 +6,7 @@
     "build:ui": "pnpm --filter @xanki/ui typecheck",
     "setup:cloud": "bash scripts/setup-cloud.sh",
     "check:secrets": "bash scripts/check-dev-secrets.sh",
+    "materialize:dev-vars": "bash scripts/materialize-dev-vars.sh",
     "check:design": "bash scripts/check-design-tokens.sh",
     "dev:cloud": "bash scripts/dev-cloud.sh",
     "dev:cloud:all": "bash scripts/dev-cloud.sh --desktop",

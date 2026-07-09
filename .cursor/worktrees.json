@@ -1,0 +1,8 @@
+{
+  "setup-worktree-unix": [
+    "pnpm install",
+    "pnpm build:shared",
+    "bash scripts/materialize-dev-vars.sh --prefer-root-copy",
+    "pnpm setup:cloud"
+  ]
+}
