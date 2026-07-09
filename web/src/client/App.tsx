@@ -12,6 +12,7 @@ import {
   HomeView,
   DeckStudyView,
   LeitnerStudyView,
+  PlatformCapabilitiesProvider,
   SettingsView,
   Toaster,
   useMainAppState,
@@ -120,7 +121,10 @@ function AuthenticatedApp({
   }, [selectedDeckId]);
 
   return (
-    <AppApiProvider api={appApi}>
+    <PlatformCapabilitiesProvider
+      capabilities={{ deckImportExport: false, cardEditor: false }}
+    >
+      <AppApiProvider api={appApi}>
       <AppShellProvider
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -196,7 +200,8 @@ function AuthenticatedApp({
           )}
         </AppShell>
       </AppShellProvider>
-    </AppApiProvider>
+      </AppApiProvider>
+    </PlatformCapabilitiesProvider>
   );
 }
 

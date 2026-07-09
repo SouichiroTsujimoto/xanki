@@ -26,6 +26,19 @@ describe("desktop auth callback", () => {
     );
   });
 
+  it("302-redirects xanki deep link when no return param", async () => {
+    const { token } = await createTestUserSession(env);
+    const res = await SELF.fetch("http://localhost/auth/desktop-callback", {
+      headers: { Authorization: `Bearer ${token}` },
+      redirect: "manual",
+    });
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe(
+      `xanki://auth/callback?token=${encodeURIComponent(token)}`,
+    );
+  });
+
   it("starts desktop sign-in with Google redirect", async () => {
     const res = await SELF.fetch(
       "http://localhost/auth/desktop-sign-in?return=http%3A%2F%2Flocalhost%3A54321%2Fcallback",

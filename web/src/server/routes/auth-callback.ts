@@ -12,11 +12,13 @@ const DESKTOP_CALLBACK_ERROR_HTML = `<!DOCTYPE html>
 
 const DESKTOP_CALLBACK_SUCCESS_HTML = (redirectTarget: string) => `<!DOCTYPE html>
 <html lang="ja">
-<head><meta charset="utf-8"><title>xanki</title></head>
+<head><meta charset="utf-8"><title>xanki</title>
+  <meta http-equiv="refresh" content="0;url=${redirectTarget}">
+</head>
 <body>
   <p>ログインしました。xanki アプリに戻ります…</p>
+  <p><a href="${redirectTarget}">アプリに戻る</a></p>
   <script>window.location.replace(${JSON.stringify(redirectTarget)});</script>
-  <p><a href=${JSON.stringify(redirectTarget)}>アプリが開かない場合はこちら</a></p>
 </body>
 </html>`;
 
@@ -96,5 +98,10 @@ authCallbackRoutes.get("/desktop-callback", async (c) => {
     return c.redirect(`${returnUrl}?token=${encodeURIComponent(token)}`, 302);
   }
   const redirectTarget = `xanki://auth/callback?token=${encodeURIComponent(token)}`;
-  return c.html(DESKTOP_CALLBACK_SUCCESS_HTML(redirectTarget));
+  // ASWebAuthenticationSession: 302 が拾えない端末向けに HTML も返す（Accept で切替）
+  const accept = c.req.header("Accept") ?? "";
+  if (accept.includes("text/html")) {
+    return c.html(DESKTOP_CALLBACK_SUCCESS_HTML(redirectTarget));
+  }
+  return c.redirect(redirectTarget, 302);
 });

@@ -1,0 +1,43 @@
+@import "../../packages/ui/src/styles/globals.css";
+@source "../../packages/ui/src/**/*.{ts,tsx}";
+@source "../src/**/*.{ts,tsx}";
+
+/* iOS safe area — dev-mobile.md */
+.platform-mobile .app-frame {
+  min-height: 100dvh;
+  height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  box-sizing: border-box;
+}
+
+.platform-mobile .app-rail,
+.platform-mobile .app-frame-narrow .app-rail-motion {
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  top: env(safe-area-inset-top);
+}
+
+/* Touch targets (44pt minimum) */
+@media (pointer: coarse) {
+  .platform-mobile .ghost-button,
+  .platform-mobile .accent-button,
+  .platform-mobile .text-button,
+  .platform-mobile .icon-button,
+  .platform-mobile .rail-nav button,
+  .platform-mobile .home-deck-card {
+    min-height: 44px;
+  }
+
+  .platform-mobile .flashcard-tile .card-actions button {
+    min-height: 44px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Keyboard: keep composer visible when virtual keyboard opens */
+.platform-mobile .text-workspace {
+  scroll-margin-bottom: 12rem;
+}

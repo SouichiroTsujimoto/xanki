@@ -13,6 +13,7 @@ import {
   HomeView,
   LeitnerStudyView,
   OnboardingView,
+  PlatformCapabilitiesProvider,
   SettingsView,
   useMainAppState,
   type AppTab,
@@ -250,7 +251,10 @@ export function MainApp() {
   }
 
   return (
-    <AppApiProvider api={appApi}>
+    <PlatformCapabilitiesProvider
+      capabilities={{ deckImportExport: true, cardEditor: true }}
+    >
+      <AppApiProvider api={appApi}>
       <AppShellProvider
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -309,6 +313,7 @@ export function MainApp() {
           )}
         </AppShell>
       </AppShellProvider>
-    </AppApiProvider>
+      </AppApiProvider>
+    </PlatformCapabilitiesProvider>
   );
 }

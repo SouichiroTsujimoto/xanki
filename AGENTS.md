@@ -22,6 +22,7 @@
 | パッケージ | 役割 |
 |-----------|------|
 | `xanki/` | Tauri デスクトップ（シェル + 取込 + 同期） |
+| `mobile/` | Capacitor iOS（学習専用 MVP + Cloud REST） |
 | `web/` | Cloud SPA + Workers API |
 | `packages/ui/` | 共有 UI（`@xanki/ui`）— Tailwind + shadcn プリミティブ |
 | `shared/` | 型・スキーマ（`@xanki/shared`）— BC 別サブフォルダ |
@@ -51,6 +52,7 @@
 | [dev-mask-editor.md](./docs/dev-mask-editor.md) | マスクエディタ |
 | [dev-dialogs-overlays.md](./docs/dev-dialogs-overlays.md) | ダイアログ・オーバーレイ |
 | [dev-settings-auth.md](./docs/dev-settings-auth.md) | 設定・認証 |
+| [dev-mobile.md](./docs/dev-mobile.md) | iOS Capacitor・Safe Area |
 
 レイアウト問題修正時は dev doc の **履歴メモ** を同 PR で更新（[ui-layout-dev-docs.mdc](./.cursor/rules/ui-layout-dev-docs.mdc)）。
 
@@ -65,6 +67,8 @@ pnpm dev:cloud -- --skip-setup  # vite dev のみ再起動
 pnpm smoke:cloud          # API 自動テスト
 pnpm dev:cloud:all        # + Tauri デスクトップ
 pnpm dev:desktop          # Desktop のみ（Cloud は別途 dev:cloud）
+pnpm dev:mobile           # iOS 用 Vite (5174)。API は別途 dev:cloud
+pnpm build:mobile:ios     # dist ビルド + cap sync ios（Xcode 起動前）
 ```
 
 **Dev secrets:** 正本は [`web/.dev.vars.op`](web/.dev.vars.op)（`op://` 参照・git 管理）。`pnpm dev:cloud` は [`scripts/with-dev-secrets.sh`](scripts/with-dev-secrets.sh) 経由で `op run` する。**worktree 間で `web/.dev.vars` をコピーする案内はしない。** 詳細: [dev-cloud.md](./docs/dev-cloud.md)
@@ -79,6 +83,7 @@ UI 変更後の手動スモーク:
 
 - `pnpm dev:cloud` — ログイン、ホーム、デッキ学習 Coverflow、フリップ、削除ダイアログ
 - `pnpm dev:desktop` — 同上 + 900px 以下サイドバードロワー
+- `pnpm dev:mobile` + Xcode シミュレータ — 同上（取込・編集・import/export は非表示）
 - `prefers-reduced-motion: reduce` — フリップ即時切替、ドロワー即時
 
 ## ルール

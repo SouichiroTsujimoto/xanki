@@ -2,6 +2,7 @@ export * from "./types";
 export * from "./copy";
 export * from "./context/app-api-context";
 export * from "./context/app-shell-context";
+export * from "./context/platform-capabilities-context";
 export * from "./components/xanki/app-shell";
 export * from "./components/xanki/confirm-delete-dialog";
 export * from "./components/xanki/cloud-account-section";

@@ -1,0 +1,36 @@
+{
+  "name": "@xanki/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "cap:sync": "cap sync && node scripts/ensure-auth-session-plugin.mjs",
+    "cap:ios": "cap sync ios && node scripts/ensure-auth-session-plugin.mjs && cap run ios --scheme App --no-sync",
+    "build:ios": "pnpm build && cap sync ios && node scripts/ensure-auth-session-plugin.mjs"
+  },
+  "dependencies": {
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/browser": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
+    "@capacitor/ios": "^7.0.1",
+    "@capacitor/preferences": "^7.0.1",
+    "@xanki/shared": "workspace:*",
+    "@xanki/ui": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.1",
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^6.0.2",
+    "tailwindcss": "^4.1.11",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16"
+  }
+}

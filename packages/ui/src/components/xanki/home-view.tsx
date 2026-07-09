@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { StudyMetrics } from "@xanki/shared";
 import { copy } from "../../copy";
 import { useAppApi } from "../../context/app-api-context";
+import { usePlatformCapabilities } from "../../context/platform-capabilities-context";
 import { ReducedAnimatePresence } from "../motion/motion-presence";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 import { HomeMetricsPanel } from "./home-metrics-panel";
@@ -28,6 +29,7 @@ export function HomeView({
   onGoToLeitner,
 }: Props) {
   const api = useAppApi();
+  const { deckImportExport } = usePlatformCapabilities();
   const [metrics, setMetrics] = useState<StudyMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [newDeckName, setNewDeckName] = useState("");
@@ -200,9 +202,11 @@ export function HomeView({
             追加
           </Button>
         </form>
-        <Button type="button" variant="text" onClick={() => void handleImportDeck()}>
-          インポート
-        </Button>
+        {deckImportExport && (
+          <Button type="button" variant="text" onClick={() => void handleImportDeck()}>
+            インポート
+          </Button>
+        )}
       </section>
 
       <section className="home-decks-section" aria-label={copy.home.decksSection}>
@@ -271,14 +275,16 @@ export function HomeView({
                         >
                           ✎
                         </Button>
-                        <Button
-                          type="button"
-                          variant="icon"
-                          aria-label="エクスポート"
-                          onClick={() => void handleExportDeck(deck.id)}
-                        >
-                          ↓
-                        </Button>
+                        {deckImportExport && (
+                          <Button
+                            type="button"
+                            variant="icon"
+                            aria-label="エクスポート"
+                            onClick={() => void handleExportDeck(deck.id)}
+                          >
+                            ↓
+                          </Button>
+                        )}
                         <Button
                           type="button"
                           variant="icon"
