@@ -11,8 +11,8 @@ pnpm dev:cloud
 # ターミナル 2: Vite（ブラウザ確認）
 pnpm dev:mobile
 
-# シミュレータ / 実機
-cd mobile && pnpm build && npx cap run ios
+# シミュレータ / 実機（AuthSession プラグイン登録込み）
+cd mobile && pnpm build && pnpm cap:ios
 ```
 
 環境変数: `mobile/.env.example` を `mobile/.env.local` にコピーし `VITE_CLOUD_URL` を設定（dev 既定: `http://localhost:8787`）。

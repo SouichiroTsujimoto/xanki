@@ -7,9 +7,9 @@
     "dev": "vite --port 5174",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "cap:sync": "cap sync",
-    "cap:ios": "cap run ios",
-    "build:ios": "pnpm build && cap sync ios"
+    "cap:sync": "cap sync && node scripts/ensure-auth-session-plugin.mjs",
+    "cap:ios": "cap sync ios && node scripts/ensure-auth-session-plugin.mjs && cap run ios --scheme App --no-sync",
+    "build:ios": "pnpm build && cap sync ios && node scripts/ensure-auth-session-plugin.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^7.0.1",

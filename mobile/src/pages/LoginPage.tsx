@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { consumeSessionExpiredNotice } from "@xanki/shared";
 import { LoginView, copy } from "@xanki/ui";
 import { signInWithGoogle } from "../lib/cloud/auth";
-import { AUTH_BROWSER_CLOSED_EVENT, AUTH_COMPLETE_EVENT } from "../lib/cloud/client";
+import {
+  AUTH_BROWSER_CLOSED_EVENT,
+  AUTH_COMPLETE_EVENT,
+  getSessionToken,
+} from "../lib/cloud/client";
 
 interface LoginPageProps {
   onAuthComplete?: () => void;
@@ -31,13 +35,31 @@ export function LoginPage({ onAuthComplete }: LoginPageProps) {
     };
   }, [onAuthComplete]);
 
+  useEffect(() => {
+    if (!busy) return;
+    const intervalId = window.setInterval(() => {
+      void getSessionToken().then((token) => {
+        if (token) {
+          setBusy(false);
+          onAuthComplete?.();
+        }
+      });
+    }, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [busy, onAuthComplete]);
+
   async function handleGoogleSignIn() {
     setError(null);
     setBusy(true);
     try {
       await signInWithGoogle();
+      setBusy(false);
+      onAuthComplete?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "ログインに失敗しました");
+      const message = e instanceof Error ? e.message : "ログインに失敗しました";
+      if (message !== "canceled" && message !== "USER_CANCELED") {
+        setError(message);
+      }
       setBusy(false);
     }
   }

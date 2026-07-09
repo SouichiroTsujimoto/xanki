@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "xanki",
   webDir: "dist",
   ios: {
-    scheme: "xanki",
+    // Xcode build scheme (default "App"). Deep link URL scheme is in Info.plist (xanki://).
     contentInset: "automatic",
   },
 };

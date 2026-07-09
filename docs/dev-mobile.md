@@ -32,6 +32,8 @@ Web / Desktop と同一の `AppShell` + `responsive.css`（900px ドロワー）
 | API 接続失敗（dev） | シミュレータから localhost 不可 | `VITE_CLOUD_URL` を Mac の IP または `127.0.0.1:8787`（シミュレータは localhost 可） |
 | 画像カードが表示されない | blob URL に Bearer を付けられない | `resolveAuthenticatedBlobUrl` で fetch → object URL |
 | OAuth 後ログイン画面のまま | コールドスタートで launch URL を未処理 | `App.getLaunchUrl()` を登録時に処理 |
+| `cap run ios` で scheme "xanki" not found | `ios.scheme` は Xcode スキーム名（URL ではない） | `capacitor.config.ts` から `scheme` を外すか `--scheme App`。deep link は `Info.plist` |
+| Google ログイン後ログイン画面のまま | `AuthSessionPlugin` が `saveCall` せず OAuth 完了後に JS へ URL を返せない | `bridge.saveCall` + `getSavedCall` で非同期 resolve |
 | インポート/編集でクラッシュ | platform hook 未実装 | `PlatformCapabilities` が false か確認 |
 
 ## 手動 QA

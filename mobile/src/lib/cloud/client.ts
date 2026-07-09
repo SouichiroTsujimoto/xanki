@@ -10,7 +10,7 @@ import {
   SESSION_CLEARED_EVENT,
 } from "./session";
 
-export { AUTH_BROWSER_CLOSED_EVENT, AUTH_COMPLETE_EVENT, CLOUD_URL, SESSION_CLEARED_EVENT };
+export { AUTH_BROWSER_CLOSED_EVENT, AUTH_COMPLETE_EVENT, CLOUD_URL, SESSION_CLEARED_EVENT, getSessionToken };
 
 let handlingUnauthorized = false;
 
