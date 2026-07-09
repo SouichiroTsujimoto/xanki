@@ -1,4 +1,6 @@
 import type {
+  AiCardsGenerateRequest,
+  AiCardsGenerateResponse,
   AiQaGenerateResponse,
   ApiCard,
   ApiDeck,
@@ -207,6 +209,12 @@ export function createCloudClient(options: CloudClientOptions) {
       request<AiQaGenerateResponse>("/api/ai/qa-generate", {
         method: "POST",
         body: JSON.stringify({ text, kind, count }),
+      }),
+
+    cardsGenerate: (payload: AiCardsGenerateRequest): Promise<AiCardsGenerateResponse> =>
+      request<AiCardsGenerateResponse>("/api/ai/cards-generate", {
+        method: "POST",
+        body: JSON.stringify(payload),
       }),
 
     askAi: async function* (

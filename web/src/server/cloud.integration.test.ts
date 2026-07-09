@@ -90,6 +90,37 @@ describe("cloud API smoke", () => {
     expect(askRes.status).toBe(503);
     const askBody = (await askRes.json()) as { error?: string };
     expect(askBody.error).toBe("ai_unavailable");
+
+    const cardsRes = await SELF.fetch("http://localhost/api/ai/cards-generate", {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ text: "photosynthesis chapter", kind: "qa", tier: "thinking", count: 3 }),
+    });
+    expect(cardsRes.status).toBe(503);
+    const cardsBody = (await cardsRes.json()) as { error?: string };
+    expect(cardsBody.error).toBe("ai_unavailable");
+  });
+
+  it("cards-generate requires auth", async () => {
+    const res = await SELF.fetch("http://localhost/api/ai/cards-generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: "hello", kind: "qa", tier: "fast" }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("cards-generate rejects missing source", async () => {
+    const { token } = await createTestUserSession(env);
+    const auth = { Authorization: `Bearer ${token}` };
+    await json("/api/dev/promote-pro", { method: "POST", headers: auth });
+
+    const res = await SELF.fetch("http://localhost/api/ai/cards-generate", {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "qa", tier: "fast" }),
+    });
+    expect(res.status).toBe(500);
   });
 
   it("rejects card create when deck_id belongs to another user", async () => {

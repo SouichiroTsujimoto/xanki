@@ -20,7 +20,17 @@ vi.mock("ai-gateway-provider/providers/google", () => ({
 }));
 
 import { generateObject, streamText } from "ai";
-import { canUseAi, generateQaItems, isAiAuthError, isAiProviderError, isDevAiBypass, resolveGoogleModelId } from "./llm";
+import {
+  canUseAi,
+  generateCardsFromSource,
+  generateQaItems,
+  getCreditCostForTier,
+  isAiAuthError,
+  isAiProviderError,
+  isDevAiBypass,
+  resolveGoogleModelId,
+  resolveModelForTier,
+} from "./llm";
 
 const env = {
   APP_URL: "http://localhost:8787",
@@ -28,6 +38,8 @@ const env = {
   AI_GATEWAY_TOKEN: "token",
   AI_GATEWAY_ID: "default",
   AI_MODEL: "google-ai-studio/gemini-2.5-flash",
+  AI_MODEL_FAST: "google-ai-studio/gemini-2.5-flash",
+  AI_MODEL_THINKING: "google-ai-studio/gemini-2.5-pro",
 } as Env;
 
 describe("llm service", () => {
@@ -44,6 +56,19 @@ describe("llm service", () => {
     const prod = { ...env, APP_URL: "https://app.example.com" } as Env;
     expect(canUseAi(prod, { plan: "free", aiCreditsRemaining: 0 })).toBe(false);
     expect(canUseAi(prod, { plan: "pro", aiCreditsRemaining: 1 })).toBe(true);
+  });
+
+  it("requires enough credits for thinking tier", () => {
+    const prod = { ...env, APP_URL: "https://app.example.com" } as Env;
+    expect(canUseAi(prod, { plan: "pro", aiCreditsRemaining: 1 }, 2)).toBe(false);
+    expect(canUseAi(prod, { plan: "pro", aiCreditsRemaining: 2 }, 2)).toBe(true);
+  });
+
+  it("resolves tier models and credit costs", () => {
+    expect(resolveModelForTier(env, "fast")).toBe("google-ai-studio/gemini-2.5-flash");
+    expect(resolveModelForTier(env, "thinking")).toBe("google-ai-studio/gemini-2.5-pro");
+    expect(getCreditCostForTier("fast")).toBe(1);
+    expect(getCreditCostForTier("thinking")).toBe(2);
   });
 
   it("classifies gateway and provider auth errors", () => {
@@ -82,6 +107,36 @@ describe("llm service", () => {
     expect(generateObject).toHaveBeenCalledWith(
       expect.objectContaining({
         providerOptions: { google: { structuredOutputs: true } },
+      }),
+    );
+  });
+
+  it("calls generateObject with multimodal messages for cards-generate", async () => {
+    vi.mocked(generateObject).mockResolvedValue({
+      object: {
+        items: [{ question: "Q2", answer: "A2" }],
+      },
+    } as never);
+
+    const result = await generateCardsFromSource(env, {
+      images: [{ data: new Uint8Array([1, 2, 3]), mime: "image/png" }],
+      count: 1,
+      kind: "qa",
+      tier: "thinking",
+    });
+
+    expect(result.items).toEqual([{ question: "Q2", answer: "A2" }]);
+    expect(generateObject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [
+          expect.objectContaining({
+            role: "user",
+            content: expect.arrayContaining([
+              expect.objectContaining({ type: "text" }),
+              expect.objectContaining({ type: "image" }),
+            ]),
+          }),
+        ],
       }),
     );
   });

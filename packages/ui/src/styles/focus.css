@@ -28,7 +28,8 @@ textarea:focus-visible {
 .ghost-button:focus-visible,
 .text-button:focus-visible,
 .icon-button:focus-visible,
-.tab-close:focus-visible {
+.tab-close:focus-visible,
+.ai-card-generate-dropzone:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-ring);
   outline-offset: var(--focus-ring-offset);
 }

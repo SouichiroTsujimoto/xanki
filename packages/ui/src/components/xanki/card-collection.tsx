@@ -21,6 +21,7 @@ interface Props {
   searchQuery: string;
   collectionRevision?: number;
   onPreviewCard: (card: Card) => void;
+  onOpenAiGenerate?: () => void;
 }
 
 export function CardCollection({
@@ -28,6 +29,7 @@ export function CardCollection({
   searchQuery,
   collectionRevision = 0,
   onPreviewCard,
+  onOpenAiGenerate,
 }: Props) {
   const reduced = useReducedMotion();
   const api = useAppApi();
@@ -206,6 +208,11 @@ export function CardCollection({
         <div className="empty-panel">
           <p className="empty-title">{copy.cards.emptyTitle}</p>
           <p className="empty-copy">{copy.cards.emptyCopy}</p>
+          {onOpenAiGenerate && (
+            <Button type="button" variant="accent" onClick={onOpenAiGenerate}>
+              {copy.ai.cardsGenerateEmptyCta}
+            </Button>
+          )}
         </div>
       )}
 

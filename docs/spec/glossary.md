@@ -123,7 +123,10 @@
 | 概念 | コード / API | UI 表示（正） | 参照 |
 |------|-------------|--------------|------|
 | 学習中 AI 質問 | `askAi`, `POST /api/ai/ask` | **AI に聞く** | [study.md](./study.md), [cloud.md](./cloud.md) |
-| Q&A 自動生成 | `qaGenerate`, `POST /api/ai/qa-generate` | **AI で生成** | [library.md](./library.md), [cloud.md](./cloud.md) |
+| Q&A 自動生成（レガシー） | `qaGenerate`, `POST /api/ai/qa-generate` | **AI で生成** | [library.md](./library.md), [cloud.md](./cloud.md) |
+| カード一括生成 | `cardsGenerate`, `POST /api/ai/cards-generate` | **AI カード一括生成** / **AI でカードを追加** | [library.md](./library.md), [cloud.md](./cloud.md) |
+| 高速 AI モード | `tier: fast` | **高速AI** | [cloud.md](./cloud.md) §9 |
+| 熟考 AI モード | `tier: thinking` | **熟考AI** | [cloud.md](./cloud.md) §9 |
 
 ---
 

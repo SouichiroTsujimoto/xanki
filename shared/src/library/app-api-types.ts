@@ -1,4 +1,6 @@
 import type {
+  AiCardsGenerateRequest,
+  AiCardsGenerateResponse,
   AiQaGenerateResponse,
   ApiCard,
   ApiDeck,
@@ -122,6 +124,16 @@ export interface AppApi {
     note?: string;
     sourceHint?: string;
   }): Promise<Card>;
+  saveQaCards(request: {
+    deckId: string;
+    cards: Array<{
+      content: string;
+      answer: string;
+      masks: TextMask[];
+      note?: string;
+      sourceHint?: string;
+    }>;
+  }): Promise<Card[]>;
   updateTextCard(request: {
     cardId: string;
     deckId: string;
@@ -168,6 +180,9 @@ export interface AppApi {
     kind: "qa" | "choice",
     count?: number,
   ): Promise<AiQaGenerateResponse>;
+  cardsGenerate(request: AiCardsGenerateRequest): Promise<AiCardsGenerateResponse>;
+  getAccount(): Promise<{ plan: string; aiCreditsRemaining: number }>;
+  uploadImageBlob(data: ArrayBuffer, mime: string): Promise<string>;
   askAi(
     cardContext: string,
     question: string,
