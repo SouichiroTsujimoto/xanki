@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Resolve web/.dev.vars.op (op:// references) into web/.dev.vars for local dev.
-# Run once per worktree (or after secret rotation). See docs/dev-cloud.md.
+# Run once per jj workspace (or after secret rotation). See docs/dev-cloud.md.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,31 +10,54 @@ PREFER_ROOT_COPY=false
 
 usage() {
   cat >&2 <<EOF
-Usage: scripts/materialize-dev-vars.sh [--prefer-root-copy]
+Usage: scripts/materialize-dev-vars.sh [--root <path>] [--prefer-root-copy]
 
   Writes web/.dev.vars from web/.dev.vars.op via op read.
   Output is chmod 600 and gitignored.
 
+  --root <path>
+    Target workspace root (default: repo containing this script).
+
   --prefer-root-copy
-    If ROOT_WORKTREE_PATH/web/.dev.vars exists, copy it instead of calling op.
-    Used by .cursor/worktrees.json when the main checkout already materialized.
+    If the default jj workspace (or ROOT_WORKTREE_PATH) has web/.dev.vars,
+    copy it instead of calling op.
 EOF
+}
+
+resolve_root_copy_path() {
+  if [[ -n "${ROOT_WORKTREE_PATH:-}" ]]; then
+    echo "${ROOT_WORKTREE_PATH}/web/.dev.vars"
+    return
+  fi
+  if command -v jj >/dev/null 2>&1; then
+    local default_root
+    default_root="$(jj workspace root --name default 2>/dev/null || true)"
+    if [[ -n "$default_root" ]]; then
+      echo "${default_root}/web/.dev.vars"
+    fi
+  fi
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --root)
+      ROOT="$(cd "$2" && pwd)"
+      DEV_VARS_OP="$ROOT/web/.dev.vars.op"
+      OUT="$ROOT/web/.dev.vars"
+      shift 2
+      ;;
     --prefer-root-copy) PREFER_ROOT_COPY=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "error: unknown argument: $1" >&2; usage; exit 1 ;;
   esac
 done
 
-if [[ "$PREFER_ROOT_COPY" == true && -n "${ROOT_WORKTREE_PATH:-}" ]]; then
-  ROOT_COPY="${ROOT_WORKTREE_PATH}/web/.dev.vars"
-  if [[ -f "$ROOT_COPY" ]]; then
+if [[ "$PREFER_ROOT_COPY" == true ]]; then
+  ROOT_COPY="$(resolve_root_copy_path || true)"
+  if [[ -n "${ROOT_COPY:-}" && -f "$ROOT_COPY" && "$ROOT_COPY" != "$OUT" ]]; then
     cp "$ROOT_COPY" "$OUT"
     chmod 600 "$OUT"
-    echo "==> materialize-dev-vars: copied from root worktree ($ROOT_COPY)"
+    echo "==> materialize-dev-vars: copied from default workspace ($ROOT_COPY)"
     exit 0
   fi
 fi

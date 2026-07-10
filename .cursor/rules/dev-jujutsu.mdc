@@ -1,0 +1,41 @@
+---
+description: xanki の VCS は colocated jujutsu（jj workspace 中心）
+alwaysApply: true
+---
+
+# jujutsu（jj）運用
+
+正本: [`docs/dev-jj.md`](../../docs/dev-jj.md)
+
+## スキル
+
+- 作成: [`jj-workspace`](../../.cursor/skills/jj-workspace/SKILL.md)（`@jj-workspace`）
+- 閉じる: [`jj-workspace-close`](../../.cursor/skills/jj-workspace-close/SKILL.md)（`@jj-workspace-close`、**rebase 統合**）
+
+## 禁止
+
+- `git commit` / `git worktree`
+- secondary で `pnpm dev:*` / `pnpm setup:*` / `pnpm smoke:*`
+
+## 並列 workspace
+
+```bash
+jj workspace add --name <name> ../xanki-ws/<name>
+pnpm setup:jj-workspace:lite ../xanki-ws/<name>
+```
+
+閉じる（default から）:
+
+```bash
+bash scripts/close-jj-workspace.sh --name <name>
+```
+
+`close-jj-workspace.sh` は secondary を default の `@` に **rebase** してから `jj edit` する。
+
+## PR（default のみ）
+
+```bash
+jj bookmark set <name> -r @-
+jj git push --bookmark <name>
+gh pr create ...
+```

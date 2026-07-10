@@ -53,6 +53,7 @@
 | [dev-dialogs-overlays.md](./docs/dev-dialogs-overlays.md) | ダイアログ・オーバーレイ |
 | [dev-settings-auth.md](./docs/dev-settings-auth.md) | 設定・認証 |
 | [dev-mobile.md](./docs/dev-mobile.md) | iOS Capacitor・Safe Area |
+| [dev-jj.md](./docs/dev-jj.md) | **jujutsu（jj）** — workspace・rebase close・PR |
 
 レイアウト問題修正時は dev doc の **履歴メモ** を同 PR で更新（[ui-layout-dev-docs.mdc](./.cursor/rules/ui-layout-dev-docs.mdc)）。
 
@@ -72,6 +73,8 @@ pnpm build:mobile:ios     # dist ビルド + cap sync ios（Xcode 起動前）
 ```
 
 **Dev secrets:** 正本は [`web/.dev.vars.op`](web/.dev.vars.op)（`op://` 参照・git 管理）。`pnpm dev:cloud` は [`scripts/with-dev-secrets.sh`](scripts/with-dev-secrets.sh) 経由で `op run` する。**worktree 間で `web/.dev.vars` をコピーする案内はしない。** 詳細: [dev-cloud.md](./docs/dev-cloud.md)
+
+**VCS（jujutsu）:** `@jj-workspace` / `@jj-workspace-close`（close は **rebase 統合**）。secondary では `pnpm dev:*` / `pnpm setup:*` 禁止。正本: [dev-jj.md](./docs/dev-jj.md)、[dev-jujutsu.mdc](./.cursor/rules/dev-jujutsu.mdc)
 
 コマンド体系の詳細: [`README.md`](./README.md)
 
