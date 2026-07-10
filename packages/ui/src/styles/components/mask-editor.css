@@ -325,6 +325,52 @@ html.tauri-macos .image-editor-header button {
   cursor: not-allowed;
 }
 
+/* Segmented mask / Q&A mode toggle (card create toolbar) */
+.editor-mode-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  height: 2rem;
+  border: var(--border-width-default) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-card);
+  overflow: hidden;
+}
+
+.editor-mode-toggle .editor-mode-toggle__option.ghost-button {
+  min-width: 0;
+  height: 100%;
+  padding: 0 0.7rem;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-muted-foreground);
+}
+
+.editor-mode-toggle .editor-mode-toggle__option.ghost-button + .editor-mode-toggle__option.ghost-button {
+  border-left: var(--border-width-default) solid var(--color-border-strong);
+}
+
+.editor-mode-toggle .editor-mode-toggle__option.ghost-button:hover:not(:disabled):not([data-active="true"]) {
+  background: var(--color-muted);
+  border-color: transparent;
+  color: var(--color-foreground);
+}
+
+.editor-mode-toggle .editor-mode-toggle__option.ghost-button[data-active="true"] {
+  background: var(--color-accent-soft);
+  border-color: transparent;
+  color: var(--color-accent-text);
+}
+
+.editor-mode-toggle .editor-mode-toggle__option.ghost-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .qa-answer-input {
   display: block;
   width: 100%;

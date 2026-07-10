@@ -9,6 +9,7 @@
 | 種別 | パス |
 |------|------|
 | テキスト | [`text-mask-editor.tsx`](../packages/ui/src/components/xanki/mask/text-mask-editor.tsx), [`text-mask-composer.tsx`](../packages/ui/src/components/xanki/mask/text-mask-composer.tsx) |
+| 作成モード保持 | [`text-editor-mode-storage.ts`](../packages/ui/src/lib/text-editor-mode-storage.ts)（`localStorage` `xanki:text-editor-mode`） |
 | 画像 | [`image-mask-editor.tsx`](../packages/ui/src/components/xanki/mask/image-mask-editor.tsx), [`image-with-mask-overlays.tsx`](../packages/ui/src/components/xanki/mask/image-with-mask-overlays.tsx) |
 | スタイル | [`mask-editor.css`](../packages/ui/src/styles/components/mask-editor.css) |
 

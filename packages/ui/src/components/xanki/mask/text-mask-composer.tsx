@@ -14,9 +14,19 @@ import {
   getTextareaPopupPosition,
   getTextareaSelectionOffsets,
 } from "../../../lib/textSelection";
+import {
+  loadTextEditorMode,
+  saveTextEditorMode,
+} from "../../../lib/text-editor-mode-storage";
 import type { Deck, TextMask } from "../../../types";
 import { AiCardGenerateDialog } from "./ai-card-generate-dialog";
 import { Button } from "../../ui/button";
+
+function resolveInitialQaMode(cardId: string | undefined, initialQaMode: boolean): boolean {
+  if (cardId) return initialQaMode;
+  if (initialQaMode) return true;
+  return loadTextEditorMode() === "qa";
+}
 
 export interface TextMaskDraftOptions {
   deckId: string;
@@ -46,7 +56,7 @@ export function useTextMaskDraft({
   const api = useAppApi();
   const [content, setContent] = useState(initialContent);
   const [answer, setAnswer] = useState(initialAnswer);
-  const [qaMode, setQaMode] = useState(initialQaMode);
+  const [qaMode, setQaMode] = useState(() => resolveInitialQaMode(cardId, initialQaMode));
   const [masks, setMasks] = useState<TextMask[]>(initialMasks);
   const [note, setNote] = useState(initialNote);
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
@@ -60,7 +70,7 @@ export function useTextMaskDraft({
   const resetDraft = useCallback(() => {
     setContent("");
     setAnswer("");
-    setQaMode(false);
+    setQaMode(loadTextEditorMode() === "qa");
     setMasks([]);
     setNote("");
     contentRef.current = "";
@@ -200,12 +210,12 @@ export function useTextMaskDraft({
   }, [masks, selection]);
 
   const enterQaMode = useCallback(() => {
-    if (!content.trim()) return;
     setQaMode(true);
+    saveTextEditorMode("qa");
     setSelection(null);
     setPopupPos(null);
     textRef.current?.focus();
-  }, [content]);
+  }, []);
 
   const removeMask = useCallback((index: number) => {
     setMasks((prev) => prev.filter((_, i) => i !== index));
@@ -217,6 +227,7 @@ export function useTextMaskDraft({
     setContent(merged);
     setAnswer("");
     setQaMode(false);
+    saveTextEditorMode("mask");
     setMasks([]);
     setSelection(null);
     setPopupPos(null);
@@ -228,6 +239,7 @@ export function useTextMaskDraft({
     setContent(question);
     setAnswer(answerText);
     setQaMode(true);
+    // AI apply does not overwrite the user's preferred create mode.
     setMasks([]);
     setSelection(null);
     setPopupPos(null);
@@ -276,33 +288,48 @@ interface QaModeToggleProps {
 }
 
 export function TextMaskQaModeToggle({ draft, disabled = false }: QaModeToggleProps) {
-  const { qaMode, content, enterQaMode, exitQaMode } = draft;
+  const { qaMode, enterQaMode, exitQaMode } = draft;
 
-  if (qaMode) {
-    return (
+  return (
+    <div
+      className="editor-mode-toggle"
+      role="group"
+      aria-label={copy.editor.modeToggleLabel}
+      data-tauri-drag-region="false"
+    >
       <Button
         type="button"
-        className="qa-toolbar-button"
+        variant="ghost"
+        className="editor-mode-toggle__option"
+        data-active={!qaMode ? "true" : undefined}
+        aria-pressed={!qaMode}
         data-tauri-drag-region="false"
-        onClick={exitQaMode}
+        disabled={disabled}
+        onClick={() => {
+          if (!qaMode) return;
+          exitQaMode();
+        }}
         title={copy.editor.qaExit}
       >
         {copy.editor.maskMode}
       </Button>
-    );
-  }
-
-  return (
-    <Button
-      type="button"
-      className="qa-toolbar-button"
-      data-tauri-drag-region="false"
-      disabled={disabled || !content.trim()}
-      onClick={enterQaMode}
-      title={copy.editor.qaToggle}
-    >
-      Q
-    </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        className="editor-mode-toggle__option"
+        data-active={qaMode ? "true" : undefined}
+        aria-pressed={qaMode}
+        data-tauri-drag-region="false"
+        disabled={disabled}
+        onClick={() => {
+          if (qaMode) return;
+          enterQaMode();
+        }}
+        title={copy.editor.qaToggle}
+      >
+        {copy.editor.qaMode}
+      </Button>
+    </div>
   );
 }
 

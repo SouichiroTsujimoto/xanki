@@ -12,7 +12,7 @@
 | [architecture.md](./architecture.md) | 技術スタック、ウィンドウ、イベント、拡張フック |
 | [capture.md](./capture.md) | ⌥⌘M / ⌥⌘S、権限、クリップボード |
 | [text-masks.md](./text-masks.md) | テキストマスクエディタ、座標、保存 |
-| [qa-cards.md](./qa-cards.md) | 一問一答カード（Q ボタン、問題文/解答） |
+| [qa-cards.md](./qa-cards.md) | 一問一答カード（モードトグル、問題文/解答、作成モード保持） |
 | [image-masks.md](./image-masks.md) | 画像マスク、OCR、座標系、マスクカラー |
 | [data-model.md](./data-model.md) | D1 / データ契約、JSON 形式 |
 | [glossary.md](./glossary.md) | ユビキタス言語（UI 表示名・コード対応） |

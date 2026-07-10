@@ -113,7 +113,7 @@
 | 新規（画像） | **暗記カード作成 ✦** | [image-masks.md](./image-masks.md) |
 | 編集（画像） | **スクショ編集 ✦** | [image-masks.md](./image-masks.md) |
 | デッキ選択ラベル | **デッキ** | [text-masks.md](./text-masks.md) |
-| 一問一答化 | **一問一答形式にする** | [qa-cards.md](./qa-cards.md) |
+| 作成モードトグル | **マスク** / **一問一答**（セグメント） | [qa-cards.md](./qa-cards.md) |
 | AI で生成 | `qaGenerate`, **AI で生成** | [library.md](./library.md), [cloud.md](./cloud.md) |
 
 ---
