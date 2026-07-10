@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5174",
+    "dev": "vite --host 0.0.0.0 --port 5174",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "cap:sync": "pnpm build && cap sync && node scripts/ensure-auth-session-plugin.mjs",

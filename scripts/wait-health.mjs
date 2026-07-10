@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Wait until URL returns HTTP 2xx (default: cloud health check).
+ * Body may be JSON or HTML (e.g. Vite index); only status matters.
  * Usage: node scripts/wait-health.mjs [url] [timeoutSec]
  */
 const url = process.argv[2] ?? "http://localhost:8787/api/health";
@@ -10,7 +11,8 @@ const deadline = Date.now() + timeoutSec * 1000;
 async function ping() {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  // Drain body so the connection can close cleanly (JSON or HTML).
+  await res.text();
 }
 
 while (Date.now() < deadline) {

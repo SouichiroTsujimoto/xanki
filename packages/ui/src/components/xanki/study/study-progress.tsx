@@ -40,12 +40,18 @@ export function DeckStudySessionProgress({
   remaining,
   total,
   progress,
+  /** When set, show swipe progress (0-based) instead of remaining. */
+  swiped,
+  roundTotal,
 }: {
   remaining: number;
   total: number;
   progress: number;
+  swiped?: number;
+  roundTotal?: number;
 }) {
   const reduced = useReducedMotion();
+  const useSwipeMeta = swiped != null && roundTotal != null;
 
   return (
     <>
@@ -58,7 +64,11 @@ export function DeckStudySessionProgress({
         />
       </div>
       <div className="review-meta">
-        <span>{uiCopy.deckStudy.sessionRemaining(remaining, total)}</span>
+        <span>
+          {useSwipeMeta
+            ? uiCopy.deckStudy.sessionSwiped(swiped, roundTotal)
+            : uiCopy.deckStudy.sessionRemaining(remaining, total)}
+        </span>
       </div>
     </>
   );

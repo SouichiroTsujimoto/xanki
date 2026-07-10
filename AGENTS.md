@@ -38,10 +38,11 @@
 | `sync/` | レガシー sync 型（縮小予定） |
 | `entitlements.ts` | プラン上限 |
 
-**開発者向けメモ（git 管理）** — 索引: [dev-ui.md](./docs/dev-ui.md)
+**開発者向けメモ（リポジトリ管理）** — 索引: [dev-ui.md](./docs/dev-ui.md)
 
 | ドキュメント | 内容 |
 |-------------|------|
+| [dev-jj.md](./docs/dev-jj.md) | **jujutsu（jj）運用** — workspace・PR・Cursor エージェント |
 | [dev-ui.md](./docs/dev-ui.md) | UI レイアウト索引・記録ルール |
 | [dev-cloud.md](./docs/dev-cloud.md) | クラウド層ローカル動作確認 |
 | [dev-app-shell.md](./docs/dev-app-shell.md) | シェル・サイドバー・狭幅ドロワー |
@@ -67,12 +68,14 @@ pnpm dev:cloud            # Web API + SPA (8787、Vite HMR)
 pnpm dev:cloud -- --skip-setup  # vite dev のみ再起動
 pnpm smoke:cloud          # API 自動テスト
 pnpm dev:cloud:all        # + Tauri デスクトップ
+pnpm dev:cloud:mobile     # + Mobile Vite + iOS シミュレータ（live reload）
 pnpm dev:desktop          # Desktop のみ（Cloud は別途 dev:cloud）
-pnpm dev:mobile           # iOS 用 Vite (5174)。API は別途 dev:cloud
-pnpm build:mobile:ios     # dist ビルド + cap sync ios（Xcode 起動前）
+pnpm dev:mobile           # Mobile Vite (5174)。API は別途 dev:cloud
+pnpm dev:mobile:ios       # Mobile Vite + iOS シミュレータ（live reload）
+pnpm build:mobile:ios     # dist ビルド + cap sync ios（Xcode / TestFlight）
 ```
 
-**Dev secrets:** 正本は [`web/.dev.vars.op`](web/.dev.vars.op)（`op://` 参照・git 管理）。`pnpm dev:cloud` は [`scripts/with-dev-secrets.sh`](scripts/with-dev-secrets.sh) 経由で `op run` する。**worktree 間で `web/.dev.vars` をコピーする案内はしない。** 詳細: [dev-cloud.md](./docs/dev-cloud.md)
+**Dev secrets:** 正本は [`web/.dev.vars.op`](web/.dev.vars.op)（`op://` 参照・リポジトリ管理）。`pnpm dev:cloud` は [`scripts/with-dev-secrets.sh`](scripts/with-dev-secrets.sh) 経由で `op run` する。**workspace 間で `web/.dev.vars` を手コピーする案内はしない。** 詳細: [dev-cloud.md](./docs/dev-cloud.md)
 
 **VCS（jujutsu）:** `@jj-workspace` / `@jj-workspace-close`（close は **rebase 統合**）。secondary では `pnpm dev:*` / `pnpm setup:*` 禁止。正本: [dev-jj.md](./docs/dev-jj.md)、[dev-jujutsu.mdc](./.cursor/rules/dev-jujutsu.mdc)
 
@@ -86,7 +89,7 @@ UI 変更後の手動スモーク:
 
 - `pnpm dev:cloud` — ログイン、ホーム、デッキ学習 Coverflow、フリップ、削除ダイアログ
 - `pnpm dev:desktop` — 同上 + 900px 以下サイドバードロワー
-- `pnpm dev:mobile` + Xcode シミュレータ — 同上（取込・編集・import/export は非表示）
+- `pnpm dev:cloud:mobile` または `pnpm dev:mobile:ios` — 同上（取込・編集・import/export は非表示）
 - `prefers-reduced-motion: reduce` — フリップ即時切替、ドロワー即時
 
 ## ルール

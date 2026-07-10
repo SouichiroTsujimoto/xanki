@@ -6,6 +6,7 @@ export * from "./study/scheduler.js";
 export * from "./study/mask-answers.js";
 export * from "./study/card-context.js";
 export * from "./study/deck-session.js";
+export * from "./study/flashcard-round.js";
 export * from "./study/metrics.js";
 export * from "./study/tz.js";
 export * from "./sync/sync.js";

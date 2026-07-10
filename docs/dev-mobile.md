@@ -2,12 +2,29 @@
 
 Capacitor + `@xanki/ui` の iPhone / iPad クライアント。仕様の正本は [ui.md](./spec/ui.md)、[cloud.md](./spec/cloud.md)。
 
+## 開発起動（ルート pnpm）
+
+Desktop / Cloud と同じく **リポジトリルート** から起動する。
+
+| コマンド | 内容 |
+|---------|------|
+| `pnpm dev:cloud:mobile` | Cloud (:8787) + Mobile Vite (:5174) + iOS シミュレータ（live reload） |
+| `pnpm dev:mobile:ios` | Mobile Vite + シミュレータ（Cloud は `pnpm dev:cloud` を別途） |
+| `pnpm dev:mobile` | Mobile Vite のみ（ブラウザ確認） |
+| `pnpm build:mobile:ios` | dist 同梱 + cap sync（Xcode / TestFlight。live reload なし） |
+
+Live reload は `CAPACITOR_LIVE_RELOAD=1` 時に `mobile/capacitor.config.ts` が `server.url=http://localhost:5174` を設定する（`scripts/dev-ios.sh`）。JS/UI は HMR。Swift 変更時は `build:mobile:ios` または `dev:mobile:ios -- --bundled`。
+
+実装の入口: [`scripts/dev-ios.sh`](../scripts/dev-ios.sh)、[`mobile/README.md`](../mobile/README.md)。
+
 ## 関連ファイル
 
 | 種別 | パス |
 |------|------|
 | Capacitor アプリ | `mobile/src/` |
 | iOS ネイティブ | `mobile/ios/` |
+| Capacitor 設定 | `mobile/capacitor.config.ts`（dev live reload） |
+| 起動スクリプト | `scripts/dev-ios.sh`, `scripts/dev-cloud.sh --mobile` |
 | Safe Area / タッチ CSS | `mobile/src/index.css` |
 | 認証（Bearer + deep link） | `mobile/src/lib/cloud/auth.ts`, `session.ts` |
 | Native HTTP（Cloud REST） | `mobile/src/lib/cloud/native-http.ts`, `mobile/ios/App/App/NativeHttpPlugin.swift` |
@@ -41,7 +58,8 @@ Web / Desktop と同一の `AppShell` + `responsive.css`（900px ドロワー）
 | Google アカウント選択後に戻らない | OAuth 開始 host と `APP_URL` の host が不一致で better-auth state cookie が Google callback に送られない | `/auth/desktop-sign-in` で `APP_URL` origin へ canonical redirect してから OAuth 開始 |
 | `cap sync` の Found 3 plugins に AuthSession が無い | npm プラグインのみ列挙。ローカル Swift は `packageClassList` + `MainBridgeViewController` で登録 | `ensure-auth-session-plugin.mjs` + `registerPluginInstance` |
 | OAuth 失敗も無言でログイン画面 | 401 HTML を ASWebAuthenticationSession が拾えずキャンセル扱い | 深リンク失敗も `xanki://auth/callback?error=...` で 302 |
-| 修正後もシミュレータで同じ症状 | `pnpm dev:cloud` だけ再起動し、iOS アプリ内の stale `dist` / native 登録が残っている | `pnpm --filter @xanki/mobile cap:ios` は build + cap sync + plugin 登録を必ず実行 |
+| 修正後もシミュレータで同じ症状 | bundled 起動で stale `dist` / native 登録が残っている、または live reload 未使用 | 日常は `pnpm dev:mobile:ios`（live reload）。Swift 変更や同梱確認は `pnpm build:mobile:ios` / `dev:mobile:ios -- --bundled` |
+| live reload なのに真っ白 | Mobile Vite (:5174) が落ちている、または `server.url` が sync されていない | `pnpm dev:mobile:ios` で Vite + sync をやり直す。実機は `CAPACITOR_DEV_SERVER_URL` に LAN IP |
 | インポート/編集でクラッシュ | platform hook 未実装 | `PlatformCapabilities` が false か確認 |
 
 ## 手動 QA
@@ -65,3 +83,4 @@ Web / Desktop と同一の `AppShell` + `responsive.css`（900px ドロワー）
 | 2026-07 | Cloud 再起動後も iOS 側の挙動が変わらない | simulator app が古い `dist` / native 登録を保持 | `cap:ios` に build + sync を含める |
 | 2026-07 | ログイン後 `/api/me` 接続失敗 | `capacitor://localhost` の CORS preflight に `Access-Control-Allow-Origin` が無い。Vite dev では Worker 前段で `OPTIONS` が返る | iOS dev origin を `http://localhost` に変更し、API CORS middleware も明示実装 |
 | 2026-07 | ログイン後 `Load failed` | `pnpm dev:cloud` が `[::1]:8787` のみ listen、`127.0.0.1` への cross-origin fetch、`http://localhost:8787` への fetch が Capacitor localhost 資産ホスト / Cloudflare Vite dev preflight に衝突 | dev server を `--host 0.0.0.0`。iOS Cloud REST / blob は `NativeHttpPlugin`（URLSession）経由に変更し、WebView fetch 依存を除去 |
+| 2026-07 | Mobile 起動がルートから不完全 | `dev:mobile` は Vite のみ、シミュレータは `cd mobile && cap:ios`、Cloud 一括なし | `dev:mobile:ios` / `dev:cloud:mobile` + Capacitor live reload（`scripts/dev-ios.sh`） |

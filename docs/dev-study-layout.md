@@ -16,6 +16,10 @@
 | 高さ計測ロジック | [`packages/ui/src/lib/flip-metrics.ts`](../packages/ui/src/lib/flip-metrics.ts) |
 | テキスト縦配置 hook | [`packages/ui/src/hooks/use-review-card-text-overflow.ts`](../packages/ui/src/hooks/use-review-card-text-overflow.ts) |
 | デッキ学習セッション load | [`use-deck-study-session.ts`](../packages/ui/src/components/xanki/study/use-deck-study-session.ts) |
+| フラッシュカード ラウンド pure | [`shared/src/study/flashcard-round.ts`](../shared/src/study/flashcard-round.ts) |
+| フラッシュカード下書き | [`flashcard-session-storage.ts`](../packages/ui/src/lib/flashcard-session-storage.ts) |
+| スワイプ選別 | [`swipeable-study-card.tsx`](../packages/ui/src/components/xanki/study/swipeable-study-card.tsx) |
+| 周回結果 | [`flashcard-round-summary.tsx`](../packages/ui/src/components/xanki/study/flashcard-round-summary.tsx) |
 | study metrics recorder | [`use-study-session-recorder.ts`](../packages/ui/src/hooks/use-study-session-recorder.ts) |
 | スマート学習キュー | [`study-progress.tsx`](../packages/ui/src/components/xanki/study/study-progress.tsx)（`useStudyQueue`） |
 
@@ -156,12 +160,41 @@ pnpm dev:desktop    # Tauri（Cloud API は別途 dev:cloud）
 
 ---
 
+## フラッシュカード スワイプ vs フリップ
+
+### 症状になりやすいこと
+
+- 答え表示前にスワイプして意図せず grade される
+- 水平ドラッグがクリックフリップと競合する
+- スワイプ fly-out 中にカード枠・影が親でクリップされる
+
+### 現行の分担
+
+| ジェスチャ | 条件 | 実装 |
+|-----------|------|------|
+| タップ / Space | 常時 | `StudyFlipCard` フリップ |
+| 左右ドラッグ | **答え表示後のみ**（`SwipeableStudyCard` `enabled={revealed}`） | 右=覚えた / 左=もう一度 |
+| ボタン / `1` `2` | 答え表示後 | スワイプと同義 |
+
+- ドラッグは `.swipeable-study-card-layer`（motion `drag="x"`）。`.study-flip-slot` は `overflow: visible` のまま（fly-out 見切れ防止）
+- `prefers-reduced-motion`: fly-out 時間 0
+- ラウンド状態の pure ロジックは shared。UI は下書き保存のみ
+
+### 履歴メモ
+
+| 時期 | 症状 | 原因 | 再発防止 |
+|------|------|------|----------|
+| 2026-07 | 進捗が 1 始まり・即末尾回しで Quizlet 風でない | 連続キュー + index+1 進捗 | ラウンドモデル + スワイプ済み 0 始まり + 周回サマリー |
+
+---
+
 ## 変更時のガイド
 
 ### CSS を触るとき
 
 - `review.css` の `.study-session` ブロックと `@media (prefers-reduced-motion)` ブロックを **セットで** 確認
 - スマート学習用 `.leitner-study-session` の flex レイアウトはデッキ学習と **別経路**（slot の `overflow` 等が分岐している）
+- フラッシュカードの `.swipeable-study-card*` / `.flashcard-round-summary*` は同ファイル。slot に `overflow: hidden` を戻さない
 
 ### 高さロジックを触るとき
 

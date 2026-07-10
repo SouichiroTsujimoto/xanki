@@ -78,7 +78,8 @@
 | 書く | `write` | **書く** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | テスト | `test` | **テスト** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | マッチ | `match` | **マッチ** | デッキ学習 | [deck-study.md](./deck-study.md) |
-| 覚えた / まだ | セッション操作 | **覚えた** / **まだ** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| 覚えた / もう一度 | セッション操作（flashcards） | **覚えた** / **もう一度** | デッキ学習 | [deck-study.md](./deck-study.md) |
+| まだ | `still`（レガシー copy） | 他手段で残る場合あり。フラッシュカード UI は **もう一度** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | 復習を始める | `LeitnerStudyView` ヒーローカード | **復習を始める** | スマート学習 | [leitner-study.md](./leitner-study.md) |
 | カードプレビュー | `singleCard` + flashcards | **カードプレビュー** | デッキ学習 | [deck-study.md](./deck-study.md) |
 | 手段起動 | `study-hub-toolbar` | **学習を始める** / **学習モード** | デッキ学習 | [deck-study.md](./deck-study.md) |

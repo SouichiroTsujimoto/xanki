@@ -38,6 +38,7 @@ flowchart TD
 | `Label` | [`components/ui/label.tsx`](../../packages/ui/src/components/ui/label.tsx) | フォームラベル | 独自 label スタイル |
 | `NativeDialog` | [`components/ui/native-dialog.tsx`](../../packages/ui/src/components/ui/native-dialog.tsx) | モーダル全般（AI パネル、確認以外） | Radix Dialog の新規導入、`<div>` オーバーレイ |
 | `Toaster` | [`components/ui/sonner.tsx`](../../packages/ui/src/components/ui/sonner.tsx) | トースト通知 | 独自 toast 実装 |
+| `ChartContainer` 等 | [`components/ui/chart.tsx`](../../packages/ui/src/components/ui/chart.tsx) | recharts ベースのグラフ（円グラフ等） | 素の recharts 直書き・独自 pie SVG の増殖 |
 
 ## Patterns
 
@@ -80,6 +81,8 @@ flowchart TD
 | コンポーネント | パス | 使う条件 | 再作成禁止 |
 |---------------|------|----------|-----------|
 | `FlashcardsMode` | [`study/flashcards-mode.tsx`](../../packages/ui/src/components/xanki/study/flashcards-mode.tsx) | フラッシュカード手段 | 新規 flip UI |
+| `SwipeableStudyCard` | [`study/swipeable-study-card.tsx`](../../packages/ui/src/components/xanki/study/swipeable-study-card.tsx) | フラッシュカード左右スワイプ選別 | 独自 drag grade |
+| `FlashcardRoundSummary` | [`study/flashcard-round-summary.tsx`](../../packages/ui/src/components/xanki/study/flashcard-round-summary.tsx) | 周回結果（枚数 + 円グラフ） | 独自完了/結果 UI |
 | `LearnMode` | [`study/learn-mode.tsx`](../../packages/ui/src/components/xanki/study/learn-mode.tsx) | 復習（learn）手段 | 同上 |
 | `TestMode` | [`study/test-mode.tsx`](../../packages/ui/src/components/xanki/study/test-mode.tsx) | テスト手段 | 同上 |
 | `WriteMode` | [`study/write-mode.tsx`](../../packages/ui/src/components/xanki/study/write-mode.tsx) | 記述手段 | 同上 |
