@@ -237,6 +237,28 @@
   border: var(--border-width-default) solid var(--color-border);
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.16s ease, border-color 0.16s ease;
+  touch-action: manipulation;
+}
+
+.flashcard-tile.is-sortable {
+  cursor: grab;
+}
+
+.flashcard-tile.is-sortable:active {
+  cursor: grabbing;
+}
+
+.flashcard-tile.is-dragging {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent-outline-muted);
+  opacity: 0.96;
+  cursor: grabbing;
+}
+
+.card-collection-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-muted-foreground);
 }
 
 .flashcard-tile-body {

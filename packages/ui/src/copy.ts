@@ -181,6 +181,8 @@ export const copy = {
     kindImage: "画像",
     previewAria: (kind: string) => `${kind} カードをプレビュー`,
     deleteTitle: "カードを削除しますか？",
+    reorderHint: "ドラッグして並べ替え",
+    reorderDisabledWhileSearch: "検索中は並べ替えできません",
   },
   capture: {
     text: "テキスト取込",

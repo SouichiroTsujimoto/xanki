@@ -64,4 +64,5 @@
 
 | 日付 | 症状 | 原因 | 対応 |
 |------|------|------|------|
+| 2026-07 | カード順が不定・ユーザー並び不可 | `sort_order` なし / list に ORDER BY なし | migration 0009 + `PUT .../cards/order` + `CardCollection` に `@dnd-kit` グリッド並べ替え。検索中は DnD 無効。ドラッグ中は Motion `layout` を切って競合回避 |
 | — | （追記用） | | |

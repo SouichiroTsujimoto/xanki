@@ -92,6 +92,8 @@ export interface AppApi {
   importDeck(data: DeckExport): Promise<void>;
   listCards(deckId?: string, query?: string): Promise<Card[]>;
   getCard(cardId: string): Promise<Card>;
+  /** Persist full deck card order (gapless). IDs must match all non-deleted cards in the deck. */
+  reorderCards(deckId: string, cardIds: string[]): Promise<void>;
   deleteCard(cardId: string): Promise<void>;
   openCardEditor(cardId: string): Promise<void>;
   submitReview(cardId: string, result: ReviewGrade): Promise<void>;

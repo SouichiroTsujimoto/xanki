@@ -59,6 +59,7 @@
 | デッキ一覧（画面） | `HomeView`, `listDecks` | ホームタブ内 | Home 画面 | [library.md](./library.md) |
 | カード | `Card`, `/api/cards` | **カード** | — | [library.md](./library.md) |
 | カード一覧 | `CardCollection`, `library-main` | 見出し **カード** | Collection, **ライブラリ**（タブ名意味） | [library.md](./library.md) |
+| カード並び順 | `sort_order`, `reorderCards` | （UI: **ドラッグして並べ替え**） | position / order_index | [library.md](./library.md), [data-model.md](./data-model.md) |
 | カード追加 | `TextMaskComposerEmbedded` / `CollectionAddBar` | **カードの追加**（インライン） | — | [library.md](./library.md) |
 | Coverflow | `StudyCardCoverflow` | **Coverflow**（固有名） | — | [deck-study.md](./deck-study.md) |
 | 変更通知 refetch | `collectionRevision`, `collection-sync` | （UI 非表示） | `libraryRevision`, `library-changed` | [architecture.md](./architecture.md) |

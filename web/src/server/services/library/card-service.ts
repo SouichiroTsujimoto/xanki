@@ -1,4 +1,4 @@
-import { and, eq, isNull, like, or, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, like, max, or, sql } from "drizzle-orm";
 import type { Env } from "../../env";
 import type { Db } from "../../db/index";
 import { cards, decks, reviewState } from "../../db/schema";
@@ -41,6 +41,17 @@ export async function purgeOrphanedCards(db: Db, userId: string, env?: Env): Pro
   return orphaned.length;
 }
 
+async function nextSortOrder(db: Db, userId: string, deckId: string): Promise<number> {
+  const row = await db
+    .select({ maxOrder: max(cards.sortOrder) })
+    .from(cards)
+    .where(
+      and(eq(cards.userId, userId), eq(cards.deckId, deckId), isNull(cards.deletedAt)),
+    )
+    .get();
+  return (row?.maxOrder ?? -1) + 1;
+}
+
 export async function listCards(db: Db, userId: string, deckId?: string, q?: string) {
   await purgeOrphanedCards(db, userId);
 
@@ -78,12 +89,14 @@ export async function listCards(db: Db, userId: string, deckId?: string, q?: str
       note: cards.note,
       sourceHint: cards.sourceHint,
       starred: cards.starred,
+      sortOrder: cards.sortOrder,
       createdAt: cards.createdAt,
       updatedAt: cards.updatedAt,
     })
     .from(cards)
     .innerJoin(decks, eq(cards.deckId, decks.id))
     .where(and(...conditions))
+    .orderBy(asc(cards.sortOrder), asc(cards.createdAt))
     .all();
 
   const reviewRows = await db
@@ -109,6 +122,7 @@ export async function listCards(db: Db, userId: string, deckId?: string, q?: str
       note: card.note,
       sourceHint: card.sourceHint,
       starred: card.starred === 1,
+      sortOrder: card.sortOrder,
       createdAt: card.createdAt,
       updatedAt: card.updatedAt,
       boxNum: rs?.box,
@@ -138,6 +152,7 @@ export interface CardInput {
   note?: string | null;
   source_hint?: string | null;
   starred?: number;
+  sort_order?: number;
   created_at: number;
   updated_at: number;
   deleted_at?: number | null;
@@ -167,11 +182,16 @@ export async function upsertCard(db: Db, userId: string, card: CardInput, env?: 
         note: card.note ?? null,
         sourceHint: card.source_hint ?? null,
         starred: card.starred ?? existing.starred,
+        // Preserve existing order unless explicitly provided (e.g. import).
+        ...(card.sort_order !== undefined ? { sortOrder: card.sort_order } : {}),
         updatedAt: card.updated_at,
         deletedAt: card.deleted_at ?? null,
       })
       .where(and(eq(cards.userId, userId), eq(cards.id, card.id)));
   } else {
+    const sortOrder =
+      card.sort_order ?? (await nextSortOrder(db, userId, card.deck_id));
+
     await db.insert(cards).values({
       userId,
       id: card.id,
@@ -186,6 +206,7 @@ export async function upsertCard(db: Db, userId: string, card: CardInput, env?: 
       note: card.note ?? null,
       sourceHint: card.source_hint ?? null,
       starred: card.starred ?? 0,
+      sortOrder,
       createdAt: card.created_at,
       updatedAt: card.updated_at,
       deletedAt: card.deleted_at ?? null,
@@ -209,6 +230,52 @@ export async function upsertCard(db: Db, userId: string, card: CardInput, env?: 
         updatedAt: card.updated_at,
       });
     }
+  }
+
+  await finishMutation(db, env, userId);
+}
+
+/**
+ * Rewrite deck card order to gapless 0..n-1.
+ * `cardIds` must be exactly the set of non-deleted cards in the deck.
+ */
+export async function reorderCards(
+  db: Db,
+  userId: string,
+  deckId: string,
+  cardIds: string[],
+  env?: Env,
+): Promise<void> {
+  await requireDeckOwnedByUser(db, userId, deckId);
+
+  const existing = await db
+    .select({ id: cards.id })
+    .from(cards)
+    .where(
+      and(eq(cards.userId, userId), eq(cards.deckId, deckId), isNull(cards.deletedAt)),
+    )
+    .all();
+
+  const existingIds = existing.map((row) => row.id);
+  if (cardIds.length !== existingIds.length) {
+    throw new Error("card_order_mismatch");
+  }
+
+  const existingSet = new Set(existingIds);
+  const seen = new Set<string>();
+  for (const id of cardIds) {
+    if (seen.has(id) || !existingSet.has(id)) {
+      throw new Error("card_order_mismatch");
+    }
+    seen.add(id);
+  }
+
+  const now = nowMs();
+  for (let i = 0; i < cardIds.length; i++) {
+    await db
+      .update(cards)
+      .set({ sortOrder: i, updatedAt: now })
+      .where(and(eq(cards.userId, userId), eq(cards.id, cardIds[i]!)));
   }
 
   await finishMutation(db, env, userId);

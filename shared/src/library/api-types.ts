@@ -24,6 +24,8 @@ export interface ApiCard {
   note?: string | null;
   sourceHint?: string | null;
   starred?: boolean;
+  /** Deck-local display order (ascending). Smaller first. */
+  sortOrder?: number;
   createdAt: number;
   updatedAt: number;
   deletedAt?: number | null;
@@ -32,6 +34,11 @@ export interface ApiCard {
   reviewStep?: number;
   dueAt?: number;
   lastResult?: number | null;
+}
+
+export interface ReorderCardsRequest {
+  /** Full ordered list of non-deleted card IDs in the deck. */
+  cardIds: string[];
 }
 
 export interface ApiReviewState {

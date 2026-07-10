@@ -7,6 +7,7 @@ import type {
   CompleteStudySessionRequest,
   CreateCardRequest,
   RecordStudyEventsRequest,
+  ReorderCardsRequest,
   StartStudySessionRequest,
   StartStudySessionResponse,
   StudyMetrics,
@@ -127,6 +128,15 @@ export function createCloudClient(options: CloudClientOptions) {
       request<{ ok: boolean }>(`/api/cards/${encodeURIComponent(cardId)}`, {
         method: "DELETE",
       }),
+
+    reorderCards: (deckId: string, payload: ReorderCardsRequest) =>
+      request<{ ok: boolean }>(
+        `/api/decks/${encodeURIComponent(deckId)}/cards/order`,
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        },
+      ),
 
     submitReview: (payload: SubmitReviewRequest) =>
       request<{ ok: boolean }>("/api/review/submit", {

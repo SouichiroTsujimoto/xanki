@@ -47,6 +47,7 @@ Cloudflare D1。全テーブルに `user_id` を持ち `(user_id, id)` 複合 PK
 | note | TEXT | 任意メモ |
 | source_hint | TEXT | 取込元ヒント |
 | starred | INTEGER | 0/1 |
+| sort_order | INTEGER | デッキ内の表示順（昇順。小さいほど先。migration 0009） |
 | created_at / updated_at / deleted_at | | |
 
 ### review_state

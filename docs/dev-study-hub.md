@@ -70,3 +70,4 @@
 |------|------|------|------|
 | 2026-07 | セッション完了が静的 `StudyEmpty` で達成感不足 | ハブのみホロパネル、セッションは別 UI | `LeitnerDueCompletePanel` 共有化 + Motion / パーティクル。デッキ別完了は控えめ UI |
 | 2026-07 | AI 一括生成の導線がマスクエディタ内のみ | 学習ハブにツールバー CTA がない | `DeckStudyView` ツールバーに **AI でカードを追加** + `CardCollection` 空状態 CTA。`study-hub-toolbar-actions` で shuffle と横並び |
+| 2026-07 | カード一覧の並びが Coverflow とずれる可能性 | 一覧・Coverflow が別順で load しうる | いずれも `listCards`（`sort_order`）を使い、reorder 後は `subscribeLibraryChanged` / revision で refetch |

@@ -43,6 +43,7 @@ export function mapApiCard(raw: ApiCard, opts?: { imagePath?: string }): MappedC
     note: raw.note ?? undefined,
     sourceHint: raw.sourceHint ?? undefined,
     starred: Boolean(raw.starred),
+    sortOrder: raw.sortOrder,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     boxNum: raw.boxNum,

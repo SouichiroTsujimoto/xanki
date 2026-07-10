@@ -112,6 +112,10 @@ export function createAppApi(deps: CreateAppApiDeps): AppApi {
     listCards: async (deckId, query) =>
       (await cloud.listCards(deckId, query)).map(mapCard),
     getCard: async (cardId) => mapCard(await cloud.getCard(cardId)),
+    reorderCards: async (deckId, cardIds) => {
+      await cloud.reorderCards(deckId, { cardIds });
+      notify();
+    },
     deleteCard: async (cardId) => {
       await cloud.deleteCard(cardId);
       notify();

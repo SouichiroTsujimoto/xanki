@@ -44,6 +44,7 @@ export const cards = sqliteTable(
     note: text("note"),
     sourceHint: text("source_hint"),
     starred: integer("starred").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
     deletedAt: integer("deleted_at"),

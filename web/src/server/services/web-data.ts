@@ -13,6 +13,7 @@ export {
   getCard,
   listCards,
   purgeOrphanedCards,
+  reorderCards,
   upsertCard,
   type CardInput,
 } from "./library/card-service";

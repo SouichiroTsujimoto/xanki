@@ -7,6 +7,7 @@ import {
   deleteDeck,
   listCards,
   listDecks,
+  reorderCards,
   submitReview,
   upsertCard,
   upsertDeck,
@@ -73,6 +74,32 @@ deckRoutes.patch("/:id", async (c) => {
 
 deckRoutes.delete("/:id", async (c) => {
   await deleteDeck(c.get("db"), c.get("user").id, c.req.param("id"), c.env);
+  return c.json({ ok: true });
+});
+
+deckRoutes.put("/:id/cards/order", async (c) => {
+  const body = z
+    .object({
+      cardIds: z.array(z.string().min(1)).min(0),
+    })
+    .parse(await c.req.json());
+  try {
+    await reorderCards(
+      c.get("db"),
+      c.get("user").id,
+      c.req.param("id"),
+      body.cardIds,
+      c.env,
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message === "deck_not_found") {
+      return c.json({ error: "deck_not_found" }, 404);
+    }
+    if (error instanceof Error && error.message === "card_order_mismatch") {
+      return c.json({ error: "card_order_mismatch" }, 400);
+    }
+    throw error;
+  }
   return c.json({ ok: true });
 });
 
