@@ -6,7 +6,7 @@
 # 1. 初回セットアップ（依存関係・D1 migrate）
 pnpm setup:cloud
 
-# 2. 1Password CLI（初回のみ — worktree でも web/.dev.vars.op がそのまま使える）
+# 2. 1Password CLI（初回のみ — 各 jj workspace で web/.dev.vars.op がそのまま使える）
 brew install 1password-cli   # 未導入なら
 op signin
 #    1Password に dev secrets アイテム（例: xanki-dev）を作成
@@ -21,7 +21,7 @@ pnpm dev:cloud
 pnpm smoke:cloud
 ```
 
-**worktree:** `web/.dev.vars` の手コピーは不要。`web/.dev.vars.op`（git 管理）+ `op signin` + `wrangler.toml` の `[secrets].required` で `pnpm dev:cloud` が動く（`op run` → process.env → Worker）。
+**jj workspace:** `web/.dev.vars` の手コピーは不要。`web/.dev.vars.op`（リポジトリ管理）+ `op signin` + `wrangler.toml` の `[secrets].required` で `pnpm dev:cloud` が動く（`op run` → process.env → Worker）。新規 workspace は `pnpm setup:jj-workspace`（[dev-jj.md](./dev-jj.md)）。
 
 **1Password なし（fallback）:** `cp web/.dev.vars.example web/.dev.vars` して平文を記入。
 
@@ -115,7 +115,7 @@ AI_MODEL=google-ai-studio/gemini-2.5-flash
 
 | ファイル | 役割 |
 |---------|------|
-| [`web/.dev.vars.op`](../web/.dev.vars.op) | **正本** — `op://` 参照のみ（git 管理・worktree 共通） |
+| [`web/.dev.vars.op`](../web/.dev.vars.op) | **正本** — `op://` 参照のみ（リポジトリ管理・全 workspace 共通） |
 | `web/.dev.vars` | fallback — 平文（`.gitignore`、手コピー不要にするため非推奨） |
 | [`scripts/with-dev-secrets.sh`](../scripts/with-dev-secrets.sh) | `pnpm dev:cloud` が vite 起動時に `op run` する |
 

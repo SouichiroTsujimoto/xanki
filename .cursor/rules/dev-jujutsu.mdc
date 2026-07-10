@@ -11,6 +11,23 @@ alwaysApply: true
 
 - 作成: [`jj-workspace`](../../.cursor/skills/jj-workspace/SKILL.md)（`@jj-workspace`）
 - 閉じる: [`jj-workspace-close`](../../.cursor/skills/jj-workspace-close/SKILL.md)（`@jj-workspace-close`、**rebase 統合**）
+- main へ push: [`jj-push-main`](../../.cursor/skills/jj-push-main/SKILL.md)（`@jj-push-main`、個人開発は PR ではなく **main 直 push**）
+
+## 作業着手前（change の混在防止）
+
+**ファイルを編集する前に**、今の `@` にこれからの作業を含めてよいか判断する。
+
+- **同じ change でよい:** 同一機能・同一バグ修正の続き、同じ main push 単位
+- **別 change にする:** 別機能・別スキル・別ドキュメント目的、Agent の別タスク、コンフリクト解消と無関係な追加
+- **迷ったら** `jj new` 側（後から `jj squash` でまとめやすい）
+- **並列の別文脈**は `@jj-workspace`（default の `@` を汚さない）
+
+別 change にすると判断したら、**編集前に**:
+
+```bash
+jj describe -m "ここまでの要約"   # これからやることではなく、現 change の内容
+jj new
+```
 
 ## 禁止
 
@@ -32,10 +49,11 @@ bash scripts/close-jj-workspace.sh --name <name>
 
 `close-jj-workspace.sh` は secondary を default の `@` に **rebase** してから `jj edit` する。
 
-## PR（default のみ）
+## main へ push（default のみ・個人開発）
 
 ```bash
-jj bookmark set <name> -r @-
-jj git push --bookmark <name>
-gh pr create ...
+pnpm push:main
+# または bash scripts/push-jj-main.sh
 ```
+
+`@jj-push-main` — fetch → rebase onto main → `main` bookmark → `jj git push --bookmark main`

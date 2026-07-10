@@ -9,6 +9,7 @@
     "materialize:dev-vars": "bash scripts/materialize-dev-vars.sh",
     "setup:jj-workspace": "bash scripts/setup-jj-workspace.sh",
     "setup:jj-workspace:lite": "bash scripts/setup-jj-workspace.sh --lite",
+    "push:main": "bash scripts/push-jj-main.sh",
     "check:design": "bash scripts/check-design-tokens.sh",
     "dev:cloud": "bash scripts/dev-cloud.sh",
     "dev:cloud:all": "bash scripts/dev-cloud.sh --desktop",

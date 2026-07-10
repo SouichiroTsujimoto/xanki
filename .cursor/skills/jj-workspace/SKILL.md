@@ -1,6 +1,6 @@
 ---
 name: jj-workspace
-description: Creates a jujutsu secondary workspace for isolated agent work in xanki. Names the workspace automatically when omitted. Runs lite bootstrap only. Use when the user invokes @jj-workspace, asks to create a jj workspace, or wants parallel agent work without touching default workspace.
+description: Creates a jujutsu secondary workspace for isolated agent work in xanki. Names the workspace automatically when omitted. Runs lite bootstrap only. Before starting, checks whether the current change should include the new work; if not, describes then jj new on default, or creates secondary. Use when the user invokes @jj-workspace, asks to create a jj workspace, or wants parallel agent work without touching default workspace.
 disable-model-invocation: true
 ---
 
@@ -12,6 +12,17 @@ secondary workspace を明示的に作成し、lite bootstrap 後にそこで実
 
 - `@jj-workspace` または workspace 作成の明示指示
 - default に無関係な WIP があり、別作業を始めたいとき
+- 今の `@` に新しい作業を含めたくないが、default で作業を続ける必要があるとき
+
+## 作業着手前（default で判断）
+
+secondary を作る**前**に、default の `@` をどうするか決める。
+
+1. 今の `@` にこれからの作業を含めてよいか判断
+2. **含めない** → 編集前に `jj describe -m "ここまでの要約"` → `jj new`
+3. **並列で隔離したい** → このスキルで secondary を作成（default の `@` はそのまま）
+
+`describe` は未来の作業ではなく、**現 change のここまでの内容**を書く。
 
 ## workspace 名（Agent が決定）
 

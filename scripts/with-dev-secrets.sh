@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dev secrets loader: materialized .dev.vars preferred, then op run, then fallback.
-# Materialize: pnpm materialize:dev-vars (or worktree setup). See docs/dev-cloud.md
+# Materialize: pnpm materialize:dev-vars (or jj workspace setup). See docs/dev-cloud.md
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,7 +20,7 @@ Dev secrets are missing. Set up 1Password CLI:
   2. op signin
   3. Create a 1Password item (e.g. "xanki-dev") with dev secret fields
   4. Edit web/.dev.vars.op — set op:// references to your vault/item/fields
-  5. pnpm materialize:dev-vars   # writes web/.dev.vars (worktree でも 1 回)
+  5. pnpm materialize:dev-vars   # writes web/.dev.vars (各 workspace で 1 回)
   6. pnpm check:secrets
 
 See docs/dev-cloud.md for details.

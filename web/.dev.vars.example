@@ -1,6 +1,6 @@
 # wrangler dev 用
 #
-# 正本: web/.dev.vars.op + 1Password CLI（git 管理・worktree 即起動）
+# 正本: web/.dev.vars.op + 1Password CLI（リポジトリ管理・各 workspace で 1 回 materialize）
 #   pnpm dev:cloud が scripts/with-dev-secrets.sh 経由で op run する
 #   診断: pnpm check:secrets
 #

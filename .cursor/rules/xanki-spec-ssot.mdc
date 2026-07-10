@@ -13,4 +13,4 @@ alwaysApply: true
 - Tauri では `window.confirm` / `window.alert` を使わない（`docs/spec/ui.md`）
 - 画面レイアウト問題を修正した PR では `docs/dev-ui.md` 索引の該当 dev doc に履歴メモを追記（`.cursor/rules/ui-layout-dev-docs.mdc`）
 
-Agent 向け索引: リポジトリルート `AGENTS.md`
+Agent 向け索引: リポジトリルート `AGENTS.md`。VCS 運用: [`.cursor/rules/dev-jujutsu.mdc`](./dev-jujutsu.mdc) / [`docs/dev-jj.md`](../../docs/dev-jj.md)

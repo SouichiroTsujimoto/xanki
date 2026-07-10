@@ -1,6 +1,6 @@
 ---
 name: jj-workspace-close
-description: Hands off completed work from a jujutsu secondary workspace to default by rebasing onto default's WIP, then forgets and removes the workspace directory. Resolves workspace name automatically when omitted. Use when the user invokes @jj-workspace-close, finishes work in a secondary workspace, or asks to merge jj workspace changes back to default.
+description: Hands off completed work from a jujutsu secondary workspace to default by rebasing onto default's WIP, then forgets and removes the workspace directory. Resolves workspace name automatically when omitted. After handoff, checks whether default @ should receive the next task or needs describe then jj new. Use when the user invokes @jj-workspace-close, finishes work in a secondary workspace, or asks to merge jj workspace changes back to default.
 disable-model-invocation: true
 ---
 
@@ -33,7 +33,8 @@ Task Progress:
 - [ ] 3. secondary で jj st 確認
 - [ ] 4. default で close スクリプト実行
 - [ ] 5. conflict なら解消 → jj describe
-- [ ] 6. default で dev:cloud / PR
+- [ ] 6. 次の作業を同じ change に含めてよいか判断（別文脈なら describe → new）
+- [ ] 7. default で dev:cloud / push
 ```
 
 **secondary（閉じる前）:**
@@ -60,17 +61,17 @@ jj st
 
 **コンフリクト時:** スクリプトは exit 1。作業ツリーの conflict を解消 → `jj describe` → 再度確認。
 
-**検証・PR（default のみ）:**
+**検証・push（default のみ）:**
 
 ```bash
 pnpm dev:cloud
 pnpm smoke:cloud        # 必要なら
-jj bookmark set <name> -r @-
-jj git push --bookmark <name>
-gh pr create ...
+pnpm push:main          # @jj-push-main
 ```
 
 D1 migration を追加した場合は先に `pnpm setup:cloud`。
+
+**handoff 後の default:** 統合された `@` に、これから始める作業を含めてよいか判断する。別文脈なら `jj describe` → `jj new` してから次へ。
 
 ## 呼び出し例
 

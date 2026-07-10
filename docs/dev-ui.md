@@ -17,6 +17,7 @@
 | ダイアログ・オーバーレイ | [dev-dialogs-overlays.md](./dev-dialogs-overlays.md) | [ui.md §ダイアログ](./spec/ui.md) | `dialogs.css`, `NativeDialog`, `study-ai-panel.tsx` |
 | 設定・認証 | [dev-settings-auth.md](./dev-settings-auth.md) | [ui.md](./spec/ui.md), [cloud.md](./spec/cloud.md) | `settings.css`, `onboarding.css`, `settings-view.tsx`, `login-view.tsx` |
 | **iOS（Capacitor）** | [dev-mobile.md](./dev-mobile.md) | [ui.md](./spec/ui.md), [cloud.md](./spec/cloud.md) | `mobile/src/index.css`, `platform-capabilities-context.tsx` |
+| **VCS（jj）** | [dev-jj.md](./dev-jj.md) | — | — |
 | クラウド API（非 UI レイアウト） | [dev-cloud.md](./dev-cloud.md) | [cloud.md](./spec/cloud.md) | `web/` |
 
 ## 各 dev ドocument の構成（テンプレート）
