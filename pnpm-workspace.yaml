@@ -11,3 +11,8 @@ allowBuilds:
   workerd: true
   "@esbuild-kit/core-utils": true
   "@esbuild-kit/esm-loader": true
+
+minimumReleaseAgeExclude:
+  - '@ai-sdk/google@4.0.11'
+  - '@ai-sdk/provider-utils@5.0.7'
+  - '@ai-sdk/provider@4.0.3'

@@ -139,6 +139,9 @@ importers:
 
   web:
     dependencies:
+      '@ai-sdk/google':
+        specifier: ^4.0.11
+        version: 4.0.11(zod@3.25.76)
       '@better-auth/drizzle-adapter':
         specifier: ^1.6.23
         version: 1.6.23(@better-auth/core@1.6.23(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@4.20260702.1)(better-call@1.3.7(zod@3.25.76))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@0.39.3(@cloudflare/workers-types@4.20260702.1)(kysely@0.29.3))
@@ -153,7 +156,7 @@ importers:
         version: 7.0.16(zod@3.25.76)
       ai-gateway-provider:
         specifier: ^3.2.0
-        version: 3.2.0(@ai-sdk/openai-compatible@2.0.57(zod@3.25.76))(@ai-sdk/provider-utils@5.0.5(zod@3.25.76))(@ai-sdk/provider@4.0.2)(ai@7.0.16(zod@3.25.76))(zod@3.25.76)
+        version: 3.2.0(@ai-sdk/openai-compatible@2.0.57(zod@3.25.76))(@ai-sdk/provider-utils@5.0.7(zod@3.25.76))(@ai-sdk/provider@4.0.3)(ai@7.0.16(zod@3.25.76))(zod@3.25.76)
       better-auth:
         specifier: ^1.6.23
         version: 1.6.23(@cloudflare/workers-types@4.20260702.1)(drizzle-kit@0.30.6)(drizzle-orm@0.39.3(@cloudflare/workers-types@4.20260702.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9(@types/node@26.1.0)(happy-dom@20.10.6)(vite@8.1.3(@types/node@26.1.0)(esbuild@0.19.12)(jiti@2.7.0)))
@@ -348,6 +351,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/google@4.0.11':
+    resolution: {integrity: sha512-1PvB3JC1D9eA43NCyHYhlz07YNfnAt9/8pvr8R7eaHp6J7LABM3lTHMvDMk1nRNGfBlV8H7U1jtgNEgB4u7MMw==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/groq@3.0.48':
     resolution: {integrity: sha512-XEmHV9mvUezqp3P/7h60AvYk0BHw9X/A2fPdaS6KH3eE8ysh3VYu5pPtlQaJPGY4f2ew90J6SCsC6JyjGsY0Jw==}
     engines: {node: '>=18'}
@@ -390,12 +399,22 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/provider-utils@5.0.7':
+    resolution: {integrity: sha512-OSm5/5kdrHa11WIOo5LYgDKnxYWp5aB/wx5EXRHi0jpUGduMDeB6oht9U6p+UNNWIP3F/EqPpV8d7vdP/iRnqg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/provider@3.0.13':
     resolution: {integrity: sha512-ZPtVYt5QIJzOta1kdUiDuCx4HhFkvNPv/rvmZ2b1iXwybYjJsCnNYR4PAw4kW7rgVfDARvHXcU64efWuqNp6bw==}
     engines: {node: '>=18'}
 
   '@ai-sdk/provider@4.0.2':
     resolution: {integrity: sha512-pfPoy9J1B1xV7cqJ8MYHOsDYrMv5tR3+EMNfI249OhkD2uRakvav3Fo7XpD2luuN/YNCBY7KfEQc7vEV7KEtyw==}
+    engines: {node: '>=22'}
+
+  '@ai-sdk/provider@4.0.3':
+    resolution: {integrity: sha512-e0CpNWJUY7OxAFAnCZkw+ri9QOHWwTs1tXP42782KFGCU07qt8NiXCrCVowyCB5dP2r5/Uls+g2oPd8kOJn9dw==}
     engines: {node: '>=22'}
 
   '@ai-sdk/xai@3.0.103':
@@ -3290,6 +3309,12 @@ snapshots:
       zod: 3.25.76
     optional: true
 
+  '@ai-sdk/google@4.0.11(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.3
+      '@ai-sdk/provider-utils': 5.0.7(zod@3.25.76)
+      zod: 3.25.76
+
   '@ai-sdk/groq@3.0.48(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.13
@@ -3339,11 +3364,23 @@ snapshots:
       eventsource-parser: 3.1.0
       zod: 3.25.76
 
+  '@ai-sdk/provider-utils@5.0.7(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.3
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.0
+      zod: 3.25.76
+
   '@ai-sdk/provider@3.0.13':
     dependencies:
       json-schema: 0.4.0
 
   '@ai-sdk/provider@4.0.2':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@4.0.3':
     dependencies:
       json-schema: 0.4.0
 
@@ -4630,11 +4667,11 @@ snapshots:
   agent-base@7.1.4:
     optional: true
 
-  ai-gateway-provider@3.2.0(@ai-sdk/openai-compatible@2.0.57(zod@3.25.76))(@ai-sdk/provider-utils@5.0.5(zod@3.25.76))(@ai-sdk/provider@4.0.2)(ai@7.0.16(zod@3.25.76))(zod@3.25.76):
+  ai-gateway-provider@3.2.0(@ai-sdk/openai-compatible@2.0.57(zod@3.25.76))(@ai-sdk/provider-utils@5.0.7(zod@3.25.76))(@ai-sdk/provider@4.0.3)(ai@7.0.16(zod@3.25.76))(zod@3.25.76):
     dependencies:
       '@ai-sdk/openai-compatible': 2.0.57(zod@3.25.76)
-      '@ai-sdk/provider': 4.0.2
-      '@ai-sdk/provider-utils': 5.0.5(zod@3.25.76)
+      '@ai-sdk/provider': 4.0.3
+      '@ai-sdk/provider-utils': 5.0.7(zod@3.25.76)
       ai: 7.0.16(zod@3.25.76)
     optionalDependencies:
       '@ai-sdk/amazon-bedrock': 4.0.130(zod@3.25.76)

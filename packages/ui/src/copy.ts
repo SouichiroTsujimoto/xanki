@@ -328,6 +328,8 @@ export const copy = {
     cardsGenerateEmptyCta: "AI でカードを追加",
     cardsGenerateImageUploading: "画像をアップロード中…",
     cardsGenerateImageError: "画像のアップロードに失敗しました",
+    cardsGenerateImageNotFound:
+      "画像が見つかりません。再度アップロードしてから生成してください。",
     cardsGenerateImageRejected: "画像ファイル（JPEG / PNG / WebP）を選択してください",
     cardsGenerateNoSelection: "保存するカードを選択してください",
     cardsGenerateEmptyFields: "問題と解答が空のカードは保存できません",

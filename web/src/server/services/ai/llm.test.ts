@@ -15,13 +15,14 @@ vi.mock("ai-gateway-provider/providers/unified", () => ({
   unified: (model: string) => `unified:${model}`,
 }));
 
-vi.mock("ai-gateway-provider/providers/google", () => ({
+vi.mock("@ai-sdk/google", () => ({
   createGoogleGenerativeAI: () => (model: string) => `google:${model}`,
 }));
 
 import { generateObject, streamText } from "ai";
 import {
   canUseAi,
+  createAskResponseStream,
   generateCardsFromSource,
   generateQaItems,
   getCreditCostForTier,
@@ -133,7 +134,11 @@ describe("llm service", () => {
             role: "user",
             content: expect.arrayContaining([
               expect.objectContaining({ type: "text" }),
-              expect.objectContaining({ type: "image" }),
+              expect.objectContaining({
+                type: "file",
+                mediaType: "image/png",
+                data: expect.any(Uint8Array),
+              }),
             ]),
           }),
         ],
@@ -148,10 +153,10 @@ describe("llm service", () => {
     }
 
     vi.mocked(streamText).mockReturnValue({
-      textStream,
+      // streamText exposes an async-iterable, not a generator factory
+      textStream: textStream(),
     } as never);
 
-    const { createAskResponseStream } = await import("./llm");
     const response = createAskResponseStream(env, {
       cardContext: "種別: qa",
       question: "詳しく",

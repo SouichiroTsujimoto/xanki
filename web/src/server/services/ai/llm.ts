@@ -1,9 +1,15 @@
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAiGateway, type AiGatewaySettings } from "ai-gateway-provider";
-import { createGoogleGenerativeAI } from "ai-gateway-provider/providers/google";
 import { unified } from "ai-gateway-provider/providers/unified";
 import { generateObject, streamText, zodSchema } from "ai";
 import { z } from "zod";
 import type { Env } from "../../env";
+
+/**
+ * Placeholder API key that Cloudflare AI Gateway strips when present.
+ * Matches ai-gateway-provider's authWrapper default for Unified Billing / BYOK.
+ */
+const CF_TEMP_TOKEN = "CF_TEMP_TOKEN";
 
 export class AiUnavailableError extends Error {
   constructor() {
@@ -78,12 +84,16 @@ function createModelForId(env: Env, modelId: string) {
   return gateway(unified(modelId));
 }
 
-/** unified() は responseFormat 非対応のため、構造化出力はネイティブ Google を使う */
+/**
+ * unified() は responseFormat 非対応のため、構造化出力はネイティブ Google を使う。
+ * AI SDK 7 は V4 tagged file data を渡すため @ai-sdk/google@4 が必要
+ *（gateway 同梱の v3 は multimodal inlineData を壊す）。
+ */
 function createObjectModelForId(env: Env, modelId: string) {
   const gateway = createGateway(env);
   const googleModelId = resolveGoogleModelId(modelId);
   if (googleModelId) {
-    const google = createGoogleGenerativeAI();
+    const google = createGoogleGenerativeAI({ apiKey: CF_TEMP_TOKEN });
     return gateway(google(googleModelId));
   }
   return gateway(unified(modelId));
@@ -178,11 +188,15 @@ export async function generateCardsFromSource(
 
   const content: Array<
     | { type: "text"; text: string }
-    | { type: "image"; image: Uint8Array; mimeType?: string }
+    | { type: "file"; data: Uint8Array; mediaType: string }
   > = [{ type: "text", text: promptLines.join("\n") }];
 
   for (const image of params.images ?? []) {
-    content.push({ type: "image", image: image.data, mimeType: image.mime });
+    content.push({
+      type: "file",
+      data: image.data,
+      mediaType: image.mime || "image/jpeg",
+    });
   }
 
   const { object } = await generateObject({

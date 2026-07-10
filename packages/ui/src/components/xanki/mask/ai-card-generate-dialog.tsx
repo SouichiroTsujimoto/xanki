@@ -36,7 +36,7 @@ function formatAiError(code: string): string {
     case "rate_limited":
       return copy.ai.errorRateLimited;
     case "image_not_found":
-      return copy.ai.cardsGenerateImageError;
+      return copy.ai.cardsGenerateImageNotFound;
     default:
       return copy.ai.errorGeneric;
   }

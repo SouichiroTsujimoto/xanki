@@ -267,7 +267,8 @@ POST /api/ai/ask              { cardContext, question }                         
 - `images` 最大 5 件。`blobHash` は R2 に commit 済みの SHA-256 hex
 - `count` 既定 5、範囲 1〜10
 - `kind` は現状 `qa` のみ
-- 画像は Worker が R2 から取得しマルチモーダル入力として LLM に渡す
+- 画像は Worker が R2 から取得し、AI SDK の `file` part（`mediaType` = 画像 MIME）として LLM に渡す
+- 構造化出力（`generateObject`）は `unified()` ではなく **`@ai-sdk/google` v4 ネイティブ**を AI Gateway 経由で使う（AI SDK 7 の V4 tagged file data と整合。v3 provider は multimodal `inlineData` を壊す）
 - 未存在 blob: **400** `{ error: "image_not_found" }`
 
 ### 環境変数（Workers）
